@@ -114,6 +114,19 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/contrib/googletest/include
 )
 
+####################
+# Accidental Noise #
+####################
+
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/contrib/accidentalnoise
+)
+
+include_directories(
+    SYSTEM
+    ${CMAKE_CURRENT_SOURCE_DIR}/contrib/accidentalnoise/include
+)
+
 ##########
 # Bullet #
 ##########
