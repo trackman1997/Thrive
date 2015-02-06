@@ -39,6 +39,7 @@ function HudSystem:init(gameState)
     local compoundButton = self.rootGUIWindow:getChild("CompoundsClosed")
     local compoundPanel = self.rootGUIWindow:getChild("CompoundsOpen")
     local quitButton = self.rootGUIWindow:getChild("QuitButton")
+    local pause = 0
     menuButton:registerEventHandler("Clicked", function() self:menuButtonClicked() end)
     helpButton:registerEventHandler("Clicked", function() self:helpButtonClicked() end)
     self.editorButton:registerEventHandler("Clicked", function() self:editorButtonClicked() end)
@@ -92,6 +93,16 @@ function HudSystem:update(renderTime)
     if (Engine.keyboard:wasKeyPressed(Keyboard.KC_D)) then
         playerMicrobe.soundSource:playSound("microbe-movement-1")
     end
+    if (Engine.keyboard:wasKeyPressed(Keyboard.KC_RETURN)) then
+        if (pause == 0) then
+            pause = 1
+            Engine:pauseGame()
+        else
+            pause = 0
+            Engine:resumeGame()
+        end
+    end
+        
     
     offset = Entity(CAMERA_NAME):getComponent(OgreCameraComponent.TYPE_ID).properties.offset
     newZVal = offset.z + Engine.mouse:scrollChange()/10
