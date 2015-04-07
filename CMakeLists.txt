@@ -180,25 +180,15 @@ add_subdirectory(
 )
 
 ################
-# OgreOggSound #
+# CAUDIO #
 ################
 
-find_package(OpenAL REQUIRED QUIET)
-find_package(Ogg REQUIRED)
-find_package(Vorbis REQUIRED)
-
-add_definitions(-DHAVE_EFX=0)
-
-add_subdirectory(
-    "${CMAKE_CURRENT_SOURCE_DIR}/contrib/ogre_ogg_sound"
-)
+find_package(cAudio REQUIRED QUIET)
 
 include_directories(
     SYSTEM
     "${CMAKE_CURRENT_SOURCE_DIR}/contrib/ogre_ogg_sound/include"
-    ${OpenAL_INCLUDE_DIRS}
-    ${OGG_INCLUDE_DIRS}
-    ${VORBIS_INCLUDE_DIRS}
+    ${CAUDIO_INCLUDE_DIR}
 )
 
 ######################
@@ -250,10 +240,7 @@ target_link_libraries(ThriveLib
     ${BULLET_SOFTBODY_LIBRARY}
     ${CEGUI_LIBRARY}
     ${TINYXML_LIBRARIES}
-    ${OpenAL_LIBRARIES}
-    ${Ogg_LIBRARIES}
-    ${Vorbis_LIBRARIES}
-    OgreOggSound
+    ${CAUDIO_LIBRARIES}
     luabind
 )
 
@@ -503,6 +490,8 @@ if(WIN32)
         "${MINGW_ENV}/install/bin/Debug/liblibpng_d.dll"
         "${MINGW_ENV}/install/bin/Debug/libSILLY_d.dll"
         "${MINGW_ENV}/install/bin/Debug/libzlib_d.dll"
+        "${MINGW_ENV}/install/bin/libcAudio_d.dll"
+        "${MINGW_ENV}/install/bin/wrap_oal.dll"
         "${MINGW_ENV}/install/bin/OpenAL32.dll"
         DESTINATION bin
 		CONFIGURATIONS Debug
@@ -518,6 +507,9 @@ if(WIN32)
         "${MINGW_ENV}/install/bin/Release/liblibpng.dll"
         "${MINGW_ENV}/install/bin/Release/libSILLY.dll"
         "${MINGW_ENV}/install/bin/Release/libzlib.dll"
+        "${MINGW_ENV}/install/bin/Release/libzlib.dll"
+        "${MINGW_ENV}/install/bin/libcAudio.dll"
+        "${MINGW_ENV}/install/bin/wrap_oal.dll"
         "${MINGW_ENV}/install/bin/OpenAL32.dll"
         DESTINATION bin
 		CONFIGURATIONS Release
