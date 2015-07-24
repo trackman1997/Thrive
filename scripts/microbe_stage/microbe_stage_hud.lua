@@ -73,9 +73,9 @@ function HudSystem:update(renderTime)
            -- TODO: fix this colour
            self.compoundListItems[compoundID] = StandardItemWrapper("[colour='FF004400']" .. compoundsString, compoundID)
            -- The object will be deleted by CEGUI so make sure that it isn't touched after destroying the layout
-           self.compoundListBox:listWidgetAddItem(self.compoundListItems[compoundID])
+           self.compoundListBox:listwidgetAddItem(self.compoundListItems[compoundID])
         else
-           self.compoundListBox:listWidgetUpdateItem(self.compoundListItems[compoundID],
+           self.compoundListBox:listwidgetUpdateItem(self.compoundListItems[compoundID],
                                                       "[colour='FF004400']" .. compoundsString)
         end
     end

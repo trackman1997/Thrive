@@ -326,9 +326,7 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
     void
     setupGUI(){
         CEGUI::WindowFactoryManager::addFactory<CEGUI::TplWindowFactory<AlphaHitWindow> >();
-
-        CEGUI::OgreRenderer::bootstrapSystem();
-        CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
+        CEGUI::OgreRenderer::bootstrapSystem(*m_graphics.root->getRenderTarget("Thrive"));        CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
         CEGUI::Window* myRoot = wmgr.createWindow( "DefaultWindow", "root" );
         myRoot->setProperty("CursorPassThroughEnabled", "True");
 
@@ -346,16 +344,6 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
 
         CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType(
             reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
-
-        // For demos
-        // This file is renamed in newer CEGUI versions
-      //  CEGUI::System::getSingleton().getDefaultGUIContext().getMouseCursor().setDefaultImage(
-       //     "ThriveGeneric/MouseArrow");
-
-       // CEGUI::SchemeManager::getSingleton().createFromFile("GameMenu.scheme");
-
-      //  CEGUI::ImageManager::getSingleton().loadImageset("GameMenu.imageset");
-       // CEGUI::ImageManager::getSingleton().loadImageset("HUDDemo.imageset");
 
         CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType( reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
         CEGUI::AnimationManager::getSingleton().loadAnimationsFromXML("thrive.anims");

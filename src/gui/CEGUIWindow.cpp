@@ -24,30 +24,11 @@ static int SCROLLABLE_PANE_VERTICAL_PADDING = 5;
 
 //Static variables used for moving gui
 static bool static_guiMode = false;
+static CEGUI::Window* static_activeMoveWindow = nullptr;
 static CEGUI::Event::Connection static_movingEvent;
 static CEGUIVector2 static_mousePosInWindow;
 
-//Event handlers
-static bool
-handleWindowMove(
-    const CEGUI::EventArgs& args
-) {
-    using namespace CEGUI;
-    if (static_guiMode) {
 
-        auto eventArgs = static_cast<const WindowEventArgs&>(args);
-        
-        eventArgs.window->getParent();
-        
-        // Still no idea what's going on
-        // Unless this is a really awkward way of allowing windows to move under some conditions
-        return true;
-    }
-    return false;
-}
-
-/*
-static CEGUI::Window* static_activeMoveWindow = nullptr;
 static bool onWindowMove(
     const CEGUI::EventArgs& args
 ) {
@@ -56,24 +37,27 @@ static bool onWindowMove(
     CEGUI::Window* parent = static_activeMoveWindow->getParent();
     CEGUI::Rectf parentRect = parent->getOuterRectClipper();
 
-    const MouseEventArgs mouseEventArgs = static_cast<const MouseEventArgs&>(args);
-    auto localMousePos = CoordConverter::screenToWindow(*static_activeMoveWindow, mouseEventArgs.position);
-    UVector2 mouseMoveOffset(cegui_reldim(localMousePos.d_x/parentRect.getWidth()), cegui_reldim(localMousePos.d_y/parentRect.getHeight()));
-    UVector2 mouseOffsetInWindow(cegui_reldim(static_mousePosInWindow.d_x/parentRect.getWidth()), cegui_reldim(static_mousePosInWindow.d_y/parentRect.getHeight()));
+    const CEGUI::CursorEventArgs mouseEventArgs = static_cast<const CursorEventArgs&>(args);
+    auto localMousePos = CoordConverter::screenToWindow(*static_activeMoveWindow, mouseEventArgs.d_cursor->getPosition());
+    UVector2 mouseMoveOffset(cegui_reldim(localMousePos.x/parentRect.getWidth()), cegui_reldim(localMousePos.y/parentRect.getHeight()));
+
+    UVector2 mouseOffsetInWindow(cegui_reldim(static_mousePosInWindow.x/parentRect.getWidth()), cegui_reldim(static_mousePosInWindow.y/parentRect.getHeight()));
     static_activeMoveWindow->setPosition(static_activeMoveWindow->getPosition() + mouseMoveOffset - mouseOffsetInWindow);
     return true;
 }
 
 //Event handlers
+//TODO: This functionionality requires a redeisgn since the new CursorEventArgs works significantly different than pre-ogre2.0 upgrade
 static bool
 handleWindowMove(
-    const CEGUI::EventArgs& args
+    const CEGUI::EventArgs& //args
 ) {
     using namespace CEGUI;
     if (static_guiMode) {
-        const MouseEventArgs mouseEventArgs = static_cast<const MouseEventArgs&>(args);
-        auto* window = static_cast<const CEGUI::WindowEventArgs&>(args).window;
-        if(mouseEventArgs.button == CEGUI::RightButton) {
+       // const CEGUI::CursorEventArgs mouseEventArgs = static_cast<const CEGUI::CursorEventArgs&>(args);
+        //auto* window = static_cast<const CEGUI::CursorEventArgs&>(args).window;
+       // auto* window = CEGUI::System::getSingleton().getDefaultGUIContext().getWindowContainingCursor();
+      /*  if(mouseEventArgs.d_cursor. .button == CEGUI::RightButton) {
             if (static_activeMoveWindow) {
                 auto newPos = static_activeMoveWindow->getPosition();
                 std::cout << "New position: {{" << newPos.d_x.d_scale << ", " << newPos.d_x.d_offset << "}, {" << newPos.d_y.d_scale << ", " << newPos.d_y.d_offset << "}}" << std::endl;
@@ -91,12 +75,12 @@ handleWindowMove(
                     std::cout << "This CEGUI window can't be moved. Are you perhaps trying to move the background or if the window you are trying to move has the clickthrough property, then remove it while adjusting gui." << std::endl;
                 }
             }
-        }
+        }*/
         return true;
     }
     return false;
 }
-*/
+
 
 //Static
 void
@@ -204,14 +188,13 @@ CEGUIWindow::luaBindings() {
         .def("setSizeRel", &CEGUIWindow::setSizeRel)
         .def("getName", &CEGUIWindow::getName)
         .def("playAnimation", &CEGUIWindow::playAnimation)
-        .def("listWidgetAddItem", &CEGUIWindow::listWidgetAddStandardItem)
-        .def("listWidgetAddItem", &CEGUIWindow::listWidgetAddTextItem)
-        .def("listWidgetAddItem", &CEGUIWindow::listWidgetAddItem)
-        .def("listWidgetResetList", &CEGUIWindow::listWidgetResetList)
-        .def("listWidgetUpdateItem", &CEGUIWindow::listWidgetUpdateItem)
-        .def("listWidgetGetFirstSelectedID", &CEGUIWindow::listWidgetGetFirstSelectedID)
-        .def("listWidgetGetFirstSelectedItemText",
-            &CEGUIWindow::listWidgetGetFirstSelectedItemText)
+        .def("listwidgetAddItem", &CEGUIWindow::listwidgetAddItem)
+        .def("listwidgetAddText", &CEGUIWindow::listwidgetAddText)
+        .def("listwidgetResetList", &CEGUIWindow::listwidgetResetList)
+        .def("listwidgetetFirstSelectedItem", &CEGUIWindow::listwidgetGetFirstSelectedItem)
+        .def("listwidgetSetSelectionBrush", &CEGUIWindow::listwidgetSetSelectionBrush)
+        .def("listwidgetGetFirstSelectedID", &CEGUIWindow::listwidgetGetFirstSelectedID)
+		.def("listwidgetUpdateItem", &CEGUIWindow::listwidgetUpdateItem)
         .def("progressbarSetProgress", &CEGUIWindow::progressbarSetProgress)
         .def("scrollingpaneAddIcon", &CEGUIWindow::scrollingpaneAddIcon)
         .def("scrollingpaneGetVerticalPosition", &CEGUIWindow::scrollingpaneGetVerticalPosition)
@@ -288,7 +271,7 @@ CEGUIWindow::setImage(
 }
 
 void
-CEGUIWindow::listWidgetAddStandardItem(
+CEGUIWindow::listwidgetAddItem(
      StandardItemWrapper* item
 ) {
 
@@ -298,29 +281,15 @@ CEGUIWindow::listWidgetAddStandardItem(
         throw std::bad_cast();
 
     auto actualItem = item->getItem();
-    
+
     list->addItem(actualItem);
 
     item->markAttached();
 }
 
 void
-CEGUIWindow::listWidgetAddItem(
-    const std::string &text,
-    int id
-) {
-
-    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
-
-    if(!list)
-        throw std::bad_cast();
-
-    list->addItem(new CEGUI::StandardItem(text.c_str(), id));
-}
-
-void
-CEGUIWindow::listWidgetAddTextItem(
-    const std::string &text
+CEGUIWindow::listwidgetAddText(
+    const std::string text
 ) {
 
     auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
@@ -332,7 +301,49 @@ CEGUIWindow::listWidgetAddTextItem(
 }
 
 void
-CEGUIWindow::listWidgetUpdateItem(
+CEGUIWindow::listwidgetResetList(){
+    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
+
+    if(!list)
+        throw std::bad_cast();
+
+    list->clearList();}
+
+
+std::string
+CEGUIWindow::listwidgetGetFirstSelectedItem(){
+
+    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
+
+    if(!list)
+        throw std::bad_cast();
+
+    auto selected = list->getFirstSelectedItem();
+
+    if(!selected)
+        return "";
+
+    return std::string(selected->getText().c_str());
+}
+
+int
+CEGUIWindow::listwidgetGetFirstSelectedID(){
+
+    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
+
+    if(!list)
+        throw std::bad_cast();
+
+    auto selected = list->getFirstSelectedItem();
+
+    if(!selected)
+        return -1;
+
+    return selected->getId();
+}
+
+void
+CEGUIWindow::listwidgetUpdateItem(
     StandardItemWrapper* item,
     const std::string &text
 ) {
@@ -350,49 +361,13 @@ CEGUIWindow::listWidgetUpdateItem(
 }
 
 void
-CEGUIWindow::listWidgetResetList(){
-
+CEGUIWindow::listwidgetSetSelectionBrush(){
     auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
 
     if(!list)
         throw std::bad_cast();
-
-    list->clearList();
+    list->setSelectionBrushImage("ThriveGeneric/TextSelectionBrush");
 }
-
-std::string
-CEGUIWindow::listWidgetGetFirstSelectedItemText(){
-
-    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
-
-    if(!list)
-        throw std::bad_cast();
-
-    auto selected = list->getFirstSelectedItem();
-
-    if(!selected)
-        return "";
-
-    return std::string(selected->getText().c_str());
-}
-
-int
-CEGUIWindow::listWidgetGetFirstSelectedID(){
-
-    auto list = dynamic_cast<CEGUI::ListWidget*>(m_window);
-
-    if(!list)
-        throw std::bad_cast();
-
-    auto selected = list->getFirstSelectedItem();
-
-    if(!selected)
-        return -1;
-
-    return selected->getId();
-}
-
-
 
 void
 CEGUIWindow::progressbarSetProgress(float progress){
@@ -450,11 +425,10 @@ CEGUIWindow::registerEventHandler(
 
     // Lambda must return something to avoid an template error.
     auto callbackLambda = [callback](const CEGUI::EventArgs& args) -> bool
-        {
-            luabind::call_function<void>(callback, CEGUIWindow(static_cast<const CEGUI::WindowEventArgs&>(args).window, false));
-            return 0;
-        };
-
+    {
+        luabind::call_function<void>(callback, CEGUIWindow(static_cast<const CEGUI::WindowEventArgs&>(args).window, false));
+        return 0;
+    };
     m_window->subscribeEvent(eventName, callbackLambda);
 }
 
@@ -469,15 +443,13 @@ void
 CEGUIWindow::registerKeyEventHandler(
     const luabind::object& callback
 ) const {
-    // Event doesn't exist anymore //
+
     auto callbackLambda = [callback](const CEGUI::EventArgs& args) -> bool
         {
-            luabind::call_function<void>(callback, CEGUIWindow(static_cast<
-                    const CEGUI::WindowEventArgs&>(args).window, false),
+            luabind::call_function<void>(callback, CEGUIWindow(static_cast<const CEGUI::WindowEventArgs&>(args).window, false),
                 static_cast<int>(static_cast<const CEGUI::TextEventArgs&>(args).character));
             return 0;
         };
-    
     m_window->subscribeEvent(CEGUI::Window::EventCharacterKey, callbackLambda);
 }
 
