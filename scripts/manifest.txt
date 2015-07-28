@@ -10,6 +10,6 @@ microbe_stage
 microbe_editor
 //sandbox
 
-console.lua
-console_commands.lua
+//NOGUI console.lua
+//NOGUI console_commands.lua
 

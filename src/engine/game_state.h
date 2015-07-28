@@ -16,7 +16,7 @@ namespace Ogre {
 
 namespace thrive {
 
-class CEGUIWindow;
+//NOGUIclass CEGUIWindow;
 class Engine;
 class EntityManager;
 class StorageContainer;
@@ -126,8 +126,8 @@ public:
     /**
     * @brief The root CEGUIWindow
     */
-    CEGUIWindow
-    rootGUIWindow();
+  //NOGUI  CEGUIWindow
+  //NOGUI  rootGUIWindow();
 
     /**
     * @brief The Ogre scene manager

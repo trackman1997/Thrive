@@ -1,3 +1,13 @@
+local function setupBackground()
+    local entity = Entity("background")
+    local skyplane = SkyPlaneComponent()
+    skyplane.properties.plane.normal = Vector3(0, 0, 2000)
+    skyplane.properties.materialName = "background/blue_01"
+    skyplane.properties:touch()
+    
+    entity:addComponent(skyplane)
+end
+
 
 local function setupCamera()
     local entity = Entity(CAMERA_NAME .. "2")
@@ -43,12 +53,14 @@ end
 local function createMainMenu(name)
     return Engine:createGameState(
         name,
-        {   
+        {  
             -- Graphics
             OgreAddSceneNodeSystem(),
             OgreUpdateSceneNodeSystem(),
             OgreCameraSystem(),
             MainMenuHudSystem(),
+            OgreLightSystem(),
+            SkySystem(),
             OgreWorkspaceSystem(),
             OgreRemoveSceneNodeSystem(),
             RenderSystem(),
@@ -56,6 +68,7 @@ local function createMainMenu(name)
             SoundSourceSystem(),
         },
         function()
+            setupBackground()
             setupCamera()
             setupSound()
         end,

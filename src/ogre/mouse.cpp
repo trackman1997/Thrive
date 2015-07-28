@@ -2,7 +2,7 @@
 
 #include "scripting/luabind.h"
 
-#include <CEGUI/CEGUI.h>
+//NOGUI #include <CEGUI/CEGUI.h>
 
 #include <iostream>
 #include <OgreVector3.h>
@@ -16,25 +16,25 @@ using namespace thrive;
 
 struct Mouse::Implementation : public OIS::MouseListener {
 
-    bool mouseMoved (const OIS::MouseEvent& e){
-        m_aggregator->injectMousePosition(e.state.X.abs, e.state.Y.abs);
+    bool mouseMoved (const OIS::MouseEvent&){//NOGUI e){
+  //NOGUI      m_aggregator->injectMousePosition(e.state.X.abs, e.state.Y.abs);
 
-        m_aggregator->injectMouseWheelChange(e.state.Z.rel/100);
+   //NOGUI     m_aggregator->injectMouseWheelChange(e.state.Z.rel/100);
 
-        
+
         return true;
     }
     bool mousePressed (const OIS::MouseEvent&, OIS::MouseButtonID id){
 
         switch(id){
         case OIS::MB_Left:
-            m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::LeftButton);
+          //NOGUI  m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::LeftButton);
             break;
         case OIS::MB_Right:
-            m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::RightButton);
+          //NOGUI  m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::RightButton);
             break;
         case OIS::MB_Middle:
-            m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::MiddleButton);
+         //NOGUI   m_aggregator->injectMouseButtonDown(CEGUI::MouseButton::MiddleButton);
             break;
         default:
             break;
@@ -46,22 +46,22 @@ struct Mouse::Implementation : public OIS::MouseListener {
     bool mouseReleased (const OIS::MouseEvent&, OIS::MouseButtonID id){
         switch(id){
         case OIS::MB_Left:
-            if(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::LeftButton)){
+            //NOGUIif(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::LeftButton)){
 
                 m_nextClickedStates |= 0x1;
-            }
+          //NOGUI  }
             break;
         case OIS::MB_Right:
-            if(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::RightButton)){
+           //NOGUI if(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::RightButton)){
 
                 m_nextClickedStates |= 0x2;
-            }
+          //NOGUI  }
             break;
         case OIS::MB_Middle:
-            if(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::MiddleButton)){
+          //NOGUI  if(!m_aggregator->injectMouseButtonUp(CEGUI::MouseButton::MiddleButton)){
 
                 m_nextClickedStates |= 0x4;
-            }
+           //NOGUI }
             break;
         default:
             break;
@@ -84,7 +84,7 @@ struct Mouse::Implementation : public OIS::MouseListener {
     int m_scrollChange = 0;
     int m_lastMouseZ = 0;
 
-    CEGUI::InputAggregator* m_aggregator;
+  //NOGUI  CEGUI::InputAggregator* m_aggregator;
 };
 
 
@@ -121,11 +121,11 @@ Mouse::~Mouse() {}
 
 void
 Mouse::init(
-    OIS::InputManager* inputManager,
-    CEGUI::InputAggregator* aggregator
+    OIS::InputManager* inputManager//NOGUI,
+  //NOGUI  CEGUI::InputAggregator* aggregator
 ) {
     assert(m_impl->m_mouse == nullptr && "Double init of mouse system");
-    m_impl->m_aggregator = aggregator;
+   //NOGUI m_impl->m_aggregator = aggregator;
     m_impl->m_mouse = static_cast<OIS::Mouse*>(
         inputManager->createInputObject(OIS::OISMouse, true)
     );

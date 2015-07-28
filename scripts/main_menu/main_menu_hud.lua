@@ -7,16 +7,16 @@ end
 
 function MainMenuHudSystem:init(gameState)
     System.init(self, gameState)
-    root = gameState:rootGUIWindow()
-    local microbeButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("NewGameButton")
-    local microbeEditorButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("EditorMenuButton")
-    local quitButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("ExitGameButton")
-    local loadButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton")   
-    microbeButton:registerEventHandler("Clicked", mainMenuMicrobeStageButtonClicked)
-    microbeEditorButton:registerEventHandler("Clicked", mainMenuMicrobeEditorButtonClicked)
-    loadButton:registerEventHandler("Clicked", mainMenuLoadButtonClicked)
-    quitButton:registerEventHandler("Clicked", quitButtonClicked)
-	updateLoadButton();
+--NOGUI  root = gameState:rootGUIWindow()
+--NOGUI  local microbeButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("NewGameButton")
+--NOGUI  local microbeEditorButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("EditorMenuButton")
+--NOGUI  local quitButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("ExitGameButton")
+--NOGUI  local loadButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton")   
+--NOGUI  microbeButton:registerEventHandler("Clicked", mainMenuMicrobeStageButtonClicked)
+--NOGUI  microbeEditorButton:registerEventHandler("Clicked", mainMenuMicrobeEditorButtonClicked)
+--NOGUI  loadButton:registerEventHandler("Clicked", mainMenuLoadButtonClicked)
+--NOGUI  quitButton:registerEventHandler("Clicked", quitButtonClicked)
+--NOGUI  updateLoadButton();
 end
 
 function MainMenuHudSystem:update(renderTime, logicTime)
@@ -29,11 +29,11 @@ function MainMenuHudSystem:activate()
     updateLoadButton();
 end
 function updateLoadButton()
-    if Engine:fileExists("quick.sav") then
-        root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton"):enable();
-    else
-        root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton"):disable();
-    end
+--NOGUI    if Engine:fileExists("quick.sav") then
+--NOGUI        root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton"):enable();
+--NOGUI    else
+--NOGUI        root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton"):disable();
+--NOGUI    end
 end
 
 function mainMenuLoadButtonClicked()

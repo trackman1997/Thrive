@@ -16,9 +16,9 @@ namespace OIS {
 class InputManager;
 }
 
-namespace CEGUI {
-    class InputAggregator;
-}
+//NOGUInamespace CEGUI {
+//NOGUI    class InputAggregator;
+//NOGUI}
 
 namespace thrive {
 
@@ -60,8 +60,8 @@ public:
     */
     void
     init(
-        OIS::InputManager* inputManager,
-        CEGUI::InputAggregator* aggregator
+        OIS::InputManager* inputManager//NOGUI,
+       //NOGUI CEGUI::InputAggregator* aggregator
     );
 
     /**

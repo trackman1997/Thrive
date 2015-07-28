@@ -18,10 +18,10 @@
 #include "bullet/collision_system.h"
 
 // CEGUI
-#include <CEGUI/CEGUI.h>
-#include <CEGUI/InputAggregator.h>
-#include "CEGUI/RendererModules/Ogre/Renderer.h"
-#include "gui/AlphaHitWindow.h"
+//NOGUI #include <CEGUI/CEGUI.h>
+//NOGUI #include <CEGUI/InputAggregator.h>
+//NOGUI #include "CEGUI/RendererModules/Ogre/Renderer.h"
+//NOGUI #include "gui/AlphaHitWindow.h"
 
 // Ogre
 #include "ogre/camera_system.h"
@@ -42,7 +42,7 @@
 #include "microbe_stage/compound.h"
 
 // Console
-#include "gui/CEGUIWindow.h"
+//NOGUI #include "gui/CEGUIWindow.h"
 
 #include "util/contains.h"
 #include "util/pair_hash.h"
@@ -110,8 +110,8 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
         m_currentGameState = gameState;
         if (gameState) {
             gameState->activate();
-            gameState->rootGUIWindow().addChild(m_consoleGUIWindow);
-            luabind::call_member<void>(m_console, "registerEvents", gameState);
+         //NOGUI   gameState->rootGUIWindow().addChild(m_consoleGUIWindow);
+         //NOGUI   luabind::call_member<void>(m_console, "registerEvents", gameState);
         }
     }
 
@@ -319,61 +319,61 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
         parameters.insert(std::make_pair(std::string("XAutoRepeatOn"), std::string("true")));
 #endif
         m_input.inputManager = OIS::InputManager::createInputSystem(parameters);
-        m_input.keyboard.init(m_input.inputManager, m_aggregator.get());
-        m_input.mouse.init(m_input.inputManager, m_aggregator.get());
+        m_input.keyboard.init(m_input.inputManager);// NOGUI , m_aggregator.get());
+        m_input.mouse.init(m_input.inputManager);// NOGUI , m_aggregator.get());
     }
 
     void
     setupGUI(){
-        CEGUI::WindowFactoryManager::addFactory<CEGUI::TplWindowFactory<AlphaHitWindow> >();
+      //NOGUI  CEGUI::WindowFactoryManager::addFactory<CEGUI::TplWindowFactory<AlphaHitWindow> >();
+      //NOGUI
+      //NOGUI  CEGUI::OgreRenderer::bootstrapSystem();
+      //NOGUI  CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
+      //NOGUI  CEGUI::Window* myRoot = wmgr.createWindow( "DefaultWindow", "root" );
+      //NOGUI  myRoot->setProperty("CursorPassThroughEnabled", "True");
+      //NOGUI
+      //NOGUI  CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow( myRoot );
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("Thrive.scheme");
+      //NOGUI  CEGUI::System::getSingleton().getDefaultGUIContext().getCursor().setDefaultImage(
+      //NOGUI      "ThriveGeneric/MouseArrow");
+      //NOGUI
+      //NOGUI  m_aggregator = std::move(std::unique_ptr<CEGUI::InputAggregator>(
+      //NOGUI          new CEGUI::InputAggregator(&CEGUI::System::getSingleton()
+      //NOGUI              .getDefaultGUIContext())));
+      //NOGUI
+      //NOGUI  // Using the handling on keydown mode to detect when inputs are consumed
+      //NOGUI  m_aggregator->initialise(false);
+      //NOGUI
+      //NOGUI  CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType(
+      //NOGUI      reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
+      //NOGUI
+      //NOGUI  // For demos
+      //NOGUI  // This file is renamed in newer CEGUI versions
+      //NOGUI//  CEGUI::System::getSingleton().getDefaultGUIContext().getMouseCursor().setDefaultImage(
+      //NOGUI //     "ThriveGeneric/MouseArrow");
+      //NOGUI
+      //NOGUI // CEGUI::SchemeManager::getSingleton().createFromFile("GameMenu.scheme");
+      //NOGUI
+      //NOGUI//  CEGUI::ImageManager::getSingleton().loadImageset("GameMenu.imageset");
+      //NOGUI // CEGUI::ImageManager::getSingleton().loadImageset("HUDDemo.imageset");
+      //NOGUI
+      //NOGUI  CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType( reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
+      //NOGUI  CEGUI::AnimationManager::getSingleton().loadAnimationsFromXML("thrive.anims");
+      //NOGUI
+      //NOGUI  //For demos:
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("SampleBrowser.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("OgreTray.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("AlfiskoSkin.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("WindowsLook.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("VanillaSkin.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("Generic.scheme");
+      //NOGUI  CEGUI::SchemeManager::getSingleton().createFromFile("VanillaCommonDialogs.scheme");
+      //NOGUI
+      //NOGUI  CEGUI::ImageManager::getSingleton().loadImageset("DriveIcons.imageset");
+      //NOGUI  CEGUI::ImageManager::getSingleton().loadImageset("HUDDemo.imageset");
 
-        CEGUI::OgreRenderer::bootstrapSystem();
-        CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
-        CEGUI::Window* myRoot = wmgr.createWindow( "DefaultWindow", "root" );
-        myRoot->setProperty("CursorPassThroughEnabled", "True");
-
-        CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow( myRoot );
-        CEGUI::SchemeManager::getSingleton().createFromFile("Thrive.scheme");
-        CEGUI::System::getSingleton().getDefaultGUIContext().getCursor().setDefaultImage(
-            "ThriveGeneric/MouseArrow");
-
-        m_aggregator = std::move(std::unique_ptr<CEGUI::InputAggregator>(
-                new CEGUI::InputAggregator(&CEGUI::System::getSingleton()
-                    .getDefaultGUIContext())));
-
-        // Using the handling on keydown mode to detect when inputs are consumed
-        m_aggregator->initialise(false);
-
-        CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType(
-            reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
-
-        // For demos
-        // This file is renamed in newer CEGUI versions
-      //  CEGUI::System::getSingleton().getDefaultGUIContext().getMouseCursor().setDefaultImage(
-       //     "ThriveGeneric/MouseArrow");
-
-       // CEGUI::SchemeManager::getSingleton().createFromFile("GameMenu.scheme");
-
-      //  CEGUI::ImageManager::getSingleton().loadImageset("GameMenu.imageset");
-       // CEGUI::ImageManager::getSingleton().loadImageset("HUDDemo.imageset");
-
-        CEGUI::System::getSingleton().getDefaultGUIContext().setDefaultTooltipType( reinterpret_cast<const CEGUI::utf8*>("Thrive/Tooltip") );
-        CEGUI::AnimationManager::getSingleton().loadAnimationsFromXML("thrive.anims");
-
-        //For demos:
-        CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("SampleBrowser.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("OgreTray.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("AlfiskoSkin.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("WindowsLook.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("VanillaSkin.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("Generic.scheme");
-        CEGUI::SchemeManager::getSingleton().createFromFile("VanillaCommonDialogs.scheme");
-
-        CEGUI::ImageManager::getSingleton().loadImageset("DriveIcons.imageset");
-        CEGUI::ImageManager::getSingleton().loadImageset("HUDDemo.imageset");
-
-        m_consoleGUIWindow = new CEGUIWindow("Console");
+      //NOGUI  m_consoleGUIWindow = new CEGUIWindow("Console");
     }
 
     void
@@ -438,7 +438,7 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
                 window->getHeight()
             );
         }
-        CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Sizef(window->getWidth(), window->getHeight()));
+   //NOGUI     CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Sizef(window->getWidth(), window->getHeight()));
     }
 
     // Lua state must be one of the last to be destroyed, so keep it at top.
@@ -450,7 +450,7 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
 
     GameState* m_currentGameState = nullptr;
 
-    CEGUIWindow* m_consoleGUIWindow = nullptr;
+  //NOGUI  CEGUIWindow* m_consoleGUIWindow = nullptr;
 
     ComponentFactory m_componentFactory;
 
@@ -504,7 +504,7 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
     luabind::object m_console;
     std::unique_ptr<SoundManager> m_soundManager;
 
-    std::unique_ptr<CEGUI::InputAggregator> m_aggregator;
+  //NOGUI  std::unique_ptr<CEGUI::InputAggregator> m_aggregator;
 
 
 };
@@ -653,7 +653,7 @@ Engine::init() {
     m_impl->setupLog();
     m_impl->setupScripts();
     m_impl->setupGraphics();
-    m_impl->setupGUI();
+  //NOGUI  m_impl->setupGUI();
     m_impl->setupInputManager();
     m_impl->loadScripts("../scripts");
     m_impl->loadVersionNumber();
@@ -924,10 +924,10 @@ Engine::update(
     assert(m_impl->m_currentGameState != nullptr);
     m_impl->m_currentGameState->update(milliseconds, m_impl->m_paused ? 0 : milliseconds);
 
-    luabind::call_member<void>(m_impl->m_console, "update");
+   //NOGUI luabind::call_member<void>(m_impl->m_console, "update");
 
-    CEGUI::System::getSingleton().injectTimePulse(milliseconds/1000.0f);
-    CEGUI::System::getSingleton().getDefaultGUIContext().injectTimePulse(milliseconds/1000.0f);
+   //NOGUI CEGUI::System::getSingleton().injectTimePulse(milliseconds/1000.0f);
+   //NOGUI CEGUI::System::getSingleton().getDefaultGUIContext().injectTimePulse(milliseconds/1000.0f);
     // Update any timed shutdown systems
     auto itr = m_impl->m_prevShutdownSystems->begin();
     while (itr != m_impl->m_prevShutdownSystems->end()) {

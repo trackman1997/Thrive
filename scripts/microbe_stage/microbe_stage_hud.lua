@@ -16,45 +16,45 @@ end
 global_if_already_displayed = false
 
 function HudSystem:activate()
-    global_activeMicrobeStageHudSystem = self -- Global reference for event handlers
-    lockedMap = Engine:playerData():lockedMap()
-    if lockedMap ~= nil and not lockedMap:isLocked("Toxin") and not ss and not global_if_already_displayed then
-        showMessage("'E' Releases Toxin")
-        global_if_already_displayed = true
-    end
-    self.helpOpen = false
-    self.menuOpen = true
-    self:updateLoadButton();
+  --NOGUI  global_activeMicrobeStageHudSystem = self -- Global reference for event handlers
+  --NOGUI  lockedMap = Engine:playerData():lockedMap()
+  --NOGUI  if lockedMap ~= nil and not lockedMap:isLocked("Toxin") and not ss and not global_if_already_displayed then
+  --NOGUI      showMessage("'E' Releases Toxin")
+  --NOGUI      global_if_already_displayed = true
+  --NOGUI  end
+  --NOGUI  self.helpOpen = false
+  --NOGUI  self.menuOpen = true
+  --NOGUI  self:updateLoadButton();
 end
 
 function HudSystem:init(gameState)
     System.init(self, gameState) ---[[
-    self.rootGUIWindow =  gameState:rootGUIWindow()
-    self.compoundListBox = self.rootGUIWindow:getChild("CompoundsOpen"):getChild("CompoundsLabel")
-    self.hitpointsBar = self.rootGUIWindow:getChild("HealthPanel"):getChild("LifeBar")
-    self.hitpointsCountLabel = self.hitpointsBar:getChild("NumberLabel")
-    self.nameLabel = self.rootGUIWindow:getChild("SpeciesNamePanel"):getChild("SpeciesNameLabel")
-    local menuButton = self.rootGUIWindow:getChild("MenuButton")
-    local saveButton = self.rootGUIWindow:getChild("SaveGameButton") 
-    local loadButton = self.rootGUIWindow:getChild("LoadGameButton")	
-    --local collapseButton = self.rootGUIWindow:getChild() collapseButtonClicked
-    local helpButton = self.rootGUIWindow:getChild("HelpButton")
-    self.editorButton = self.rootGUIWindow:getChild("EditorButton")
-    --local returnButton = self.rootGUIWindow:getChild("MenuButton")
-    local compoundButton = self.rootGUIWindow:getChild("CompoundsClosed")
-    local compoundPanel = self.rootGUIWindow:getChild("CompoundsOpen")
-    local quitButton = self.rootGUIWindow:getChild("QuitButton")
-    saveButton:registerEventHandler("Clicked", function() self:saveButtonClicked() end)
-    loadButton:registerEventHandler("Clicked", function() self:loadButtonClicked() end)
-    menuButton:registerEventHandler("Clicked", function() self:menuButtonClicked() end)
-    helpButton:registerEventHandler("Clicked", function() self:helpButtonClicked() end)
-    self.editorButton:registerEventHandler("Clicked", function() self:editorButtonClicked() end)
-    --returnButton:registerEventHandler("Clicked", returnButtonClicked)
-    compoundButton:registerEventHandler("Clicked", function() self:openCompoundPanel() end)
-    compoundPanel:registerEventHandler("Clicked", function() self:closeCompoundPanel() end)
-    quitButton:registerEventHandler("Clicked", quitButtonClicked)
-    self.rootGUIWindow:getChild("MainMenuButton"):registerEventHandler("Clicked", menuMainMenuClicked) -- in microbe_editor_hud.lua
-    self:updateLoadButton();
+  --NOGUI  self.rootGUIWindow =  gameState:rootGUIWindow()
+  --NOGUI  self.compoundListBox = self.rootGUIWindow:getChild("CompoundsOpen"):getChild("CompoundsLabel")
+  --NOGUI  self.hitpointsBar = self.rootGUIWindow:getChild("HealthPanel"):getChild("LifeBar")
+  --NOGUI  self.hitpointsCountLabel = self.hitpointsBar:getChild("NumberLabel")
+  --NOGUI  self.nameLabel = self.rootGUIWindow:getChild("SpeciesNamePanel"):getChild("SpeciesNameLabel")
+  --NOGUI  local menuButton = self.rootGUIWindow:getChild("MenuButton")
+  --NOGUI  local saveButton = self.rootGUIWindow:getChild("SaveGameButton") 
+  --NOGUI  local loadButton = self.rootGUIWindow:getChild("LoadGameButton")	
+  --NOGUI  --local collapseButton = self.rootGUIWindow:getChild() collapseButtonClicked
+  --NOGUI  local helpButton = self.rootGUIWindow:getChild("HelpButton")
+  --NOGUI  self.editorButton = self.rootGUIWindow:getChild("EditorButton")
+  --NOGUI  --local returnButton = self.rootGUIWindow:getChild("MenuButton")
+  --NOGUI  local compoundButton = self.rootGUIWindow:getChild("CompoundsClosed")
+  --NOGUI  local compoundPanel = self.rootGUIWindow:getChild("CompoundsOpen")
+  --NOGUI  local quitButton = self.rootGUIWindow:getChild("QuitButton")
+  --NOGUI  saveButton:registerEventHandler("Clicked", function() self:saveButtonClicked() end)
+  --NOGUI  loadButton:registerEventHandler("Clicked", function() self:loadButtonClicked() end)
+  --NOGUI  menuButton:registerEventHandler("Clicked", function() self:menuButtonClicked() end)
+  --NOGUI  helpButton:registerEventHandler("Clicked", function() self:helpButtonClicked() end)
+  --NOGUI  self.editorButton:registerEventHandler("Clicked", function() self:editorButtonClicked() end)
+  --NOGUI  --returnButton:registerEventHandler("Clicked", returnButtonClicked)
+  --NOGUI  compoundButton:registerEventHandler("Clicked", function() self:openCompoundPanel() end)
+  --NOGUI  compoundPanel:registerEventHandler("Clicked", function() self:closeCompoundPanel() end)
+  --NOGUI  quitButton:registerEventHandler("Clicked", quitButtonClicked)
+  --NOGUI  self.rootGUIWindow:getChild("MainMenuButton"):registerEventHandler("Clicked", menuMainMenuClicked) -- in microbe_editor_hud.lua
+  --NOGUI  self:updateLoadButton();
 end
 
 
@@ -63,22 +63,22 @@ function HudSystem:update(renderTime)
     local playerMicrobe = Microbe(player)
     self.nameLabel:setText(playerMicrobe.microbe.speciesName)
 
-    self.hitpointsBar:progressbarSetProgress(playerMicrobe.microbe.hitpoints/playerMicrobe.microbe.maxHitpoints)
-    self.hitpointsCountLabel:setText("".. math.floor(playerMicrobe.microbe.hitpoints))
-    local playerSpecies = playerMicrobe:getSpeciesComponent()
-    --TODO display population in home patch here
-    for compoundID in CompoundRegistry.getCompoundList() do
-        local compoundsString = string.format("%s - %d", CompoundRegistry.getCompoundDisplayName(compoundID), playerMicrobe:getCompoundAmount(compoundID))
-        if self.compoundListItems[compoundID] == nil then
-           -- TODO: fix this colour
-           self.compoundListItems[compoundID] = StandardItemWrapper("[colour='FF004400']" .. compoundsString, compoundID)
-           -- The object will be deleted by CEGUI so make sure that it isn't touched after destroying the layout
-           self.compoundListBox:listWidgetAddItem(self.compoundListItems[compoundID])
-        else
-           self.compoundListBox:listWidgetUpdateItem(self.compoundListItems[compoundID],
-                                                      "[colour='FF004400']" .. compoundsString)
-        end
-    end
+ --NOGUI   self.hitpointsBar:progressbarSetProgress(playerMicrobe.microbe.hitpoints/playerMicrobe.microbe.maxHitpoints)
+ --NOGUI   self.hitpointsCountLabel:setText("".. math.floor(playerMicrobe.microbe.hitpoints))
+ --NOGUI   local playerSpecies = playerMicrobe:getSpeciesComponent()
+ --NOGUI   --TODO display population in home patch here
+ --NOGUI   for compoundID in CompoundRegistry.getCompoundList() do
+ --NOGUI       local compoundsString = string.format("%s - %d", CompoundRegistry.getCompoundDisplayName(compoundID), playerMicrobe:getCompoundAmount(compoundID))
+ --NOGUI       if self.compoundListItems[compoundID] == nil then
+ --NOGUI          -- TODO: fix this colour
+ --NOGUI          self.compoundListItems[compoundID] = StandardItemWrapper("[colour='FF004400']" .. compoundsString, compoundID)
+ --NOGUI          -- The object will be deleted by CEGUI so make sure that it isn't touched after destroying the layout
+ --NOGUI          self.compoundListBox:listWidgetAddItem(self.compoundListItems[compoundID])
+ --NOGUI       else
+ --NOGUI          self.compoundListBox:listWidgetUpdateItem(self.compoundListItems[compoundID],
+ --NOGUI                                                     "[colour='FF004400']" .. compoundsString)
+ --NOGUI       end
+ --NOGUI   end
     
     
     if keyCombo(kmp.togglemenu) then
@@ -136,11 +136,11 @@ function showMessage(msg)
 end
 
 function HudSystem:updateLoadButton()
-    if Engine:fileExists("quick.sav") then
-        self.rootGUIWindow:getChild("LoadGameButton"):enable();
-    else
-        self.rootGUIWindow:getChild("LoadGameButton"):disable();
-    end
+  --NOGUI  if Engine:fileExists("quick.sav") then
+  --NOGUI      self.rootGUIWindow:getChild("LoadGameButton"):enable();
+  --NOGUI  else
+  --NOGUI      self.rootGUIWindow:getChild("LoadGameButton"):disable();
+  --NOGUI  end
 end
 
 --Event handlers
@@ -150,7 +150,7 @@ function HudSystem:saveButtonClicked()
     Engine:save("quick.sav")
     print("Game Saved");
 	--Because using update load button here doesn't seem to work unless you press save twice
-    self.rootGUIWindow:getChild("LoadGameButton"):enable();
+  --NOGUI  self.rootGUIWindow:getChild("LoadGameButton"):enable();
 end
 function HudSystem:loadButtonClicked()
     local guiSoundEntity = Entity("gui_sounds")
@@ -160,64 +160,64 @@ function HudSystem:loadButtonClicked()
 end
 
 function HudSystem:menuButtonClicked()
-    local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    print("played sound")
-    if not self.menuOpen then
-        self.rootGUIWindow:getChild("StatsButton"):playAnimation("MoveToStatsButton");
-        self.rootGUIWindow:getChild("HelpButton"):playAnimation("MoveToHelpButton");
-        self.rootGUIWindow:getChild("OptionsButton"):playAnimation("MoveToOptionsButton");
-        self.rootGUIWindow:getChild("LoadGameButton"):playAnimation("MoveToLoadGameButton");
-        self.rootGUIWindow:getChild("SaveGameButton"):playAnimation("MoveToSaveGameButton");
-        self:updateLoadButton();
-        self.menuOpen = true
-    else
-        self.rootGUIWindow:getChild("StatsButton"):playAnimation("MoveToMenuButtonD0");
-        self.rootGUIWindow:getChild("HelpButton"):playAnimation("MoveToMenuButtonD2");
-        self.rootGUIWindow:getChild("OptionsButton"):playAnimation("MoveToMenuButtonD1");
-        self.rootGUIWindow:getChild("LoadGameButton"):playAnimation("MoveToMenuButtonD4");
-        self.rootGUIWindow:getChild("SaveGameButton"):playAnimation("MoveToMenuButtonD3");
-        self:updateLoadButton();
-        self.menuOpen = false
-    end
+  --NOGUI  local guiSoundEntity = Entity("gui_sounds")
+  --NOGUI  guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
+  --NOGUI  print("played sound")
+  --NOGUI  if not self.menuOpen then
+  --NOGUI      self.rootGUIWindow:getChild("StatsButton"):playAnimation("MoveToStatsButton");
+  --NOGUI      self.rootGUIWindow:getChild("HelpButton"):playAnimation("MoveToHelpButton");
+  --NOGUI      self.rootGUIWindow:getChild("OptionsButton"):playAnimation("MoveToOptionsButton");
+  --NOGUI      self.rootGUIWindow:getChild("LoadGameButton"):playAnimation("MoveToLoadGameButton");
+  --NOGUI      self.rootGUIWindow:getChild("SaveGameButton"):playAnimation("MoveToSaveGameButton");
+  --NOGUI      self:updateLoadButton();
+  --NOGUI      self.menuOpen = true
+  --NOGUI  else
+  --NOGUI      self.rootGUIWindow:getChild("StatsButton"):playAnimation("MoveToMenuButtonD0");
+  --NOGUI      self.rootGUIWindow:getChild("HelpButton"):playAnimation("MoveToMenuButtonD2");
+  --NOGUI      self.rootGUIWindow:getChild("OptionsButton"):playAnimation("MoveToMenuButtonD1");
+  --NOGUI      self.rootGUIWindow:getChild("LoadGameButton"):playAnimation("MoveToMenuButtonD4");
+  --NOGUI      self.rootGUIWindow:getChild("SaveGameButton"):playAnimation("MoveToMenuButtonD3");
+  --NOGUI      self:updateLoadButton();
+  --NOGUI      self.menuOpen = false
+  --NOGUI  end
 end
 
 
 function HudSystem:openCompoundPanel()
     local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    self.rootGUIWindow:getChild("CompoundsOpen"):show()
-    self.rootGUIWindow:getChild("CompoundsClosed"):hide()
+  --NOGUI  guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
+  --NOGUI  self.rootGUIWindow:getChild("CompoundsOpen"):show()
+  --NOGUI  self.rootGUIWindow:getChild("CompoundsClosed"):hide()
 end
 
 function HudSystem:closeCompoundPanel()
     local guiSoundEntity = Entity("gui_sounds")
     guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    self.rootGUIWindow:getChild("CompoundsOpen"):hide()
-    self.rootGUIWindow:getChild("CompoundsClosed"):show()
+   --NOGUI self.rootGUIWindow:getChild("CompoundsOpen"):hide()
+   --NOGUI self.rootGUIWindow:getChild("CompoundsClosed"):show()
 end
 
 function HudSystem:helpButtonClicked()
-    local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    --Engine:currentGameState():rootGUIWindow():getChild("MenuPanel"):hide()
-    if Engine:currentGameState():name() == "microbe" then
-        if self.helpOpen then
-            Engine:resumeGame()
-            self.rootGUIWindow:getChild("HelpPanel"):hide()
-        else
-            Engine:pauseGame()
-            self.rootGUIWindow:getChild("HelpPanel"):show()
-        end
-        self.helpOpen = not self.helpOpen
-    end
+   --NOGUI local guiSoundEntity = Entity("gui_sounds")
+   --NOGUI guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
+   --NOGUI --Engine:currentGameState():rootGUIWindow():getChild("MenuPanel"):hide()
+   --NOGUI if Engine:currentGameState():name() == "microbe" then
+   --NOGUI     if self.helpOpen then
+   --NOGUI         Engine:resumeGame()
+   --NOGUI         self.rootGUIWindow:getChild("HelpPanel"):hide()
+   --NOGUI     else
+   --NOGUI         Engine:pauseGame()
+   --NOGUI         self.rootGUIWindow:getChild("HelpPanel"):show()
+   --NOGUI     end
+   --NOGUI     self.helpOpen = not self.helpOpen
+   --NOGUI end
 end
 
 
 function HudSystem:editorButtonClicked()
     local guiSoundEntity = Entity("gui_sounds")
     guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    self.editorButton:disable()
+   --NOGUI self.editorButton:disable()
     Engine:setCurrentGameState(GameState.MICROBE_EDITOR)
 end
 

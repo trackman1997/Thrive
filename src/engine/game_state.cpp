@@ -7,7 +7,7 @@
 #include "engine/serialization.h"
 #include "engine/system.h"
 
-#include "gui/CEGUIWindow.h"
+//NOGUI #include "gui/CEGUIWindow.h"
 
 
 #include <OgreRoot.h>
@@ -26,8 +26,8 @@ struct GameState::Implementation {
         m_initializer(initializer),
         m_name(name),
         m_systems(std::move(systems)),
-        m_guiLayoutName(guiLayoutName),
-        m_guiWindow(nullptr)
+        m_guiLayoutName(guiLayoutName)//NOGUI,
+     //NOGUI   m_guiWindow(nullptr)
     {
     }
 
@@ -89,7 +89,7 @@ struct GameState::Implementation {
 
     std::string m_guiLayoutName;
 
-    CEGUIWindow m_guiWindow;
+  //NOGUI  CEGUIWindow m_guiWindow;
 
 };
 
@@ -99,7 +99,7 @@ GameState::luaBindings() {
     using namespace luabind;
     return class_<GameState>("GameState")
         .def("name", &GameState::name)
-        .def("rootGUIWindow", &GameState::rootGUIWindow)
+       // .def("rootGUIWindow", &GameState::rootGUIWindow)
         .def("entityManager", static_cast<EntityManager&(GameState::*)()>(&GameState::entityManager))
     ;
 }
@@ -121,8 +121,8 @@ GameState::~GameState() {}
 
 void
 GameState::activate() {
-    m_impl->m_guiWindow.show();
-    CEGUIWindow::getRootWindow().addChild(&m_impl->m_guiWindow);
+  //NOGUI  m_impl->m_guiWindow.show();
+  //NOGUI  CEGUIWindow::getRootWindow().addChild(&m_impl->m_guiWindow);
     for (const auto& system : m_impl->m_systems) {
         system->activate();
     }
@@ -134,8 +134,8 @@ GameState::deactivate() {
     for (const auto& system : m_impl->m_systems) {
         system->deactivate();
     }
-    m_impl->m_guiWindow.hide();
-    CEGUIWindow::getRootWindow().removeChild(&m_impl->m_guiWindow);
+    //NOGUIm_impl->m_guiWindow.hide();
+    //NOGUICEGUIWindow::getRootWindow().removeChild(&m_impl->m_guiWindow);
 }
 
 
@@ -159,7 +159,7 @@ GameState::entityManager() {
 
 void
 GameState::init() {
-    m_impl->m_guiWindow = CEGUIWindow(m_impl->m_guiLayoutName);
+  //NOGUI  m_impl->m_guiWindow = CEGUIWindow(m_impl->m_guiLayoutName);
     m_impl->setupPhysics();
     m_impl->setupSceneManager();
     for (const auto& system : m_impl->m_systems) {
@@ -208,10 +208,10 @@ GameState::physicsWorld() const {
     return m_impl->m_physics.world.get();
 }
 
-CEGUIWindow
-GameState::rootGUIWindow(){
-    return m_impl->m_guiWindow;
-}
+//NOGUICEGUIWindow
+//NOGUIGameState::rootGUIWindow(){
+//NOGUI    return m_impl->m_guiWindow;
+//NOGUI}
 
 
 

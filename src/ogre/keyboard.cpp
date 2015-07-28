@@ -2,14 +2,14 @@
 
 #include "scripting/luabind.h"
 
-#include <CEGUI/CEGUI.h>
+//NOGUI #include <CEGUI/CEGUI.h>
 
 #include <array>
 #include <iostream>
 #include <OISInputManager.h>
 #include <OISKeyboard.h>
 
-#include <CEGUI/InputAggregator.h>
+//NOGUI #include <CEGUI/InputAggregator.h>
 
 using namespace thrive;
 
@@ -31,25 +31,25 @@ struct Keyboard::Implementation : public OIS::KeyListener{
         const OIS::KeyEvent& event
     ) {
         // TODO: cache this for a single frame
-        m_aggregator->setModifierKeys(
-            m_keyboard->isModifierDown(OIS::Keyboard::Shift),
-            m_keyboard->isModifierDown(OIS::Keyboard::Alt),
-            m_keyboard->isModifierDown(OIS::Keyboard::Ctrl)
-        );
+     //NOGUI   m_aggregator->setModifierKeys(
+     //NOGUI       m_keyboard->isModifierDown(OIS::Keyboard::Shift),
+     //NOGUI       m_keyboard->isModifierDown(OIS::Keyboard::Alt),
+     //NOGUI       m_keyboard->isModifierDown(OIS::Keyboard::Ctrl)
+     //NOGUI   );
 
         // Because we use CEGUI InputAggregator handling on key down this properly returns
         // true only when the input is actually used
-        if(m_aggregator->injectKeyDown(static_cast<CEGUI::Key::Scan>(
-                    static_cast<int>(event.key))))
-        {
-            
-            return true;
-        }      
-
-        if(m_aggregator->injectChar(event.text)){
-            
-            return true;
-        }
+      //NOGUI  if(m_aggregator->injectKeyDown(static_cast<CEGUI::Key::Scan>(
+      //NOGUI              static_cast<int>(event.key))))
+      //NOGUI  {
+      //NOGUI      
+      //NOGUI      return true;
+      //NOGUI  }      
+      //NOGUI
+      //NOGUI  if(m_aggregator->injectChar(event.text)){
+      //NOGUI      
+      //NOGUI      return true;
+      //NOGUI  }
             
         m_keysHeld.data()[event.key] = 1;
         m_previousKeyStates->data()[event.key] = 1;
@@ -63,7 +63,7 @@ struct Keyboard::Implementation : public OIS::KeyListener{
     ) {
         // Aggregator is not configured to handle keys in key up so the result can always
         // be ignored
-        m_aggregator->injectKeyUp(static_cast<CEGUI::Key::Scan>(static_cast<int>(event.key)));
+      //NOGUI  m_aggregator->injectKeyUp(static_cast<CEGUI::Key::Scan>(static_cast<int>(event.key)));
         
 
         m_keysHeld.data()[event.key] = 0;
@@ -99,7 +99,7 @@ struct Keyboard::Implementation : public OIS::KeyListener{
 
     std::list<KeyEvent> m_queue;
 
-    CEGUI::InputAggregator* m_aggregator;
+    //NOGUICEGUI::InputAggregator* m_aggregator;
 
 };
 
@@ -287,12 +287,12 @@ Keyboard::eventQueue() const {
 
 void
 Keyboard::init(
-    OIS::InputManager* inputManager,
-    CEGUI::InputAggregator* aggregator
+    OIS::InputManager* inputManager//NOGUI,
+   //NOGUI CEGUI::InputAggregator* aggregator
 ) {
     assert(m_impl->m_keyboard == nullptr && "Double init of keyboard system");
     m_impl->m_inputManager = inputManager;
-    m_impl->m_aggregator = aggregator;
+  //NOGUI  m_impl->m_aggregator = aggregator;
     m_impl->m_keyboard = static_cast<OIS::Keyboard*>(
         inputManager->createInputObject(OIS::OISKeyboard, true)
     );

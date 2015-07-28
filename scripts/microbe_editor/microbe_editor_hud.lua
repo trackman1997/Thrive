@@ -98,14 +98,14 @@ function MicrobeEditorHudSystem:update(renderTime, logicTime)
     self.editor:update(renderTime, logicTime)
     -- Render the hex under the cursor
     local sceneNode = self.hoverHex:getComponent(OgreSceneNodeComponent.TYPE_ID)
-    if CEGUIWindow.getWindowUnderMouse():getName() == 'root' then
-        local x, y = axialToCartesian(self.editor:getMouseHex())
-        local translation = Vector3(-x, -y, 0)
-        
-        sceneNode.transform.position = translation
-    else
-        sceneNode.transform.position = Vector3(0,0,100)
-    end
+   --NOGUI if CEGUIWindow.getWindowUnderMouse():getName() == 'root' then
+   --NOGUI     local x, y = axialToCartesian(self.editor:getMouseHex())
+   --NOGUI     local translation = Vector3(-x, -y, 0)
+   --NOGUI     
+   --NOGUI     sceneNode.transform.position = translation
+   --NOGUI else
+   --NOGUI     sceneNode.transform.position = Vector3(0,0,100)
+   --NOGUI end
     sceneNode.transform:touch()
     
     -- Handle input
@@ -204,7 +204,7 @@ end
 function menuPlayClicked()
     local guiSoundEntity = Entity("gui_sounds")
     guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    Engine:currentGameState():rootGUIWindow():getChild("MenuPanel"):hide()
+  --NOGUI  Engine:currentGameState():rootGUIWindow():getChild("MenuPanel"):hide()
     playClicked()
 end
 
@@ -339,17 +339,17 @@ function MicrobeEditorHudSystem:rootLoadCreationClicked()
     i = 0
     pathsString = Engine:getCreationFileList("microbe")
     -- using pattern matching for splitting on spaces
-    for path in string.gmatch(pathsString, "%S+")  do
-        -- this is unsafe when one of the paths is, for example, C:\\Application Data\Thrive\saves
-        item = CEGUIWindow("Thrive/ListboxItem", "creationItems"..i)
-        pathSep = package.config:sub(1,1) -- / for unix, \ for windows
-        text = string.sub(path, string.len(path) - string.find(path:reverse(), pathSep) + 2)
-        item:setText(text)
-        self.creationsListbox:itemListboxAddItem(item)
-        self.creationFileMap[text] = path
-        i = i + 1
-    end
-    self.creationsListbox:itemListboxHandleUpdatedItemData()
+    f--NOGUIor path in string.gmatch(pathsString, "%S+")  do
+     --NOGUI   -- this is unsafe when one of the paths is, for example, C:\\Application Data\Thrive\saves
+     --NOGUI   item = CEGUIWindow("Thrive/ListboxItem", "creationItems"..i)
+     --NOGUI   pathSep = package.config:sub(1,1) -- / for unix, \ for windows
+     --NOGUI   text = string.sub(path, string.len(path) - string.find(path:reverse(), pathSep) + 2)
+     --NOGUI   item:setText(text)
+     --NOGUI   self.creationsListbox:itemListboxAddItem(item)
+     --NOGUI   self.creationFileMap[text] = path
+     --NOGUI   i = i + 1
+   --NOGUI end
+   --NOGUI self.creationsListbox:itemListboxHandleUpdatedItemData()
 end
 
 function MicrobeEditorHudSystem:saveCreationClicked()

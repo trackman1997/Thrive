@@ -75,7 +75,7 @@ local function createMicrobeEditor(name)
         name,
         {   
       --      MicrobeSystem(),
-            MicrobeEditorHudSystem(),
+       --     MicrobeEditorHudSystem(),
             -- Graphics
             OgreAddSceneNodeSystem(),
             OgreUpdateSceneNodeSystem(),

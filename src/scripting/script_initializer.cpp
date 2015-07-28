@@ -7,7 +7,7 @@
 #include "general/script_bindings.h"
 #include "game.h"
 #include "microbe_stage/script_bindings.h"
-#include "gui/script_bindings.h"
+//NOGUI#include "gui/script_bindings.h"
 #include "ogre/script_bindings.h"
 #include "scripting/luabind.h"
 #include "scripting/script_bindings.h"
@@ -60,7 +60,7 @@ thrive::initializeLua(
         BulletBindings::luaBindings(),
         ScriptBindings::luaBindings(),
         MicrobeBindings::luaBindings(),
-        GuiBindings::luaBindings(),
+     //NOGUI   GuiBindings::luaBindings(),
         SoundBindings::luaBindings(),
         RollingGrid::luaBindings()
     ];
