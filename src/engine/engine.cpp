@@ -31,13 +31,13 @@
 #include "ogre/render_system.h"
 #include "ogre/scene_node_system.h"
 #include "ogre/sky_system.h"
-#include <ogre/Overlay/OgreOverlay.h>
-#include <ogre/Overlay/OgreOverlaySystem.h>
-#include <ogre/Overlay/OgreOverlayManager.h>
-#include <ogre/Overlay/OgreOverlayContainer.h>
-#include <ogre/OgreMaterialManager.h>
-#include <ogre/OgreMaterial.h>
-#include <ogre/OgreTechnique.h>
+#include <OGRE/Overlay/OgreOverlay.h>
+#include <OGRE/Overlay/OgreOverlaySystem.h>
+#include <OGRE/Overlay/OgreOverlayManager.h>
+#include <OGRE/Overlay/OgreOverlayContainer.h>
+#include <OGRE/OgreMaterialManager.h>
+#include <OGRE/OgreMaterial.h>
+#include <OGRE/OgreTechnique.h>
 
 
 // Scripting
@@ -79,7 +79,7 @@
 #include <unordered_map>
 #include <iostream>
 #include "sound/sound_manager.h"
-#include "ogre-ffmpeg/videoplayer.hpp"
+#include <ogre-ffmpeg/videoplayer.hpp>
 
 using namespace thrive;
 
