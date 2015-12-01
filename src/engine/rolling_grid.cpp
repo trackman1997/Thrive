@@ -8,7 +8,7 @@
 using namespace thrive;
 
 
-// TODO: optimize, template, and add support for a lower-level leaf datastructure
+// TODO: optimize, template, and add support for a lower-level leaf data structure
 
 struct RollingGrid::Implementation {
     /// Dimensions in grid coordinates. Must be a power of 2.
@@ -27,10 +27,10 @@ struct RollingGrid::Implementation {
     typedef boost::multi_array<int, 2>::index Index;
 
     Implementation(int width, int height, int resolution)
-        : m_width(width), m_height(height), m_resolution(resolution), 
+        : m_width(width), m_height(height), m_resolution(resolution),
         m_x(0), m_y(0),
         m_rows(height / resolution), m_cols(width / resolution) {
-        
+
         m_data.resize(boost::extents[m_rows][m_cols]);
         // TODO clear all data
         for (int i = 0; i < m_rows; i++)
@@ -39,8 +39,8 @@ struct RollingGrid::Implementation {
     }
 
     int garbage = DEFAULT_VAL;
-    
-    void 
+
+    void
     clearRow(int row) {
         for (int i = 0; i < m_cols; i++) {
             m_data[row][i] = DEFAULT_VAL;
@@ -171,8 +171,13 @@ RollingGrid::luaBindings() {
     ;
 }
 
-RollingGrid::RollingGrid(int width, int height, int resolution) 
-    : m_impl(new Implementation(width, height, resolution)) {
+RollingGrid::RollingGrid(int width, int height, int resolution)
+    : m_x(0),
+      m_y(0),
+      m_width(width),
+      m_height(height),
+      m_resolution(resolution),
+      m_impl(new Implementation(width, height, resolution)) {
 
 }
 
@@ -181,6 +186,8 @@ RollingGrid::~RollingGrid(){}
 
 void
 RollingGrid::move(int dx, int dy) {
+    m_x += dx;
+    m_y += dy;
     m_impl->move(dx, dy);
 }
 

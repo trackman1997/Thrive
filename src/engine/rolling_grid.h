@@ -16,10 +16,10 @@ namespace thrive {
 class RollingGrid {
 
 public:
-    
+
     /**
      * @brief constructor
-     * 
+     *
      * @param width The width of the grid in number of grid cells
      * @param height The height of the grid in number of grid cells
      * @param resolution The width and height of each grid cell
@@ -27,7 +27,14 @@ public:
     RollingGrid(
            int width, int height, int resolution
     );
-    
+
+    // Coordinates of lower-left corner.
+    int m_x, m_y;
+    // Number of cells in the width and the height of the grid.
+    int m_width, m_height;
+    // Side-length of each cell.
+    int m_resolution;
+
     /**
      * @brief destructor
      */
@@ -47,7 +54,7 @@ public:
     luaBindings();
 
     // TODO probably not the best move function
-    /** 
+    /**
      * Moves the grid a certain distance in world coordinates.
      * @param dx
      * @param dy
@@ -63,7 +70,7 @@ public:
      * @param y Y coordinate to access, in world coordinates.
      */
     int&
-    operator() (long x, long y); 
+    operator() (long x, long y);
 
     /*
      * Lua-accessible position indexing

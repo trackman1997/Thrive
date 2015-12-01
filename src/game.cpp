@@ -9,7 +9,6 @@
 #include <type_traits>
 #include <unordered_map>
 
-
 using namespace thrive;
 
 struct Game::Implementation {

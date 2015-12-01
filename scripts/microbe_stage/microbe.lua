@@ -240,6 +240,7 @@ function Microbe.createMicrobeEntity(name, aiControlled, speciesName)
     compoundEmitter.particleLifetime = 5000
     local reactionHandler = CollisionComponent()
     reactionHandler:addCollisionGroup("microbe")
+	reactionHandler:addCollisionGroup("powerupable")
     local membraneComponent = MembraneComponent()
     
     local soundComponent = SoundSourceComponent()
@@ -516,7 +517,7 @@ function Microbe:damage(amount, damageType)
     end
     self.microbe.hitpoints = self.microbe.hitpoints - amount
     for _, organelle in pairs(self.microbe.organelles) do
-        organelle:flashColour(300, ColourValue(1,0.2,0.2,1))
+        organelle:flashColour(3000, ColourValue(1,0,0,1))
     end
     self:_updateAllHexColours()
     if self.microbe.hitpoints <= 0 then
@@ -836,14 +837,14 @@ end
 function Microbe:purgeCompounds()
     -- Gather excess compounds that are the compounds that the storage organelles automatically emit to stay less than full
     local excessCompounds = {}
-    while self.microbe.stored > self.microbe.capacity do
-		print("purge")
+	local lastLowestPriority = -1
+    while self.microbe.stored/self.microbe.capacity > STORAGE_EJECTION_THRESHHOLD+0.01 do
         -- Find lowest priority compound type contained in the microbe
         local lowestPriorityId = nil
         local lowestPriority = math.huge
         for compoundId,_ in pairs(self.microbe.compounds) do
             assert(self.microbe.compoundPriorities[compoundId] ~= nil, "Compound priority table was missing compound")
-            if self.microbe.compoundPriorities[compoundId] < lowestPriority then
+            if self.microbe.compoundPriorities[compoundId] < lowestPriority and self.microbe.compoundPriorities[compoundId] > lastLowestPriority then
                 lowestPriority = self.microbe.compoundPriorities[compoundId]
                 lowestPriorityId = compoundId
             end
@@ -858,6 +859,7 @@ function Microbe:purgeCompounds()
 
 		local dedicatedStorage = self.microbe.compoundPriorities[lowestPriorityId]/totalPriority*self.microbe.capacity*STORAGE_EJECTION_THRESHHOLD
         excessCompounds[lowestPriorityId] = self:takeCompound(lowestPriorityId, self.microbe.compounds[lowestPriorityId]-dedicatedStorage)
+		lastLowestPriority = lowestPriority
     end
 
     for compoundId, amount in pairs(excessCompounds) do

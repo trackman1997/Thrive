@@ -67,7 +67,6 @@ Entity::luaBindings() {
     ;
 }
 
-
 static EntityManager&
 getEntityManager(
     GameState* gameState
@@ -238,4 +237,3 @@ Entity::stealName(
 ) {
     m_impl->m_entityManager->stealName(m_impl->m_id, name);
 }
-

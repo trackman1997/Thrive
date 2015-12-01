@@ -31,6 +31,7 @@ function MicrobeReplacementSystem:activate()
             newMicrobe:storeCompound(CompoundRegistry.getCompoundId("atp"), 10)
         end
 
+		newMicrobe.collisionHandler:addCollisionGroup("microbe")
         newMicrobe.collisionHandler:addCollisionGroup("powerupable")
         newMicrobeEntity = newMicrobe.entity:transfer(GameState.MICROBE)
         newMicrobeEntity:stealName(PLAYER_NAME)

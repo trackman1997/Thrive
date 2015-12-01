@@ -2,9 +2,11 @@
 
 #include "engine/component.h"
 #include "engine/typedefs.h"
+#include "ogre/colour_material.h"
 
 #include <string>
 #include <iostream>
+#include <OgreColourValue.h>
 namespace luabind {
 class scope;
 }
