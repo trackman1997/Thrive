@@ -107,6 +107,7 @@ OgreWorkspaceSystem::luaBindings() {
         ;
 }
 
+    static int n = 0;
 
 struct OgreWorkspaceSystem::Implementation {
 
@@ -202,7 +203,14 @@ struct OgreWorkspaceSystem::Implementation {
 
         restoreWorkspace(entityId, component);
     }
-    
+
+    static void paradoxicalFunction( const std::string &name)
+    {
+       std::cout << "before crash?" << std::endl;
+        name.find( "global_" );
+       std::cout << "after crash?" << std::endl;
+    }
+
     static
     void createCommonWorkspaceDefinitions(){
 
@@ -210,7 +218,8 @@ struct OgreWorkspaceSystem::Implementation {
 
         auto manager = Ogre::Root::getSingleton().getCompositorManager2();
 
-        auto thriveDefault = manager->addWorkspaceDefinition("thrive_default");
+        auto thriveDefault = manager->addWorkspaceDefinition("thrive_default" + n);
+        n++;
 
         auto sceneNode = manager->addNodeDefinition("thrive_default_scene_pass");
 
@@ -224,8 +233,12 @@ struct OgreWorkspaceSystem::Implementation {
         sceneNode->setNumOutputChannels(1);
 
         // This may not be required, as no earlier rendered images are used
+        std::cout << "foop" << std::endl;
+        std::string* rewd = new std::string("renderwindow");
+        std::cout << "cCWSD*: " << rewd << std::endl;
         sceneNode->addTextureSourceName("renderwindow", 0,
             Ogre::TextureDefinitionBase::TEXTURE_INPUT);
+        std::cout << "it ran!" << std::endl;
 
         // Two stage pass, clear first and then render
         auto nodePasses = sceneNode->addTargetPass("renderwindow");
@@ -248,7 +261,7 @@ struct OgreWorkspaceSystem::Implementation {
 
         // Connect the main render target to the node
         thriveDefault->connectOutput("thrive_default_scene_pass", 0);
-        
+        std::cout << "done!" << std::endl;
         workspacesCreated = true;
     }
 

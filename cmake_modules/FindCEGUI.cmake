@@ -133,6 +133,7 @@
             ~/Library/Frameworks
             /Library/Frameworks
             /usr/local/lib
+            /usr/lib/x86_64-linux-gnu/
             /usr/lib
             /sw/lib
             /opt/local/lib

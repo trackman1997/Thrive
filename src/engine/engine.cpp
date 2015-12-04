@@ -341,7 +341,7 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
     setupGUI(){
         CEGUI::WindowFactoryManager::addFactory<CEGUI::TplWindowFactory<AlphaHitWindow> >();
 
-        CEGUI::OgreRenderer::bootstrapSystem();
+        CEGUI::OgreRenderer::bootstrapSystem(*m_graphics.root->getRenderTarget("Thrive"));
         CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
         CEGUI::Window* myRoot = wmgr.createWindow( "DefaultWindow", "root" );
         myRoot->setProperty("CursorPassThroughEnabled", "True");

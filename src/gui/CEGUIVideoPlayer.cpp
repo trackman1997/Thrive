@@ -6,10 +6,10 @@
 #include "scripting/luabind.h"
 
 #include <OgreVector3.h>
-#include <ogre/OgreMaterialManager.h>
-#include <ogre/OgreMaterial.h>
-#include <ogre/OgreTechnique.h>
-#include <ogre/OgreTextureManager.h>
+#include <OGRE/OgreMaterialManager.h>
+#include <OGRE/OgreMaterial.h>
+#include <OGRE/OgreTechnique.h>
+#include <OGRE/OgreTextureManager.h>
 #include <luabind/object.hpp>
 #include <functional>
 
