@@ -17,7 +17,7 @@ REPRODUCTASE_TO_SPLIT = 5
 RELATIVE_VELOCITY_TO_BUMP_SOUND = 6
 INITIAL_EMISSION_RADIUS = 0.5
 ENGULFING_MOVEMENT_DIVISION = 3
-ENGULFED_MOVEMENT_DIVISION = 8
+ENGULFED_MOVEMENT_DIVISION = 4
 ENGULFING_ATP_COST_SECOND = 1.5
 ENGULF_HP_RATIO_REQ = 1.5 
 
@@ -336,7 +336,7 @@ end
 --
 -- @return
 --  returns whether the organelle was added
-function Microbe:addOrganelle(q, r, organelle)
+function Microbe:addOrganelle(q, r, rotation, organelle)
     local s = encodeAxial(q, r)
     if self.microbe.organelles[s] then
         return false
@@ -355,7 +355,7 @@ function Microbe:addOrganelle(q, r, organelle)
     organelle.sceneNode.parent = self.entity
     organelle.sceneNode.transform.position = translation
     organelle.sceneNode.transform:touch()
-    organelle:onAddedToMicrobe(self, q, r)
+    organelle:onAddedToMicrobe(self, q, r, rotation)
     self:_updateAllHexColours()
     self.microbe.hitpoints = (self.microbe.hitpoints/self.microbe.maxHitpoints) * (self.microbe.maxHitpoints + MICROBE_HITPOINTS_PER_ORGANELLE)
     self.microbe.maxHitpoints = self.microbe.maxHitpoints + MICROBE_HITPOINTS_PER_ORGANELLE
@@ -456,11 +456,11 @@ end
 -- True if an organelle has been removed, false if there was no organelle
 -- at (q,r)
 function Microbe:removeOrganelle(q, r)
-    local s = encodeAxial(q, r)
-    local organelle = self.microbe.organelles[s]
+    local organelle = self:getOrganelleAt(q,r)
     if not organelle then
         return false
     end
+    local s = encodeAxial(organelle.position.q, organelle.position.r)
     self.microbe.organelles[s] = nil
     organelle.position.q = 0
     organelle.position.r = 0
@@ -516,7 +516,7 @@ function Microbe:damage(amount, damageType)
     end
     self.microbe.hitpoints = self.microbe.hitpoints - amount
     for _, organelle in pairs(self.microbe.organelles) do
-        organelle:flashColour(300, ColourValue(1,0.2,0.2,1))
+        organelle:flashColour(3000, ColourValue(1,0.2,0.2,1))
     end
     self:_updateAllHexColours()
     if self.microbe.hitpoints <= 0 then
@@ -749,9 +749,10 @@ function Microbe:toggleEngulfMode()
         colourToSet = ColourValue.Red
         self.microbe.movementFactor = self.microbe.movementFactor / ENGULFING_MOVEMENT_DIVISION
     end
-    for _, organelle in pairs(self.microbe.organelles) do
-        organelle:setExternalEdgeColour(colourToSet)
-    end
+	-- You should be able to get the membrane to flash blue (or become some color)
+	-- if you are able to get your hands on the membrane entity, which is currently defined in c++
+	-- below line is just an example—it doesn't actually work.
+    -- microbe.membraneComponent.entity:flashColour(3000, ColourValue(1,0.2,0.2,1))
     self.microbe.engulfMode = not self.microbe.engulfMode
 end
 
@@ -821,43 +822,44 @@ function Microbe:update(logicTime)
             end
 		end
 	end
+	-- Membrane
+	self.sceneNode.meshName = "membrane_" .. self.microbe.speciesName 
+	for _, organelle in pairs(self.microbe.organelles) do
+		for _, hex in pairs(organelle._hexes) do
+			local q = hex.q + organelle.position.q
+			local r = hex.r + organelle.position.r
+			local x, y = axialToCartesian(q, r)
+			self.membraneComponent:sendOrganelles(x, y)
+		end
+	end
 end
 
 function Microbe:purgeCompounds()
     -- Gather excess compounds that are the compounds that the storage organelles automatically emit to stay less than full
     local excessCompounds = {}
-    while self.microbe.stored/self.microbe.capacity > STORAGE_EJECTION_THRESHHOLD+0.01 do
+    while self.microbe.stored > self.microbe.capacity do
         -- Find lowest priority compound type contained in the microbe
         local lowestPriorityId = nil
         local lowestPriority = math.huge
         for compoundId,_ in pairs(self.microbe.compounds) do
             assert(self.microbe.compoundPriorities[compoundId] ~= nil, "Compound priority table was missing compound")
-            if self.microbe.compounds[compoundId] > 0  and self.microbe.compoundPriorities[compoundId] < lowestPriority then
+            if self.microbe.compoundPriorities[compoundId] < lowestPriority then
                 lowestPriority = self.microbe.compoundPriorities[compoundId]
                 lowestPriorityId = compoundId
             end
         end
         assert(lowestPriorityId ~= nil, "The microbe didn't seem to contain any compounds but was over the threshold")
         assert(self.microbe.compounds[lowestPriorityId] ~= nil, "Microbe storage was over threshold but didn't have any valid compounds to expell")
-        -- Return an amount that either is how much the microbe contains of the compound or until it goes to the threshhold
-        local amountInExcess
-        
-        amountInExcess = math.min(self.microbe.compounds[lowestPriorityId],self.microbe.stored - self.microbe.capacity * STORAGE_EJECTION_THRESHHOLD)
-        excessCompounds[lowestPriorityId] = self:takeCompound(lowestPriorityId, amountInExcess)
+
+		local totalPriority = 0
+		for compoundId,_ in pairs(self.microbe.compounds) do
+			totalPriority = totalPriority + self.microbe.compoundPriorities[compoundId]
+		end
+
+		local dedicatedStorage = self.microbe.compoundPriorities[lowestPriorityId]/totalPriority*self.microbe.capacity*STORAGE_EJECTION_THRESHHOLD
+        excessCompounds[lowestPriorityId] = self:takeCompound(lowestPriorityId, self.microbe.compounds[lowestPriorityId]-dedicatedStorage)
     end
 
-    -- Expel compounds of priority 0 periodically
-    for compoundId,_ in pairs(self.microbe.compounds) do
-        if self.microbe.compoundPriorities[compoundId] == 0 and self.microbe.compounds[compoundId] > 1 then
-            local uselessCompoundAmount
-            uselessCompoundAmount = self.microbe:getBandwidth(self.microbe.compounds[compoundId], compoundId)
-            if excessCompounds[compoundId] ~= nil then
-                excessCompounds[compoundId] = excessCompounds[compoundId] + self:takeCompound(compoundId, uselessCompoundAmount)
-            else
-                excessCompounds[compoundId] = self:takeCompound(compoundId, uselessCompoundAmount)
-            end
-        end
-    end 
     for compoundId, amount in pairs(excessCompounds) do
         if amount > 0 then
             self:ejectCompound(compoundId, amount, 160, 200)
@@ -910,6 +912,7 @@ function Microbe:_initialize()
         local q = organelle.position.q
         local r = organelle.position.r
         local x, y = axialToCartesian(q, r)
+		local rotation = organelle.rotation
         local translation = Vector3(x, y, 0)
         -- Collision shape
         self.rigidBody.properties.shape:addChildShape(
@@ -921,7 +924,7 @@ function Microbe:_initialize()
         organelle.sceneNode.parent = self.entity
         organelle.sceneNode.transform.position = translation
         organelle.sceneNode.transform:touch()
-        organelle:onAddedToMicrobe(self, q, r)
+        organelle:onAddedToMicrobe(self, q, r, rotation)
 
     end
     self.microbe.initialized = true
@@ -1024,14 +1027,6 @@ function MicrobeSystem:update(renderTime, logicTime)
     for entityId in self.entities:addedEntities() do
         local microbe = Microbe(Entity(entityId))
         self.microbes[entityId] = microbe
-        -- Membrane
-		microbe.sceneNode.meshName = "membrane_" .. microbe.microbe.speciesName
-        for _, organelle in pairs(microbe.microbe.organelles) do
-            local q = organelle.position.q
-            local r = organelle.position.r
-            local x, y = axialToCartesian(q, r)
-            microbe.membraneComponent:sendOrganelles(x, y)
-        end
     end
     self.entities:clearChanges()
     for _, microbe in pairs(self.microbes) do
