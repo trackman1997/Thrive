@@ -13,13 +13,13 @@ Style tips:
 compounds = {
     atp = {
         name = "ATP",
-        weight = 1,
+        weight = 507,
         mesh = "ATP.mesh",
         size = 0.1,
     },
     oxygen = {
         name = "Oxygen",
-        weight = 1,
+        weight = 32,
         mesh = "molecule.mesh",
         size = 0.3,
     },
@@ -31,26 +31,56 @@ compounds = {
     },
     aminoacids = {
         name = "Amino Acids",
-        weight = 1,
+        weight = 130,
         mesh = "aminoacid.mesh",
         size = 0.2,
     },
     ammonia = {
         name = "Ammonia",
-        weight = 1,
+        weight = 17,
         mesh = "ammonia.mesh",
         size = 0.16,
     },
     glucose = {
         name = "Glucose",
-        weight = 1,
+        weight = 180,
         mesh = "glucose.mesh",
         size = 0.3,
     },
     co2 = {
         name = "CO2",
-        weight = 1,
+        weight = 44,
         mesh = "co2.mesh",
+        size = 0.16,
+    },
+    pyruvate = {
+        name = "Pyruvate",
+        weight = 88,
+        mesh = "ammonia.mesh",
+        size = 0.16,
+    },
+    fattyacid = {
+        name = "Fatty Acid",
+        weight = 520,
+        mesh = "ammonia.mesh",
+        size = 0.16,
+    },
+    protein = {
+        name = "Protein",
+        weight = 300000, -- if these weights are to be used for diffusion
+        mesh = "ammonia.mesh",
+        size = 0.16,
+    },
+    nucleotide = {
+        name = "Nucleotide",
+        weight = 496,
+        mesh = "ammonia.mesh",
+        size = 0.16,
+    },
+    nucleicacid = {
+        name = "Nucleic Acid",
+        weight = 500000,
+        mesh = "ammonia.mesh",
         size = 0.16,
     },
 }
@@ -81,6 +111,79 @@ processes = {
             co2 = 6,
             atp = 36,
         },
+    },
+    -- replace respiration above with this once ready
+    NewRespiration = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {pyruvate = 1, oxygen = 3},
+        outputs = {co2 = 3, atp = 18},
+    },
+    Glycolysis = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {glucose = 1},
+        outputs = {pyruvate = 2, atp = 2},
+    },
+    ProteinSynthesis = {
+        speedFactor = 0.1,
+        energyCost = 4,
+        inputs = {aminoacids = 1},
+        outputs = {protein = 1},
+    },
+    ProteinDigestion = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {protein = 1},
+        outputs = {aminoacids = 1},
+    },
+    Deamination = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {aminoacids = 1},
+        outputs = {atp = 2, pyruvate = 1, ammonia = 1},
+    },
+    NewAminoAciSynthesis = {
+        speedFactor = 0.1,
+        energyCost = 3,
+        inputs = {pyruvate = 1, ammonia = 1},
+        outputs = {aminoacids = 1},
+    },
+    FattyAcidSynthesis = {
+        speedFactor = 0.1,
+        energyCost = 56,
+        inputs = {pyruvate = 9},
+        outputs = {fattyacid = 1, co2 = 9},
+    },
+    FattyAcidDigestion = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {fattyacid = 1},
+        outputs = {pyruvate = 6, atp = 45},
+    },
+    NucleotideSynthesis = {
+        speedFactor = 0.1,
+        energyCost = 7,
+        inputs = {glucose = 1, aminoacids = 2},
+        outputs = {nucleotide = 1},
+    },
+    NucleotideDigestion = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {nucleotide = 1},
+        outputs = {aminoacids = 1, pyruvate = 1, ammonia = 1, glucose = 1},
+    },
+    NucleicAcidSynthesis = {
+        speedFactor = 0.1,
+        energyCost = 1,
+        inputs = {nucleotide = 1},
+        outputs = {nucleicacid = 1},
+    },
+    NucleicAcidDigestion = {
+        speedFactor = 0.1,
+        energyCost = 0,
+        inputs = {nucleicacid = 1},
+        outputs = {nucleotide = 1},
     },
     ReproductaseSynthesis = {
         speedFactor = 0.5,
