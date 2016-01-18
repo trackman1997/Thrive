@@ -4,6 +4,9 @@
 #include <random>
 #include <algorithm>
 
+// This code is under GPL v3
+// Copyright 2012 Sol from www.solarianprogrammer.com
+
 // THIS IS A DIRECT TRANSLATION TO C++11 FROM THE REFERENCE
 // JAVA IMPLEMENTATION OF THE IMPROVED PERLIN FUNCTION (see http://mrl.nyu.edu/~perlin/noise/)
 // THE ORIGINAL JAVA IMPLEMENTATION IS COPYRIGHT 2002 KEN PERLIN

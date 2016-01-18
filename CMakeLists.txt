@@ -78,6 +78,7 @@ set(OGRE_PLUGINS
   #  Plugin_OctreeSceneManager
   #  Plugin_OctreeZone
     Plugin_ParticleFX
+    Plugin_CgProgramManager
   #  Plugin_PCZSceneManager
     RenderSystem_GL
 )

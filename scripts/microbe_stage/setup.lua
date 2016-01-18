@@ -2,8 +2,10 @@ local function setupBackground()
     local backgroundEntity = Entity("background")
     local skyplane = SkyPlaneComponent()
     skyplane.properties.plane.normal = Vector3(0, 0, 2000)
-    skyplane.properties.materialName = "background/blue_01"
+    --skyplane.properties.materialName = "Background"
+    skyplane.properties.materialName = "CompoundCloud"
 	skyplane.properties.scale = 200
+	skyplane.properties.tiling = 16
     skyplane.properties:touch()
     backgroundEntity:addComponent(skyplane)	
 end
@@ -129,7 +131,7 @@ local function setSpawnablePhysics(entity, pos, mesh, scale, collisionShape)
     entity:addComponent(rigidBody)
     -- Scene node
     local sceneNode = OgreSceneNodeComponent()
-    --sceneNode.meshName = mesh
+    sceneNode.meshName = mesh
     sceneNode.transform.scale = Vector3(scale, scale, scale)
     entity:addComponent(sceneNode)
     return entity
@@ -163,7 +165,7 @@ local function createCompoundCloud(compound, amount, position)
 	compoundEntity:addComponent(cloud)
 	
 	-- Allows the compound cloud to be spawned.
-	setSpawnablePhysics(compoundEntity, position, "CompoundCloudCore.mesh", 1, SphereShape(HEX_SIZE))
+	setSpawnablePhysics(compoundEntity, position, "nucleus.mesh", 1, SphereShape(HEX_SIZE/2))
 
 	-- Compound cloud can be absorbed by microbes.
 	local compoundComponent = CompoundComponent()
@@ -248,21 +250,21 @@ local function createSpawnSystem()
     --spawnSystem:addSpawnType(spawnCO2Emitter, 1/500, 50)
     --spawnSystem:addSpawnType(spawnGlucoseEmitter, 1/500, 50)
     --spawnSystem:addSpawnType(spawnAmmoniaEmitter, 1/1250, 50)
-    spawnSystem:addSpawnType(toxinOrganelleSpawnFunction, 1/17000, 50)
-    spawnSystem:addSpawnType(ChloroplastOrganelleSpawnFunction, 1/17000, 50)
+    --spawnSystem:addSpawnType(toxinOrganelleSpawnFunction, 1/17000, 50)
+    --spawnSystem:addSpawnType(ChloroplastOrganelleSpawnFunction, 1/17000, 50)
 
-	spawnSystem:addSpawnType(function(pos) return createCompoundCloud("oxygen", 1, pos) end, 1/5000, 50)
-	spawnSystem:addSpawnType(function(pos) return createCompoundCloud("co2", 1, pos) end, 1/5000, 50)
-	spawnSystem:addSpawnType(function(pos) return createCompoundCloud("glucose", 1, pos) end, 1/5000, 50)
-	spawnSystem:addSpawnType(function(pos) return createCompoundCloud("ammonia", 1, pos) end, 1/12500, 50)
+	--spawnSystem:addSpawnType(function(pos) return createCompoundCloud("oxygen", 1, pos) end, 1/50, 50)
+	--spawnSystem:addSpawnType(function(pos) return createCompoundCloud("co2", 1, pos) end, 1/50, 50)
+	--spawnSystem:addSpawnType(function(pos) return createCompoundCloud("glucose", 1, pos) end, 1/50, 50)
+	--spawnSystem:addSpawnType(function(pos) return createCompoundCloud("ammonia", 1, pos) end, 1/125, 50)
 
-    for name, species in pairs(starter_microbes) do
-        spawnSystem:addSpawnType(
-            function(pos) 
-                return microbeSpawnFunctionGeneric(pos, name, true, nil)
-            end, 
-            species.spawnDensity, 60)
-    end
+    --for name, species in pairs(starter_microbes) do
+    --    spawnSystem:addSpawnType(
+    --        function(pos) 
+    --            return microbeSpawnFunctionGeneric(pos, name, true, nil)
+    --        end, 
+    --        species.spawnDensity, 60)
+    --end
     return spawnSystem
 end
 
@@ -378,8 +380,7 @@ local function createMicrobeStage(name)
             OgreRemoveSceneNodeSystem(),
             RenderSystem(),
             MembraneSystem(),
-			--FluidSystem(),
-			CompoundCloudSystem(),
+			FluidSystem(),
             -- Other
             SoundSourceSystem(),
             PowerupSystem(),

@@ -15,6 +15,12 @@ add_sources(
     "${CMAKE_CURRENT_SOURCE_DIR}/membrane.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/membrane_system.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/membrane_system.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/compound_clouds.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/compound_clouds.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fluid_sim.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fluid_sim.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/PerlinNoise.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/PerlinNoise.h"
 )
 
 
