@@ -1,6 +1,7 @@
 #include <boost/thread.hpp>
 #include <cstdio>
 #include <fstream>
+#include "general/task_manager.h"
 #include "game.h"
 #include <iostream>
 #include <OgreRoot.h>
@@ -34,6 +35,13 @@ extern "C" {
             return -1;
         }
         using namespace thrive;
+
+        /*
+        TaskManager& taskManager = TaskManager::instance();
+        std::cout << boost::this_thread::get_id() << std::endl;
+        std::cout << taskManager.getAvailableThreads() << std::endl;
+        */
+
         Game& game = Game::instance();
         game.run();
         return 0;
