@@ -114,16 +114,18 @@ TaskManager::worker()
         if(tryGetTask(task))
         {
             task->run();
+            boost::this_thread::yield();
         }
         else
         {
+	      // nothing is ready to run, sleep for 1.667 milliseconds (1/10th of a frame @ 60 FPS)
+	      boost::this_thread::sleep_for(boost::chrono::microseconds(1667));
     /*
             {
                 boost::lock_guard<boost::mutex> lock(mu);
                 std::cout << "Worker " << boost::this_thread::get_id() << " Yielding!" << std::endl;
             }
     */
-            boost::this_thread::yield();
         }
     }
 
