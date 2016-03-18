@@ -13,14 +13,22 @@ namespace thrive
 class Task
 {
     public:
-        template<class F>
+        typedef std::shared_ptr<Task> TaskPtr;
+
         Task();
-        ~Task();
+        virtual ~Task();
+        virtual void run() = 0;
+
+        bool isReady();
+
+    private:
+        friend class TaskManager;
 };
 
 class TaskManager
 {
     public:
+        typedef std::shared_ptr<Task> TaskPtr;
 
         /**
         * @brief Singleton instance
@@ -28,6 +36,10 @@ class TaskManager
         */
         static TaskManager&
         instance();
+
+        void start();
+        void stop();
+        void addTask(TaskPtr);
 
         /**
         * @brief Destructor
@@ -41,12 +53,13 @@ class TaskManager
 
     private:
         TaskManager();
-        void start();
         void worker();
         bool m_running;
+        bool tryGetTask(TaskPtr&);
+        std::vector<TaskPtr> m_taskQueue;
 
         size_t m_availableThreads;
-        std::vector<std::unique_ptr<boost::thread>> m_threads;
+        std::vector<boost::thread*> m_threads;
 
         struct Implementation;
         std::unique_ptr<Implementation> m_impl;

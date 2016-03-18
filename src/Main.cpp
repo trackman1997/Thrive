@@ -12,6 +12,45 @@
 #include "windows.h"
 #endif
 
+using namespace thrive;
+
+/*
+class T1 : public Task {
+    public:
+        T1(std::string msg) : Task() { m_msg = msg; };
+        ~T1() {};
+
+        void run() final
+        {
+            boost::mutex mu;
+
+            {
+                boost::lock_guard<boost::mutex> lock(mu);
+                std::cout << m_msg << std::endl;
+            }
+            boost::this_thread::sleep_for(boost::chrono::microseconds(3000));
+        }
+
+        std::string m_msg;
+};
+*/
+
+class TaskGame : public Task {
+public:
+    TaskGame() {};
+    ~TaskGame() {};
+
+    void run() final
+    {
+        TaskManager& tm = TaskManager::instance();
+
+        Game& game = Game::instance();
+        game.run();
+
+        tm.stop();
+    }
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,16 +73,28 @@ extern "C" {
         if (initThrive() != 0){
             return -1;
         }
-        using namespace thrive;
+
+        TaskManager& taskManager = TaskManager::instance();
+
+        taskManager.addTask(TaskManager::TaskPtr(new TaskGame()));
+        taskManager.start();
 
         /*
-        TaskManager& taskManager = TaskManager::instance();
-        std::cout << boost::this_thread::get_id() << std::endl;
-        std::cout << taskManager.getAvailableThreads() << std::endl;
+        taskManager.addTask(TaskManager::TaskPtr(new T1("Test 1")));
+        taskManager.addTask(TaskManager::TaskPtr(new T1("Test 2")));
+        taskManager.addTask(TaskManager::TaskPtr(new T1("Test 3")));
+
+        taskManager.start();
+
+        taskManager.stop();
         */
 
+        /*
         Game& game = Game::instance();
         game.run();
+        */
+
+        boost::this_thread::sleep_for(boost::chrono::microseconds(100000));
         return 0;
     }
 
