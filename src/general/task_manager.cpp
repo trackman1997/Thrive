@@ -2,7 +2,10 @@
 
 using namespace thrive;
 
-Task::Task() { }
+Task::Task()
+{
+//    m_taskComplete = false;
+}
 
 Task::~Task() { }
 
@@ -10,6 +13,12 @@ bool
 Task::isReady()
 {
     return true;
+}
+
+bool
+Task::isFinished()
+{
+    return m_taskComplete;
 }
 
 struct TaskManager::Implementation{
@@ -97,6 +106,37 @@ TaskManager::tryGetTask(TaskPtr& result)
 }
 
 void
+TaskManager::waitOnTask(TaskPtr task)
+{
+    while(!task->isFinished())
+    {
+//        boost::this_thread::yield();
+
+        // nothing is ready to run, sleep for 1.667 milliseconds (1/10th of a frame @ 60 FPS)
+        boost::this_thread::sleep_for(boost::chrono::microseconds(1667));
+    }
+}
+
+void
+TaskManager::waitOnTasks(std::vector<TaskPtr> taskList)
+{
+    bool allTasksFinished = false;
+    int tasksRunning;
+
+    while(!allTasksFinished)
+    {
+        tasksRunning = 0;
+
+        for(TaskPtr task : taskList)
+            if(!task->isFinished())
+                tasksRunning += 1;
+
+        if(tasksRunning <= 0)
+            allTasksFinished = true;
+    }
+}
+
+void
 TaskManager::worker()
 {
     TaskPtr task;
@@ -113,7 +153,13 @@ TaskManager::worker()
     {
         if(tryGetTask(task))
         {
+            {
+//                boost::lock_guard<boost::mutex> lock(mu);
+//                std::os << "Worker " << boost::this_thread::get_id() << " running task!" << std::endl;
+            }
             task->run();
+            task->m_taskComplete = true;
+
             boost::this_thread::yield();
         }
         else

@@ -10,6 +10,7 @@
 #include "engine/rng.h"
 #include "engine/player_data.h"
 #include "game.h"
+#include "general/task_manager.h"
 
 // Bullet
 #include "bullet/bullet_to_ogre_system.h"
@@ -78,6 +79,21 @@ using namespace thrive;
 
 static const char* RESOURCES_CFG = "resources.cfg";
 static const char* PLUGINS_CFG   = "plugins.cfg";
+
+class LuaUpdateTask : public Task {
+public:
+    LuaUpdateTask(luabind::object console, const char* func) : console_(console), func_(func) {};
+    ~LuaUpdateTask() {};
+
+    void run() final
+    {
+        luabind::call_member<void>(console_, func_);
+        std::cout << "LuaUpdateTask Finished!" << std::endl;
+    }
+
+    luabind::object console_;
+    const char* func_;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Engine
@@ -507,6 +523,9 @@ struct Engine::Implementation : public Ogre::WindowEventListener {
     luabind::object m_console;
     std::unique_ptr<SoundManager> m_soundManager;
     std::unique_ptr<CEGUI::InputAggregator> m_aggregator;
+
+    TaskManager& m_taskManager = TaskManager::instance();
+
 };
 
 
@@ -928,6 +947,13 @@ Engine::update(
 
     luabind::call_member<void>(m_impl->m_console, "update");
 
+    /*
+    LuaUpdateTask m_luaUpdateTask = LuaUpdateTask(m_impl->m_console, "update");
+
+    m_impl->m_taskManager.addTask(TaskManager::TaskPtr(&m_luaUpdateTask));
+    m_impl->m_taskManager.waitOnTask(TaskManager::TaskPtr(&m_luaUpdateTask));
+    */
+
     CEGUI::System::getSingleton().injectTimePulse(milliseconds/1000.0f);
     CEGUI::System::getSingleton().getDefaultGUIContext().injectTimePulse(milliseconds/1000.0f);
     // Update any timed shutdown systems
@@ -947,6 +973,8 @@ Engine::update(
     if (not m_impl->m_serialization.loadFile.empty()) {
         m_impl->loadSavegame();
     }
+
+
 }
 
 int

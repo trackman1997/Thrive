@@ -6,6 +6,7 @@
 #include "engine/entity_manager.h"
 #include "engine/serialization.h"
 #include "engine/system.h"
+#include "general/task_manager.h"
 
 #include "gui/CEGUIWindow.h"
 
@@ -13,6 +14,22 @@
 #include <OgreRoot.h>
 
 using namespace thrive;
+
+class GameSystemTask : public Task {
+public:
+    GameSystemTask(System * system, int renderTime, int logicTime) : system_(system), renderTime_(renderTime), logicTime_(logicTime) {};
+    ~GameSystemTask() {};
+
+    void run() final
+    {
+        system_->update(renderTime_, logicTime_);
+    }
+
+    System * system_;
+    int renderTime_;
+    int logicTime_;
+};
+
 
 struct GameState::Implementation {
 
@@ -91,6 +108,7 @@ struct GameState::Implementation {
 
     CEGUIWindow m_guiWindow;
 
+    TaskManager& m_taskManager = TaskManager::instance();
 };
 
 
@@ -262,13 +280,21 @@ GameState::update(
     int renderTime,
     int logicTime
 ) {
+    std::vector<GameSystemTask> taskList;
+    std::vector<TaskManager::TaskPtr> taskPtrList;
+
     for(auto& system : m_impl->m_systems) {
         if (system->enabled()) {
            //Uncomment to debug mystical crashes and other anomalies
            //std::cout << "Updating system " << system->getName() << std::endl;
-           system->update(renderTime, logicTime);
+//           system->update(renderTime, logicTime);
+            taskList.push_back(GameSystemTask(system.get(), renderTime, logicTime));
+            m_impl->m_taskManager.addTask(TaskManager::TaskPtr(&taskList.back()));
+            taskPtrList.push_back(TaskManager::TaskPtr(&taskList.back()));
            //std::cout << "Done updating system " << system->getName() << std::endl;
         }
     }
+
+    m_impl->m_taskManager.waitOnTasks(taskPtrList);
     m_impl->m_entityManager.processRemovals();
 }

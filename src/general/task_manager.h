@@ -20,8 +20,10 @@ class Task
         virtual void run() = 0;
 
         bool isReady();
+        bool isFinished();
 
     private:
+        bool m_taskComplete = false;
         friend class TaskManager;
 };
 
@@ -40,6 +42,8 @@ class TaskManager
         void start();
         void stop();
         void addTask(TaskPtr);
+        void waitOnTask(TaskPtr);
+        void waitOnTasks(std::vector<TaskPtr>);
 
         /**
         * @brief Destructor
