@@ -4,7 +4,7 @@ using namespace thrive;
 
 Task::Task()
 {
-//    m_taskComplete = false;
+    m_taskComplete = false;
 }
 
 Task::~Task() { }
@@ -76,8 +76,7 @@ TaskManager::stop()
 void
 TaskManager::addTask(TaskPtr t)
 {
-    boost::mutex mu;
-    boost::lock_guard<boost::mutex> lock(mu);
+    boost::lock_guard<boost::mutex> lock(m_muQueue);
 
     m_taskQueue.push_back(t);
 }
@@ -85,8 +84,7 @@ TaskManager::addTask(TaskPtr t)
 bool
 TaskManager::tryGetTask(TaskPtr& result)
 {
-    boost::mutex mu;
-    boost::lock_guard<boost::mutex> lock(mu);
+    boost::lock_guard<boost::mutex> lock(m_muQueue);
 
 //    std::cout << "Try Task....Total of " << m_taskQueue.size() << std::endl;
 
@@ -140,23 +138,11 @@ void
 TaskManager::worker()
 {
     TaskPtr task;
-    /*
-    boost::mutex mu;
-
-    {
-        boost::lock_guard<boost::mutex> lock(mu);
-        std::cout << "Worker " << boost::this_thread::get_id() << " started!" << std::endl;
-    }
-    */
 
     while(m_running)
     {
         if(tryGetTask(task))
         {
-            {
-//                boost::lock_guard<boost::mutex> lock(mu);
-//                std::os << "Worker " << boost::this_thread::get_id() << " running task!" << std::endl;
-            }
             task->run();
             task->m_taskComplete = true;
 
@@ -166,19 +152,6 @@ TaskManager::worker()
         {
 	      // nothing is ready to run, sleep for 1.667 milliseconds (1/10th of a frame @ 60 FPS)
 	      boost::this_thread::sleep_for(boost::chrono::microseconds(1667));
-    /*
-            {
-                boost::lock_guard<boost::mutex> lock(mu);
-                std::cout << "Worker " << boost::this_thread::get_id() << " Yielding!" << std::endl;
-            }
-    */
         }
     }
-
-    /*
-    {
-        boost::lock_guard<boost::mutex> lock(mu);
-        std::cout << "Worker " << boost::this_thread::get_id() << " Stoppped!" << std::endl;
-    }
-    */
 }

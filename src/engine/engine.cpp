@@ -88,7 +88,6 @@ public:
     void run() final
     {
         luabind::call_member<void>(console_, func_);
-        std::cout << "LuaUpdateTask Finished!" << std::endl;
     }
 
     luabind::object console_;
@@ -945,14 +944,10 @@ Engine::update(
     assert(m_impl->m_currentGameState != nullptr);
     m_impl->m_currentGameState->update(milliseconds, m_impl->m_paused ? 0 : milliseconds);
 
-    luabind::call_member<void>(m_impl->m_console, "update");
+//    luabind::call_member<void>(m_impl->m_console, "update");
 
-    /*
-    LuaUpdateTask m_luaUpdateTask = LuaUpdateTask(m_impl->m_console, "update");
-
-    m_impl->m_taskManager.addTask(TaskManager::TaskPtr(&m_luaUpdateTask));
-    m_impl->m_taskManager.waitOnTask(TaskManager::TaskPtr(&m_luaUpdateTask));
-    */
+    TaskManager::TaskPtr m_luaUpdateTask = TaskManager::TaskPtr(new LuaUpdateTask(m_impl->m_console, "update"));
+    m_impl->m_taskManager.addTask(m_luaUpdateTask);
 
     CEGUI::System::getSingleton().injectTimePulse(milliseconds/1000.0f);
     CEGUI::System::getSingleton().getDefaultGUIContext().injectTimePulse(milliseconds/1000.0f);
@@ -974,7 +969,7 @@ Engine::update(
         m_impl->loadSavegame();
     }
 
-
+    m_impl->m_taskManager.waitOnTask(m_luaUpdateTask);
 }
 
 int

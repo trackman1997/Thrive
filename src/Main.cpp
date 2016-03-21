@@ -53,10 +53,12 @@ extern "C" {
             return -1;
         }
 
+//        /*
         TaskManager& taskManager = TaskManager::instance();
 
         taskManager.addTask(TaskManager::TaskPtr(new TaskGame()));
         taskManager.start();
+//        */
 
         /*
         Game& game = Game::instance();

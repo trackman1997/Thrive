@@ -22,7 +22,19 @@ public:
 
     void run() final
     {
+        boost::mutex mu;
+
+        {
+            boost::lock_guard<boost::mutex> lock(mu);
+            std::cout << "Updating system " << system_->getName() << std::endl;
+        }
+
         system_->update(renderTime_, logicTime_);
+
+        {
+            boost::lock_guard<boost::mutex> lock(mu);
+            std::cout << "Done updating system " << system_->getName() << std::endl;
+        }
     }
 
     System * system_;
@@ -280,21 +292,19 @@ GameState::update(
     int renderTime,
     int logicTime
 ) {
-    std::vector<GameSystemTask> taskList;
     std::vector<TaskManager::TaskPtr> taskPtrList;
 
     for(auto& system : m_impl->m_systems) {
         if (system->enabled()) {
            //Uncomment to debug mystical crashes and other anomalies
            //std::cout << "Updating system " << system->getName() << std::endl;
-//           system->update(renderTime, logicTime);
-            taskList.push_back(GameSystemTask(system.get(), renderTime, logicTime));
-            m_impl->m_taskManager.addTask(TaskManager::TaskPtr(&taskList.back()));
-            taskPtrList.push_back(TaskManager::TaskPtr(&taskList.back()));
+           system->update(renderTime, logicTime);
+//            taskPtrList.push_back(TaskManager::TaskPtr(new GameSystemTask(system.get(), renderTime, logicTime)));
+//            m_impl->m_taskManager.addTask(taskPtrList.back());
            //std::cout << "Done updating system " << system->getName() << std::endl;
         }
     }
 
-    m_impl->m_taskManager.waitOnTasks(taskPtrList);
+//    m_impl->m_taskManager.waitOnTasks(taskPtrList);
     m_impl->m_entityManager.processRemovals();
 }

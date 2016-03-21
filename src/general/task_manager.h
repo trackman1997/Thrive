@@ -23,7 +23,9 @@ class Task
         bool isFinished();
 
     private:
-        bool m_taskComplete = false;
+        bool m_taskComplete;
+
+
         friend class TaskManager;
 };
 
@@ -60,6 +62,7 @@ class TaskManager
         void worker();
         bool m_running;
         bool tryGetTask(TaskPtr&);
+        boost::mutex m_muQueue;
         std::vector<TaskPtr> m_taskQueue;
 
         size_t m_availableThreads;
