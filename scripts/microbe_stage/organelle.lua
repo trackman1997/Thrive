@@ -24,7 +24,7 @@ function Organelle:__init()
         q = 0,
         r = 0
     }
-    self.rotation = 0
+    self.rotation = nil
     self.name = "<nameless>"
 end
 
@@ -100,7 +100,7 @@ function Organelle:onAddedToMicrobe(microbe, q, r, rotation)
     self.microbe = microbe
     self.position.q = q
     self.position.r = r
-	self.rotation = rotation
+    self.rotation = rotation
 	
 	local offset = Vector3(0,0,0)
 	local count = 0
@@ -116,7 +116,9 @@ function Organelle:onAddedToMicrobe(microbe, q, r, rotation)
     local sceneNode = OgreSceneNodeComponent()
     self.sceneNode = sceneNode
     sceneNode.parent = self.entity
-	sceneNode.meshName = self.name .. ".mesh"
+    if self.name ~= "cytoplasm" then
+        sceneNode.meshName = self.name .. ".mesh"
+    end
 	if self.name == "nucleus"  then
 		offset = Vector3(0,0,0)
 		-- TODO: Add specific nucleus animation here.

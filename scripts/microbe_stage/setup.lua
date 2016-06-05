@@ -3,10 +3,9 @@ local function setupBackground()
     local entity = Entity("background")
     local skyplane = SkyPlaneComponent()
     skyplane.properties.plane.normal = Vector3(0, 0, 2000)
-    skyplane.properties.materialName = "background/blue_01"
+    skyplane.properties.materialName = "Background"
 	skyplane.properties.scale = 200
     skyplane.properties:touch()
-    
     entity:addComponent(skyplane)
 end
 
@@ -43,6 +42,38 @@ end
 
 local function setupCompounds()
     CompoundRegistry.loadFromXML("../scripts/definitions/compounds.xml")
+end
+
+local function setupCompoundClouds()
+    local compoundId = CompoundRegistry.getCompoundId("glucose")
+    local entity = Entity("compound_cloud_glucose")
+    local compoundCloud = CompoundCloudComponent()
+    compoundCloud:initialize(compoundId, 150, 170, 180)
+    entity:addComponent(compoundCloud)
+    
+    compoundId = CompoundRegistry.getCompoundId("oxygen")
+    entity = Entity("compound_cloud_oxygen")
+    compoundCloud = CompoundCloudComponent()
+    compoundCloud:initialize(compoundId, 60, 160, 180)
+    entity:addComponent(compoundCloud)
+    
+    compoundId = CompoundRegistry.getCompoundId("co2")
+    entity = Entity("compound_cloud_co2")
+    compoundCloud = CompoundCloudComponent()
+    compoundCloud:initialize(compoundId, 20, 50, 100)
+    entity:addComponent(compoundCloud)
+    
+    compoundId = CompoundRegistry.getCompoundId("ammonia")
+    entity = Entity("compound_cloud_ammonia")
+    compoundCloud = CompoundCloudComponent()
+    compoundCloud:initialize(compoundId, 255, 220, 50)
+    entity:addComponent(compoundCloud)
+    
+    compoundId = CompoundRegistry.getCompoundId("aminoacids")
+    entity = Entity("compound_cloud_aminoacids")
+    compoundCloud = CompoundCloudComponent()
+    compoundCloud:initialize(compoundId, 255, 150, 200)
+    entity:addComponent(compoundCloud)
 end
 
 --  This isn't a finished solution. Optimally the process class would be moved to CPP and loaded there entirely.
@@ -82,6 +113,7 @@ function setupSpecies()
         speciesComponent = SpeciesComponent(name)
         speciesEntity:addComponent(speciesComponent)
         speciesComponent.organelles = data.organelles -- note, shallow assignment
+        speciesComponent.colour = Vector3(data.colour.r, data.colour.g, data.colour.b)
 
         -- iterates over all compounds, and sets amounts and priorities
         for compoundID in CompoundRegistry.getCompoundList() do
@@ -137,6 +169,26 @@ local function setSpawnablePhysics(entity, pos, mesh, scale, collisionShape)
     return entity
 end
 
+function createCompoundCloud(compoundName, x, y, amount)
+    if compoundName == "aminoacids" or compoundName == "glucose" or compoundName == "co2" or compoundName == "oxygen" or compoundName == "ammonia" then
+        Entity("compound_cloud_" .. compoundName):getComponent(CompoundCloudComponent.TYPE_ID):addCloud(amount, x, y)
+    end
+end
+
+function createAgentCloud(compoundId, x, y, direction, amount)
+    local entity = Entity()
+    local sceneNode = OgreSceneNodeComponent()
+    sceneNode.meshName = "oxytoxy.mesh"
+    sceneNode.transform.position = Vector3(x + direction.x/2, y + direction.y/2, 0)
+    sceneNode.transform:touch()
+    local agent = AgentCloudComponent()
+    agent:initialize(compoundId, 255, 0, 255)
+    agent.direction = direction*2
+    agent.potency = amount
+    entity:addComponent(sceneNode)
+    entity:addComponent(agent)
+end
+
 local function addEmitter2Entity(entity, compound)
     local compoundEmitter = CompoundEmitterComponent()
     entity:addComponent(compoundEmitter)
@@ -156,39 +208,6 @@ end
 
 local function createSpawnSystem()
     local spawnSystem = SpawnSystem()
-
-    local spawnOxygenEmitter = function(pos)
-        local entity = Entity()
-        setSpawnablePhysics(entity, pos, "molecule.mesh", 1, CylinderShape(
-                CollisionShape.AXIS_X, 
-                0.4,
-                2.0
-            ))
-        addEmitter2Entity(entity, "oxygen")
-        return entity
-    end
-    local spawnCO2Emitter = function(pos)
-        local entity = Entity()
-        setSpawnablePhysics(entity, pos, "co2.mesh", 0.4, CylinderShape(
-                CollisionShape.AXIS_X, 
-                0.4,
-                2.0
-            ))
-        addEmitter2Entity(entity, "co2")
-        return entity
-    end
-    local spawnGlucoseEmitter = function(pos)
-        local entity = Entity()
-        setSpawnablePhysics(entity, pos, "glucose.mesh", 1, SphereShape(HEX_SIZE))
-        addEmitter2Entity(entity, "glucose")
-        return entity
-    end
-    local spawnAmmoniaEmitter = function(pos)
-        local entity = Entity()
-        setSpawnablePhysics(entity, pos, "ammonia.mesh", 0.5, SphereShape(HEX_SIZE))
-        addEmitter2Entity(entity, "ammonia")
-        return entity
-    end
 
     local toxinOrganelleSpawnFunction = function(pos) 
         powerupEntity = Entity()
@@ -216,16 +235,35 @@ local function createSpawnSystem()
         powerupEntity:addComponent(powerupComponent)
         return powerupEntity
     end
+        
+    local spawnGlucoseCloud =  function(pos)
+        createCompoundCloud("glucose", pos.x, pos.y, 75000)
+    end
+    local spawnOxygenCloud =  function(pos)
+        createCompoundCloud("oxygen", pos.x, pos.y, 75000)
+    end
+    local spawnCO2Cloud =  function(pos)
+        createCompoundCloud("co2", pos.x, pos.y, 75000)
+    end
+    local spawnAmmoniaCloud =  function(pos)
+        createCompoundCloud("ammonia", pos.x, pos.y, 75000)
+    end
 
     --Spawn one emitter on average once in every square of sidelength 10
     -- (square dekaunit?)
 	-- Spawn radius should depend on view rectangle
-    spawnSystem:addSpawnType(spawnOxygenEmitter, 1/1600, 50)
-    spawnSystem:addSpawnType(spawnCO2Emitter, 1/1700, 50)
-    spawnSystem:addSpawnType(spawnGlucoseEmitter, 1/1600, 50)
-    spawnSystem:addSpawnType(spawnAmmoniaEmitter, 1/2250, 50)
+    --spawnSystem:addSpawnType(spawnOxygenEmitter, 1/1600, 50)
+    --spawnSystem:addSpawnType(spawnCO2Emitter, 1/1700, 50)
+    --spawnSystem:addSpawnType(spawnGlucoseEmitter, 1/1600, 50)
+    --spawnSystem:addSpawnType(spawnAmmoniaEmitter, 1/2250, 50)
+    
     spawnSystem:addSpawnType(toxinOrganelleSpawnFunction, 1/17000, 50)
     spawnSystem:addSpawnType(ChloroplastOrganelleSpawnFunction, 1/12000, 50)
+    
+    spawnSystem:addSpawnType(spawnGlucoseCloud, 1/5000, 50)
+    spawnSystem:addSpawnType(spawnCO2Cloud, 1/5000, 50)
+    spawnSystem:addSpawnType(spawnAmmoniaCloud, 1/5000, 50)
+    spawnSystem:addSpawnType(spawnOxygenCloud, 1/5000, 50)
 
     for name, species in pairs(starter_microbes) do
         spawnSystem:addSpawnType(
@@ -238,34 +276,34 @@ local function createSpawnSystem()
 end
 
 local function setupEmitter()
-    -- Setting up a test emitter
-    local entity = Entity("glucose-emitter")
-    -- Rigid body
-    local rigidBody = RigidBodyComponent()
-    rigidBody.properties.friction = 0.2
-    rigidBody.properties.linearDamping = 0.8
-    rigidBody.properties.shape = CylinderShape(
-        CollisionShape.AXIS_X, 
-        0.4,
-        2.0
-    )
-    rigidBody:setDynamicProperties(
-        Vector3(10, 0, 0),
-        Quaternion(Radian(Degree(0)), Vector3(1, 0, 0)),
-        Vector3(0, 0, 0),
-        Vector3(0, 0, 0)
-    )
-    rigidBody.properties:touch()
-    entity:addComponent(rigidBody)
-    local reactionHandler = CollisionComponent()
-    reactionHandler:addCollisionGroup("emitter")
-    entity:addComponent(reactionHandler)
-    -- Scene node
-    local sceneNode = OgreSceneNodeComponent()
-    sceneNode.meshName = "molecule.mesh"
-    entity:addComponent(sceneNode)
-    -- Emitter test
-    addEmitter2Entity(entity, "glucose")
+    -- -- Setting up a test emitter
+    -- local entity = Entity("glucose-emitter")
+    -- -- Rigid body
+    -- local rigidBody = RigidBodyComponent()
+    -- rigidBody.properties.friction = 0.2
+    -- rigidBody.properties.linearDamping = 0.8
+    -- rigidBody.properties.shape = CylinderShape(
+        -- CollisionShape.AXIS_X, 
+        -- 0.4,
+        -- 2.0
+    -- )
+    -- rigidBody:setDynamicProperties(
+        -- Vector3(10, 0, 0),
+        -- Quaternion(Radian(Degree(0)), Vector3(1, 0, 0)),
+        -- Vector3(0, 0, 0),
+        -- Vector3(0, 0, 0)
+    -- )
+    -- rigidBody.properties:touch()
+    -- entity:addComponent(rigidBody)
+    -- local reactionHandler = CollisionComponent()
+    -- reactionHandler:addCollisionGroup("emitter")
+    -- entity:addComponent(reactionHandler)
+    -- -- Scene node
+    -- local sceneNode = OgreSceneNodeComponent()
+    -- sceneNode.meshName = "molecule.mesh"
+    -- entity:addComponent(sceneNode)
+    -- -- Emitter test
+    -- addEmitter2Entity(entity, "glucose")
 end
 
 function unlockToxin(entityId)
@@ -288,16 +326,16 @@ function unlockChloroplast(entityId)
 end
 
 local function setupPlayer()
-    microbe = microbeSpawnFunctionGeneric(nil, "Default", false, PLAYER_NAME)
+    local microbe = microbeSpawnFunctionGeneric(nil, "Default", false, PLAYER_NAME)
     microbe.collisionHandler:addCollisionGroup("powerupable")
     Engine:playerData():lockedMap():addLock("Toxin")
     Engine:playerData():lockedMap():addLock("chloroplast")
     Engine:playerData():setActiveCreature(microbe.entity.id, GameState.MICROBE)
     speciesEntity = Entity("defaultMicrobeSpecies")
-    species = SpeciesComponent("defaultMicrobeSpecies")
+    species = SpeciesComponent("Default")
     species:fromMicrobe(microbe)
     speciesEntity:addComponent(species)
-    microbe.microbe.speciesName = "defaultMicrobeSpecies"
+    microbe.microbe.speciesName = "Default"
 end
 
 local function setupSound()
@@ -305,7 +343,7 @@ local function setupSound()
     local soundSource = SoundSourceComponent()
     soundSource.ambientSoundSource = true
     soundSource.autoLoop = true
-    soundSource.volumeMultiplier = 0.5
+    soundSource.volumeMultiplier = 0.3
     ambientEntity:addComponent(soundSource)
     -- Sound
     soundSource:addSound("microbe-theme-1", "microbe-theme-1.ogg")
@@ -316,7 +354,7 @@ local function setupSound()
     soundSource:addSound("microbe-theme-7", "microbe-theme-7.ogg")   
     local ambientEntity2 = Entity("ambience2")
     local soundSource = SoundSourceComponent()
-    soundSource.volumeMultiplier = 0.3
+    soundSource.volumeMultiplier = 0.1
     soundSource.ambientSoundSource = true
     ambientSound = soundSource:addSound("microbe-ambient", "soundeffects/microbe-ambience.ogg")
     soundSource.autoLoop = true
@@ -377,6 +415,8 @@ local function createMicrobeStage(name)
             OgreRemoveSceneNodeSystem(),
             RenderSystem(),
             MembraneSystem(),
+            CompoundCloudSystem(),
+            AgentCloudSystem(),
             -- Other
             SoundSourceSystem(),
             PowerupSystem(),
@@ -385,6 +425,7 @@ local function createMicrobeStage(name)
         function()
             setupBackground()
             setupCamera()
+            setupCompoundClouds()
             setupEmitter()
             setupSpecies()
             setupPlayer()
@@ -395,5 +436,5 @@ local function createMicrobeStage(name)
 end
 
 GameState.MICROBE = createMicrobeStage("microbe")
-GameState.MICROBE_ALTERNATE = createMicrobeStage("microbe_alternate")
+--GameState.MICROBE_ALTERNATE = createMicrobeStage("microbe_alternate")
 --Engine:setCurrentGameState(GameState.MICROBE)

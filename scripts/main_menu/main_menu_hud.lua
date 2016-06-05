@@ -6,7 +6,7 @@ function MainMenuHudSystem:__init()
 end
 
 function MainMenuHudSystem:init(gameState)
-    System.init(self, gameState)
+    System.init(self, "MainMenuHudSystem", gameState)
     root = gameState:rootGUIWindow()
     local microbeButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("NewGameButton")
     local microbeEditorButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("EditorMenuButton")
@@ -95,7 +95,7 @@ end
 function mainMenuMicrobeStageButtonClicked()
     local guiSoundEntity = Entity("gui_sounds")
     guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    Engine:setCurrentGameState(GameState.MICROBE)
+    Engine:setCurrentGameState(GameState.MICROBE_TUTORIAL)
 end
 
 function mainMenuMicrobeEditorButtonClicked()

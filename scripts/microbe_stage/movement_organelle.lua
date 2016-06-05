@@ -45,7 +45,7 @@ function MovementOrganelle:_moveMicrobe(microbe, milliseconds)
     local direction = microbe.microbe.movementDirection
     local forceMagnitude = self.force:dotProduct(direction)
     if forceMagnitude > 0 then
-        if direction:isZeroLength() or self.force:isZeroLength() then
+        if direction:isZeroLength() or self.force:isZeroLength()  then
             self.movingTail = false
             self.sceneNode:setAnimationSpeed(0.25)
             return
@@ -57,6 +57,8 @@ function MovementOrganelle:_moveMicrobe(microbe, milliseconds)
         local availableEnergy = microbe:takeCompound(CompoundRegistry.getCompoundId("atp"), energy)
         if availableEnergy < energy then
             forceMagnitude = sign(forceMagnitude) * availableEnergy * 1000 / milliseconds
+            self.movingTail = false
+            self.sceneNode:setAnimationSpeed(0.25) 
         end
         local impulseMagnitude = microbe.microbe.movementFactor * milliseconds * forceMagnitude / 1000
         local impulse = impulseMagnitude * direction
@@ -126,7 +128,7 @@ function OrganelleFactory.render_flagellum(data)
 	local translation = Vector3(-x, -y, 0)
 	data.sceneNode[1].meshName = "flagellum.mesh"
 	data.sceneNode[1].transform.position = translation
-	data.sceneNode[1].transform.orientation = Quaternion(Radian(Degree(data.rotation)), Vector3(0, 0, 1))
+	data.sceneNode[1].transform.orientation = Quaternion(Radian(Degree(-90)), Vector3(0, 0, 1))
 	
 	data.sceneNode[2].transform.position = translation
 	OrganelleFactory.setColour(data.sceneNode[2], data.colour)

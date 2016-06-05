@@ -83,6 +83,7 @@ set(OGRE_PLUGINS
   #  Plugin_OctreeSceneManager
   #  Plugin_OctreeZone
     Plugin_ParticleFX
+    Plugin_CgProgramManager
   #  Plugin_PCZSceneManager
     RenderSystem_GL
 )
@@ -250,7 +251,6 @@ target_link_libraries(ThriveLib
     #These two FFMPEG need to be at the top (before ogre?) to avoid linking error
     ${OgreFFMPEG_LIBRARIES} 
     ${FFMPEG_LIBRARIES}
-    ${SWRESAMPLE_LIBRARIES}
     ${Boost_LIBRARIES}
     ${OGRE_LIBRARIES}
     ${OIS_LIBRARIES}
@@ -262,6 +262,16 @@ target_link_libraries(ThriveLib
     luabind
 )
 
+if(WIN32)
+    target_link_libraries(ThriveLib
+        ${SWRESAMPLE_LIBRARIES}
+    )
+else()
+    target_link_libraries(ThriveLib
+        ${AVRESAMPLE_LIBRARIES}
+    )
+endif()
+
 # Windows requires using Bullet DEBUG libraries to fix broken build
 # But Linux build breaks with those settings 
 if(WIN32)
@@ -271,8 +281,7 @@ if(WIN32)
     ${BULLET_COLLISION_LIBRARY_DEBUG}
     ${BULLET_MATH_LIBRARY_DEBUG}
     ${BULLET_SOFTBODY_LIBRARY_DEBUG}
-    )
-  
+    )  
 else()
 
   target_link_libraries(ThriveLib
@@ -291,10 +300,18 @@ set_target_properties(ThriveLib PROPERTIES
     OUTPUT_NAME Thrive
 )
 
-# Compile executable
+if(WIN32)
+  
 add_executable(Thrive
-#WIN32
+ ${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/windows/thrive.rc)
+else()
+ add_executable(Thrive
  ${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp)
+endif()
+
+# Compile executable
+
 
 target_link_libraries(Thrive ThriveLib)
 
@@ -396,6 +413,7 @@ install(DIRECTORY "${ASSET_DIRECTORY}/materials"
         PATTERN "*.jpeg"
         PATTERN "*.material"
         PATTERN "*.png"
+        PATTERN "*.cg"
 )
 
 install(DIRECTORY
@@ -521,7 +539,7 @@ if(WIN32)
         "${OGRE_PLUGIN_DIR_REL}/OgreMain.dll"
 		"${OGRE_PLUGIN_DIR_REL}/RenderSystem_GL.dll"
 		"${OGRE_PLUGIN_DIR_REL}/OIS.dll"
-        #"${OGRE_PLUGIN_DIR_REL}/cg.dll"
+        "${MINGW_ENV}/install/bin/Release/cg.dll"
 		DESTINATION bin
 		CONFIGURATIONS Release
 	)
@@ -530,7 +548,7 @@ if(WIN32)
         "${OGRE_PLUGIN_DIR_DBG}/OgreMain_d.dll"
 		"${OGRE_PLUGIN_DIR_DBG}/RenderSystem_GL_d.dll"
 		"${OGRE_PLUGIN_DIR_DBG}/OIS_d.dll"
-        #"${OGRE_PLUGIN_DIR_DBG}/cg.dll"
+        "${MINGW_ENV}/install/bin/Debug/cg.dll"
 		DESTINATION bin
 		CONFIGURATIONS Debug
 	)
@@ -584,6 +602,11 @@ if(WIN32)
         "${MINGW_ENV}/install/bin/swresample-1.dll"
         DESTINATION bin
 		CONFIGURATIONS Release
+    )
+    
+    install(FILES
+        "${ASSET_DIRECTORY}/misc/Thrive.exe"
+        DESTINATION ./
     )
 
 elseif(UNIX)

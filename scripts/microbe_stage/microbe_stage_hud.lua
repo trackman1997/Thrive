@@ -11,6 +11,7 @@ function HudSystem:__init()
     self.rootGuiWindow = nil
     self.populationNumberLabel = nil
     self.rootGUIWindow = nil
+    self.scrollChange = 0
 end
 
 global_if_already_displayed = false
@@ -22,13 +23,13 @@ function HudSystem:activate()
         showMessage("'E' Releases Toxin")
         global_if_already_displayed = true
     end
-    self.helpOpen = false
-    self.menuOpen = true
+    self.helpOpen = true
+    self.menuOpen = false
     self:updateLoadButton();
 end
 
 function HudSystem:init(gameState)
-    System.init(self, gameState) ---[[
+    System.init(self, "MicrobeStageHudSystem", gameState)
     self.rootGUIWindow =  gameState:rootGUIWindow()
     self.compoundListBox = self.rootGUIWindow:getChild("CompoundsOpen"):getChild("CompoundsLabel")
     self.hitpointsBar = self.rootGUIWindow:getChild("HealthPanel"):getChild("LifeBar")
@@ -61,7 +62,12 @@ end
 function HudSystem:update(renderTime)
     local player = Entity("player")
     local playerMicrobe = Microbe(player)
-    self.nameLabel:setText(playerMicrobe.microbe.speciesName)
+    local name = playerMicrobe.microbe.speciesName
+    if string.len(name) > 18 then
+        name = string.sub(playerMicrobe.microbe.speciesName, 1, 15)
+        name = name .. "..."
+    end
+    self.nameLabel:setText(name)
 
     self.hitpointsBar:progressbarSetProgress(playerMicrobe.microbe.hitpoints/playerMicrobe.microbe.maxHitpoints)
     self.hitpointsCountLabel:setText("".. math.floor(playerMicrobe.microbe.hitpoints))
@@ -79,7 +85,6 @@ function HudSystem:update(renderTime)
                                                       "[colour='FF004400']" .. compoundsString)
         end
     end
-    
     
     if keyCombo(kmp.togglemenu) then
         self:menuButtonClicked()
@@ -110,14 +115,30 @@ function HudSystem:update(renderTime)
         playerMicrobe:toggleEngulfMode()
     end
     
-    offset = Entity(CAMERA_NAME):getComponent(OgreCameraComponent.TYPE_ID).properties.offset
-    newZVal = offset.z + Engine.mouse:scrollChange()/10
+    local offset = Entity(CAMERA_NAME):getComponent(OgreCameraComponent.TYPE_ID).properties.offset
+    
+    if Engine.mouse:scrollChange()/10 ~= 0 then
+        self.scrollChange = self.scrollChange + Engine.mouse:scrollChange()/10
+    end
+    
+    local newZVal = offset.z
+    if self.scrollChange >= 1 then
+        newZVal = newZVal + 2.5
+        self.scrollChange = self.scrollChange - 1
+    elseif self.scrollChange <= -1 then
+        newZVal = newZVal - 2.5
+        self.scrollChange = self.scrollChange + 1
+    end
+    
     if newZVal < 10 then
         newZVal = 10
-    elseif newZVal > 80 then
-        newZVal = 80
+        self.scrollChange = 0
+    elseif newZVal > 60 then
+        newZVal = 60
+        self.scrollChange = 0
     end
-    offset.z = newZVal --]]
+    
+    offset.z = newZVal
 end
 
 function showReproductionDialog() global_activeMicrobeStageHudSystem:showReproductionDialog() end

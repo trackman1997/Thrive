@@ -199,9 +199,16 @@ function decodeAxial(s)
     return q, r
 end
 
--- Rotates a hex by 60 degrees about the origin
+-- Rotates a hex by 60 degrees about the origin clock-wise.
 function rotateAxial(q, r)
 	local q2 = -1*r
 	local r2 = q + r
 	return q2, r2
+end
+
+-- Flips a hex vertically about 0,0.
+function flipHorizontally(q,r)
+    local q2 = -q
+    local r2 = q + r2
+    return q2, r2
 end
