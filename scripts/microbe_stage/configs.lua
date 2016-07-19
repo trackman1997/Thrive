@@ -13,7 +13,7 @@ Style tips:
 compounds = {
     atp = {
         name = "ATP",
-        weight = 507,
+        weight = 507, -- molar mass, used for diffusion rate
         mesh = "ATP.mesh",
         size = 0.1,
     },
@@ -67,7 +67,7 @@ compounds = {
     },
     protein = {
         name = "Protein",
-        weight = 300000, -- if these weights are to be used for diffusion
+        weight = 300000,
         mesh = "ammonia.mesh",
         size = 0.16,
     },
@@ -103,85 +103,61 @@ agents = {
 processes = {
     Respiration = {
         speedFactor = 0.1,
-        inputs = {
-            glucose = 1,
-            oxygen = 6,
-        },
-        outputs = {
-            co2 = 6,
-            atp = 36,
-        },
-    },
-    -- replace respiration above with this once ready
-    NewRespiration = {
-        speedFactor = 0.1,
-        energyCost = 0,
         inputs = {pyruvate = 1, oxygen = 3},
         outputs = {co2 = 3, atp = 18},
     },
     Glycolysis = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {glucose = 1},
         outputs = {pyruvate = 2, atp = 2},
     },
     ProteinSynthesis = {
         speedFactor = 0.1,
-        energyCost = 4,
-        inputs = {aminoacids = 1},
+        inputs = {atp = 4, aminoacids = 1},
         outputs = {protein = 1},
     },
     ProteinDigestion = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {protein = 1},
         outputs = {aminoacids = 1},
     },
     Deamination = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {aminoacids = 1},
         outputs = {atp = 2, pyruvate = 1, ammonia = 1},
     },
-    NewAminoAciSynthesis = {
+    AminoAcidSynthesis = {
         speedFactor = 0.1,
-        energyCost = 3,
-        inputs = {pyruvate = 1, ammonia = 1},
+        inputs = {atp = 3, pyruvate = 1, ammonia = 1},
         outputs = {aminoacids = 1},
     },
     FattyAcidSynthesis = {
         speedFactor = 0.1,
-        energyCost = 56,
-        inputs = {pyruvate = 9},
+        inputs = {atp = 56, pyruvate = 9},
         outputs = {fattyacid = 1, co2 = 9},
     },
     FattyAcidDigestion = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {fattyacid = 1},
-        outputs = {pyruvate = 6, atp = 45},
+        outputs = {co2 = 6, pyruvate = 6, atp = 45},
     },
     NucleotideSynthesis = {
         speedFactor = 0.1,
-        energyCost = 7,
-        inputs = {glucose = 1, aminoacids = 2},
+        inputs = {atp = 7, glucose = 1, aminoacids = 2},
         outputs = {nucleotide = 1},
     },
     NucleotideDigestion = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {nucleotide = 1},
         outputs = {aminoacids = 1, pyruvate = 1, ammonia = 1, glucose = 1},
     },
     NucleicAcidSynthesis = {
         speedFactor = 0.1,
-        energyCost = 1,
-        inputs = {nucleotide = 1},
+        inputs = {nucleotide = 1, atp = 1},
         outputs = {nucleicacid = 1},
     },
     NucleicAcidDigestion = {
         speedFactor = 0.1,
-        energyCost = 0,
         inputs = {nucleicacid = 1},
         outputs = {nucleotide = 1},
     },
@@ -195,18 +171,6 @@ processes = {
         },
         outputs = {
             reproductase = 5,
-        },
-    },
-    AminoAcidSynthesis = {
-        speedFactor = 1,
-        inputs = {
-            glucose = 1,
-            ammonia = 1,
-        },
-        outputs = {
-            co2 = 1,
-            atp = 1,
-            aminoacids = 1,
         },
     },
     OxyToxySynthesis = {
@@ -234,37 +198,67 @@ processes = {
 -- currently only stores process capacity data for processing organelles, but can later also store material costs for organelles
 organelles = {
     nucleus = {
+        size = 10,
         processes = {
-            ReproductaseSynthesis = 1,
-            AminoAcidSynthesis = 1,
+            ReproductaseSynthesis = 0.1,
+            ProteinSynthesis = 0.3, -- in the ER
+            NucleicAcidSynthesis = 0.1,
         },
     },
     mitochondrion = {
         processes = {
-            Respiration = 1,
+            Respiration = 0.1,
         },
+        size = 2,
     },
     oxytoxy = {
         processes = {
-            OxyToxySynthesis = 1,
+            OxyToxySynthesis = 0.1,
         },
+        size = 1,
     },
     chloroplast = {
         processes = {
-            Photosynthesis = 1,
+            Photosynthesis = 0.03,
         },
+        size = 3,
+    },
+    cytoplasm = {
+        processes = {
+            Glycolysis = 0.1,
+            AminoAcidSynthesis = 0.1,
+            Deamination = 0.1,
+            ProteinSynthesis = 0.1,
+            ProteinDigestion = 0.1,
+            NucleotideSynthesis = 0.1,
+            NucleotideDigestion = 0.1,
+            NucleicAcidDigestion = 0.1,
+            FattyAcidSynthesis = 0.1,
+            FattyAcidDigestion = 0.1,
+        },
+        capacity = 15,
+        size = 0, -- size is used to determine how many cytoplasms to put under the organelle
+    },
+    vacuole = {
+        size = 1,
+        capacity = 50,
     },
 }
 
 
 default_thresholds = {
     atp = {low = 13, high = 16, vent = 1000},
+    pyruvate = {low = 8, high = 12, vent = 50},
     glucose = {low = 16, high = 30, vent = 70},
     oxygen = {low = 22, high = 40, vent = 70},
     co2 = {low = 0, high = 0, vent = 0},
     ammonia = {low = 12, high = 30, vent = 70},
     aminoacids = {low = 12, high = 30, vent = 70},
-    oxytoxy = {low = 0, high = 0, vent = 5},
+    protein = {low = 1, high = 2, vent = 70},
+    fattyacid = {low = 1, high = 2, vent = 70},
+    nucleotide = {low = 1, high = 2, vent = 70},
+    nucleicacid = {low = 1, high = 2, vent = 70},
+    oxytoxy = {low = 0, high = 5, vent = 7},
     reproductase = {low = 5, high = 1000, vent = 1000},
 }
 
