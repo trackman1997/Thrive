@@ -203,8 +203,19 @@ function SpeciesSystem:update(_, milliseconds)
 end
 
 function SpeciesSystem.initProcessorComponent(entity, speciesComponent)
-    entity:addComponent(speciesComponent)
     print('SpeciesComponent:initProcessorComponent for species '..speciesComponent.name)
+
+    local sc = entity:getComponent(ProcessorComponent.TYPE_ID)
+    if sc == nil and speciesComponent ~= nil then
+        entity:addComponent(speciesComponent)
+    elseif sc == nil and speciesComponent == nil then
+        assert(false, "No SpeciesComponent available for initProcessorComponent")
+    elseif sc ~= nil and speciesComponent == nil then
+        speciesComponent = sc
+    else
+        assert(sc == SpeciesComponent, "conflicting species components for initProcessorComponent")
+    end
+
     local pc = entity:getComponent(ProcessorComponent.TYPE_ID)
     if pc == nil then
         pc = ProcessorComponent()

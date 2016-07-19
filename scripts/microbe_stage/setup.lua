@@ -116,9 +116,6 @@ function setupSpecies()
         -- iterates over all compounds, and sets amounts and priorities
         for compoundID in CompoundRegistry.getCompoundList() do
             compound = CompoundRegistry.getCompoundInternalName(compoundID)
-            thresholdData = default_thresholds[compound]
-             -- we'll need to generate defaults from species template
-            processorComponent:setThreshold(compoundID, thresholdData.low, thresholdData.high, thresholdData.vent)
             compoundData = data.compounds[compound]
             if compoundData ~= nil then
                 amount = compoundData.amount
@@ -127,44 +124,8 @@ function setupSpecies()
                 -- speciesComponent.compoundPriorities[compoundID] = priority
             end
         end
-        if data[thresholds] ~= nil then
-            local thresholds = data[thresholds]
-            for compoundID in CompoundRegistry.getCompoundList() do
-                compound = CompoundRegistry.getCompoundInternalName(compoundID)
-                if thresholds[compound] ~= nil then
-                    if thresholds[compound].low ~= nil then
-                        processorComponent:setLowThreshold(compoundID, thresholds[compound].low)
-                    end
-                    if thresholds[compound].low ~= nil then
-                        processorComponent:setHighThreshold(compoundID, thresholds[compound].high)
-                    end
-                    if thresholds[compound].vent ~= nil then
-                        processorComponent:setVentThreshold(compoundID, thresholds[compound].vent)
-                    end
-                end
-            end
-        end
-        local capacities = {}
-        for _, organelle in pairs(data.organelles) do
-            if organelles[organelle.name] ~= nil then
-                if organelles[organelle.name]["processes"] ~= nil then
-                    for process, capacity in pairs(organelles[organelle.name]["processes"]) do
-                        if capacities[process] == nil then
-                            capacities[process] = 0
-                        end
-                        capacities[process] = capacities[process] + capacity
-                    end
-                end
-            end
-        end
-        for bioProcessId in BioProcessRegistry.getList() do
-            local name = BioProcessRegistry.getInternalName(bioProcessId)
-            if capacities[name] ~= nil then
-                processorComponent:setCapacity(bioProcessId, capacities[name])
-            -- else
-                -- processorComponent:setCapacity(bioProcessId, 0)
-            end
-        end
+
+        SpeciesSystem.initProcessorComponent(speciesEntity, speciesComponent)
     end
 end
 
