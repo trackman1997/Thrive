@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 -- Class for the single core organelle of any microbe
 --------------------------------------------------------------------------------
-class 'NucleusOrganelle' (ProcessOrganelle)
+class 'NucleusOrganelle' (Organelle)
 
 -- Constructor
 function NucleusOrganelle:__init()
-    ProcessOrganelle.__init(self)
+    Organelle.__init(self)
     self.golgi = Entity()
 	self.ER = Entity()
 end
@@ -27,7 +27,7 @@ function NucleusOrganelle:onAddedToMicrobe(microbe, q, r, rotation)
     self.golgi:addComponent(sceneNode1)
 	self.golgi.sceneNode = sceneNode1
 	self.golgi:setVolatile(true)
-	
+
 	local sceneNode2 = OgreSceneNodeComponent()
     sceneNode2.meshName = "ER.mesh"
 	sceneNode2.parent = microbe:getOrganelleAt(q,r).entity
@@ -46,8 +46,8 @@ function NucleusOrganelle:onAddedToMicrobe(microbe, q, r, rotation)
     self.ER:addComponent(sceneNode2)
 	self.ER.sceneNode = sceneNode2
 	self.ER:setVolatile(true)
-	
-    ProcessOrganelle.onAddedToMicrobe(self, microbe, q, r, rotation)
+
+    Organelle.onAddedToMicrobe(self, microbe, q, r, rotation)
 end
 
 -- Overridded from Organelle:onRemovedFromMicrobe
@@ -68,8 +68,6 @@ end
 
 function OrganelleFactory.make_nucleus(data)
     local nucleus = NucleusOrganelle()
-    -- nucleus:addProcess(global_processMap["ReproductaseSynthesis"])
-    -- nucleus:addProcess(global_processMap["AminoAcidSynthesis"])
         
     if data.rotation == nil then
 		data.rotation = 0

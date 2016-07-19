@@ -198,30 +198,49 @@ processes = {
 -- currently only stores process capacity data for processing organelles, but can later also store material costs for organelles
 organelles = {
     nucleus = {
-        size = 10,
+        hexes = {
+            -- always {q, r}
+            {0,0},
+            {1,0},
+            {0,1},
+            {0,-1},
+            {1,-1},
+            {-1,1},
+            {-1,0},
+            {-1,-1},
+            {-2,0},
+            {-2,1},
+        },
         processes = {
             ReproductaseSynthesis = 0.1,
             ProteinSynthesis = 0.3, -- in the ER
-            NucleicAcidSynthesis = 0.1,
+            NucleicAcidSynthesis = 0.2,
         },
     },
     mitochondrion = {
         processes = {
-            Respiration = 0.1,
+            Respiration = 0.2,
         },
-        size = 2,
+        hexes = {
+            {0,0},
+            {1,0},
+        },
     },
     oxytoxy = {
         processes = {
             OxyToxySynthesis = 0.1,
         },
-        size = 1,
+        hexes = {
+            {0,0},
+        },
     },
     chloroplast = {
         processes = {
-            Photosynthesis = 0.03,
+            Photosynthesis = 0.01,
         },
-        size = 3,
+        hexes = {
+            {0,0},
+        },
     },
     cytoplasm = {
         processes = {
@@ -236,11 +255,15 @@ organelles = {
             FattyAcidSynthesis = 0.1,
             FattyAcidDigestion = 0.1,
         },
+        hexes = {
+            {0,0},
+        },
         capacity = 15,
-        size = 0, -- size is used to determine how many cytoplasms to put under the organelle
     },
     vacuole = {
-        size = 1,
+        hexes = {
+            {0,0},
+        },
         capacity = 50,
     },
 }

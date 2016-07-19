@@ -22,63 +22,11 @@ MAX_EXPECTED_PROCESS_ATP_COST = 30
 -- @param outputCompounds
 -- A dictionary of produced compoundIds as keys and amounts as values
 --
-function Process:__init(basicRate, inputCompounds, outputCompounds)
-    return
-    --[[
-    self.basicRate = basicRate
-    self.inputCompounds = inputCompounds
-    self.outputCompounds = outputCompounds
-    self.priority = 0
-    self.inConcentrationFactor = 1.0
-    self.outConcentrationFactor = 1.0
-    self.atpCost = 0 -- doesn't actually work, but doesn't matter as this code will be replaced soon
-    -- costPriorityFactor and inputUnitSum are used as minor precalculation optimizations
-    self.costPriorityFactor = 1 - self.atpCost* 0.5 / MAX_EXPECTED_PROCESS_ATP_COST
-    self.inputUnitSum = 0 
-    for _ ,amount in pairs(self.inputCompounds) do
-        self.inputUnitSum = self.inputUnitSum + amount
-    end
-    --]]
-end
+function Process:__init(basicRate, inputCompounds, outputCompounds) end
 
 
-function Process:updateFactors(parentMicrobe)
-    --[[
-    -- Update processPriority
-    self.priority = 0
-    for compoundId ,amount in pairs(self.outputCompounds) do
-        -- self.priority = self.priority + (parentMicrobe.microbe.compoundPriorities[compoundId] * amount)
-    end
-    -- Update input concentration factor
-    self.inConcentrationFactor = 1.0
-   
-   
-    -- Find minimum concentration and use as limiting factor
-    for compoundId ,_ in pairs(self.inputCompounds) do
-        local compoundConcentration = (parentMicrobe:getCompoundAmount(compoundId) / parentMicrobe.microbe.capacity)
-        if compoundConcentration < self.inConcentrationFactor then
-            self.inConcentrationFactor = compoundConcentration
-        end
-    end
-   
-    --Alternate way of looking at concentrations - product of concentrations:
-   -- Multiplying up concentrations for all input compounds
-    --for compoundId ,_ in pairs(self.inputCompounds) do
-    -- self.inConcentrationFactor = self.inConcentrationFactor * (parentMicrobe:getCompoundAmount(compoundId) / parentMicrobe.microbe.capacity)
-   -- end
+function Process:updateFactors(parentMicrobe) end
 
-
-   -- Multiplying up concentrations for all output compounds
-    self.outConcentrationFactor = 1.0
-    for compoundId ,_ in pairs(self.outputCompounds) do
-        self.outConcentrationFactor = self.outConcentrationFactor * (parentMicrobe:getCompoundAmount(compoundId) / parentMicrobe.microbe.capacity)
-    end
-    --]]
-end
-
-INPUT_CONCENTRATION_WEIGHT = 0.7
-OUTPUT_CONCENTRATION_WEIGHT = 0.5
-CAPACITY_EVEN_FACTOR = 0.4
 -- Run the process for a given amount of time
 --
 -- @param milliseconds
@@ -86,96 +34,13 @@ CAPACITY_EVEN_FACTOR = 0.4
 --
 function Process:produce(milliseconds, capacityFactor, parentMicrobe, storageTarget)
     return 0
-    --[[
-    -- so a factor=1.0 would mean that respiration would use 1 glucose and produce 6 Oxygen
-    -- Lower values for in and out weights here bring the factors closer to constant 1 (no effect)
-    -- We want to do 1-concentration for output concentration so that higher concentration gives lower factor
-    -- Factor here is the value we multiply on to the compound amounts to be produced and consumed,
-    local factor = (self.inConcentrationFactor^INPUT_CONCENTRATION_WEIGHT) *
-                    (1-(OUTPUT_CONCENTRATION_WEIGHT * self.outConcentrationFactor)) *
-                    self.basicRate *
-                    (milliseconds/1000) *
-                    capacityFactor
-    local cost =  factor * self.atpCost
-    if parentMicrobe:getCompoundAmount(CompoundRegistry.getCompoundId("atp")) >= cost then
-        -- Making sure microbe has the required amount of input compounds, otherwise lower factor
-        for compoundId ,baseAmount in pairs(self.inputCompounds) do
-            if factor * baseAmount > parentMicrobe:getCompoundAmount(compoundId) then
-                factor = parentMicrobe:getCompoundAmount(compoundId)/self.inputCompounds[compoundId]
-            end
-        end
-        -- Take compounds from microbe
-        for compoundId ,baseAmount in pairs(self.inputCompounds) do
-            parentMicrobe:takeCompound(compoundId, baseAmount*factor)
-        end
-        -- Give compounds to microbe
-        for compoundId ,baseAmount in pairs(self.outputCompounds) do
-            if storageTarget == nil then
-            parentMicrobe:storeCompound(compoundId, baseAmount*factor)
-            else
-                storageTarget:storeCompound(compoundId, baseAmount*factor)
-            end
-        end
-        parentMicrobe:takeCompound(CompoundRegistry.getCompoundId("atp"), cost)
-    else
-        factor = 0
-    end
-    return factor
-    --]]
 end
 
 function Process:storage()
-    --[[
-    storage:set("basicRate", self.basicRate)
-    storage:set("priority", self.priority)
-    storage:set("inConcentrationFactor", self.inConcentrationFactor)
-    storage:set("outConcentrationFactor", self.outConcentrationFactor)
-    storage:set("atpCost", self.atpCost)
-    storage:set("inputUnitSum", self.inputUnitSum)
-    local inputCompoundsSt = StorageList()
-    for compoundId, amount in pairs(self.inputCompounds) do
-        inputStorage = StorageContainer()
-        inputStorage:set("compoundId", compoundId)
-        inputStorage:set("amount", amount)
-        inputCompoundsSt:append(inputStorage)
-    end
-    storage:set("inputCompounds", inputCompoundsSt)
-    local outputCompoundsSt = StorageList()
-    for compoundId, amount in pairs(self.outputCompounds) do
-        outputStorage = StorageContainer()
-        outputStorage:set("compoundId", compoundId)
-        outputStorage:set("amount", amount)
-        outputCompoundsSt:append(outputStorage)
-    end
-    storage:set("outputCompounds", outputCompoundsSt)
-    --]]
     return storage
 end
 
-
-function Process:load(storage)
-    --[[
-    self.originalColour = self._colour
-    self.basicRate = storage:get("basicRate", 0)
-    self.priority = storage:get("priority", 0)
-    self.inConcentrationFactor = storage:get("inConcentrationFactor", 1.0)
-    self.outConcentrationFactor = storage:get("outConcentrationFactor", 1.0)
-    self.atpCost = storage:get("atpCost", 0)
-    self.inputUnitSum = storage:get("inputUnitSum", 0)
-    self.costPriorityFactor = 1 - self.atpCost* 0.5 / MAX_EXPECTED_PROCESS_ATP_COST
-    local inputCompoundsSt = storage:get("inputCompounds", {})
-    for i = 1,inputCompoundsSt:size() do
-        local inputStorage = inputCompoundsSt:get(i)
-        self.inputCompounds[inputStorage:get("compoundId", 0)] = inputStorage:get("amount", 0)
-    end
-    local outputCompoundsSt = storage:get("outputCompounds", {})
-    for i = 1,outputCompoundsSt:size() do
-        local outputStorage = outputCompoundsSt:get(i)
-        self.outputCompounds[outputStorage:get("compoundId", 0)] = outputStorage:get("amount", 0)
-    end
-    --]]
-end
-
+function Process:load(storage) end
 
 --------------------------------------------------------------------------------
 -- Class for Organelles capable of producing compounds
@@ -236,32 +101,6 @@ end
 -- The time since the last call to update()
 function ProcessOrganelle:update(microbe, logicTime)
     Organelle.update(self, microbe, logicTime)
-    --[[
-    self.capacityIntervalTimer = self.capacityIntervalTimer + logicTime
-    processFactoredPriorities = {}
-    factorProduct = 0.0
-    if self.capacityIntervalTimer > PROCESS_CAPACITY_UPDATE_INTERVAL then
-        local prioritySum = 0
-        for _, process in ipairs(self.processes) do
-            process:updateFactors(microbe)
-            -- We use input compound concentrations to reduce the priority of the process
-            local priorityValue = process.priority * process.inConcentrationFactor
-            processFactoredPriorities[process] = priorityValue
-            prioritySum = prioritySum + process.priority
-        end
-        -- calculate capacity distribution and perform processing:
-        if prioritySum > 0 then -- Avoid division by 0
-            for _, process in ipairs(self.processes) do
-                    -- (processPriority / sumOfAllProcessPriorities) * (1-X) + X/numOfProcesses
-                    local capacityFactor = (process.priority / prioritySum) * (1-CAPACITY_EVEN_FACTOR) + CAPACITY_EVEN_FACTOR/#self.processes
-                    factorProduct = math.max(factorProduct, process:produce(self.capacityIntervalTimer, capacityFactor, microbe))
-            end
-        end
-        self.capacityIntervalTimer = 0
-        self._needsColourUpdate = true -- Update colours for displaying completeness of organelle production
-        self:_updateColourDynamic(factorProduct)
-    end
-    --]]
 end
 
 
@@ -275,13 +114,7 @@ function ProcessOrganelle:storage()
     storage:set("capacityIntervalTimer", self.capacityIntervalTimer)
     storage:set("originalColour", self.originalColour)
     storage:set("colourChangeFactor", self.colourChangeFactor)
-    --[[
-    local processes = StorageList()
-    for _, process in ipairs(self.processes) do
-        processes:append(process:storage())
-    end
-    storage:set("processes", processes)
-    --]]
+
     return storage
 end
 
