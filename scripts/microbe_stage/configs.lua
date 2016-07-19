@@ -198,6 +198,7 @@ processes = {
 -- currently only stores process capacity data for processing organelles, but can later also store material costs for organelles
 organelles = {
     nucleus = {
+        mp_cost = 0,
         hexes = {
             -- always {q, r}
             {0,0},
@@ -218,6 +219,7 @@ organelles = {
         },
     },
     mitochondrion = {
+        mp_cost = 20,
         processes = {
             Respiration = 0.2,
         },
@@ -235,6 +237,7 @@ organelles = {
         },
     },
     chloroplast = {
+        mp_cost = 20,
         processes = {
             Photosynthesis = 0.01,
         },
@@ -243,6 +246,7 @@ organelles = {
         },
     },
     cytoplasm = {
+        mp_cost = 5,
         processes = {
             Glycolysis = 0.1,
             AminoAcidSynthesis = 0.1,
@@ -258,13 +262,13 @@ organelles = {
         hexes = {
             {0,0},
         },
-        capacity = 15,
+        capacity = 10,
     },
     vacuole = {
         hexes = {
             {0,0},
         },
-        capacity = 50,
+        capacity = 100,
     },
 }
 

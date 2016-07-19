@@ -106,11 +106,8 @@ function setupSpecies()
     
     for name, data in pairs(starter_microbes) do
         speciesEntity = Entity(name)
-        speciesComponent = SpeciesComponent(name)
-        speciesEntity:addComponent(speciesComponent)
-        speciesComponent.organelles = data.organelles -- note, shallow assignment
-        processorComponent = ProcessorComponent()
-        speciesEntity:addComponent(processorComponent)
+        speciesComponent = speciesEntity:getOrCreate(SpeciesComponent)
+        speciesComponent.organelles = deepcopy(data.organelles)
         speciesComponent.colour = Vector3(data.colour.r, data.colour.g, data.colour.b)
 
         -- iterates over all compounds, and sets amounts and priorities
@@ -125,7 +122,7 @@ function setupSpecies()
             end
         end
 
-        SpeciesSystem.initProcessorComponent(speciesEntity, speciesComponent)
+        SpeciesSystem.initProcessorComponent(speciesEntity)
     end
 end
 

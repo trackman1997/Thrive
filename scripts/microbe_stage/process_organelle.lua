@@ -142,11 +142,8 @@ Organelle.mpCosts["chloroplast"] = 20
 Organelle.mpCosts["mitochondrion"] = 20
 
 function OrganelleFactory.make_mitochondrion(data)
-    local mito = ProcessOrganelle()
-    -- mito:addProcess(global_processMap["Respiration"])
-	
+    local mito = Organelle()
 	local angle = (data.rotation / 60)
-	
 	mito:addHex(0, 0)
 	local q = 1
 	local r = 0
@@ -160,10 +157,7 @@ end
 
 function OrganelleFactory.make_chloroplast(data)
 	local x, y = axialToCartesian(data.q, data.r)
-    
-    local chloro = ProcessOrganelle()
-    -- chloro:addProcess(global_processMap["Photosynthesis"])
-	
+    local chloro = Organelle()
 	local angle = (data.rotation / 60)
     if x < 0 then
         angle = angle + 5

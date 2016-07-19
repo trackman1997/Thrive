@@ -202,25 +202,12 @@ function SpeciesSystem:update(_, milliseconds)
     end
 end
 
-function SpeciesSystem.initProcessorComponent(entity, speciesComponent)
+function SpeciesSystem.initProcessorComponent(entity)
+    local speciesComponent = entity:getComponent(SpeciesComponent.TYPE_ID)
+    assert(speciesComponent ~= nil, "No SpeciesComponent available for initProcessorComponent")
     print('SpeciesComponent:initProcessorComponent for species '..speciesComponent.name)
 
-    local sc = entity:getComponent(ProcessorComponent.TYPE_ID)
-    if sc == nil and speciesComponent ~= nil then
-        entity:addComponent(speciesComponent)
-    elseif sc == nil and speciesComponent == nil then
-        assert(false, "No SpeciesComponent available for initProcessorComponent")
-    elseif sc ~= nil and speciesComponent == nil then
-        speciesComponent = sc
-    else
-        assert(sc == SpeciesComponent, "conflicting species components for initProcessorComponent")
-    end
-
-    local pc = entity:getComponent(ProcessorComponent.TYPE_ID)
-    if pc == nil then
-        pc = ProcessorComponent()
-        entity:addComponent(pc)
-    end
+    local pc = entity:getOrCreate(ProcessorComponent)
 
     local thresholds = {}
 
@@ -247,11 +234,17 @@ function SpeciesSystem.initProcessorComponent(entity, speciesComponent)
         pc:setThreshold(compoundID, t.low, t.high, t.vent)
     end
 
+    local cytoplasm = 0
     local capacities = {}
-    for _, organelle in pairs(speciesComponent.organelles) do
+    for _, organelle in ipairs(speciesComponent.organelles) do
         if organelles[organelle.name] ~= nil then
-            if organelles[organelle.name]["processes"] ~= nil then
-                for process, capacity in pairs(organelles[organelle.name]["processes"]) do
+            if organelle.name ~= "cytoplasm" and organelles[organelle.name].hexes then
+                for _, __ in ipairs(organelles[organelle.name].hexes) do
+                    cytoplasm = cytoplasm + 1
+                end
+            end
+            if organelles[organelle.name].processes ~= nil then
+                for process, capacity in pairs(organelles[organelle.name].processes) do
                     if capacities[process] == nil then
                         capacities[process] = 0
                     end
@@ -260,6 +253,16 @@ function SpeciesSystem.initProcessorComponent(entity, speciesComponent)
             end
         end
     end
+
+    for process, capacity in pairs(organelles.cytoplasm.processes) do
+        if capacities[process] == nil then
+            capacities[process] = 0
+        end
+        capacities[process] = capacities[process] + capacity * cytoplasm
+    end
+
+    -- TODO increment microbe storage capacity based on amount of cytoplasm
+
     for bioProcessID in BioProcessRegistry.getList() do
         local name = BioProcessRegistry.getInternalName(bioProcessID)
         if capacities[name] ~= nil then
