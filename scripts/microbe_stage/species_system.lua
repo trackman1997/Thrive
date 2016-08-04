@@ -91,7 +91,7 @@ function SpeciesSystem.initProcessorComponent(entity, speciesComponent)
     end
 
     local capacities = {}
-    for _, organelle in pairs(speciesComponent.organelles) do
+    for _, organelle in pairs(speciesComponent:getOrganelles()) do
         if organelles[organelle.name] ~= nil then
             if organelles[organelle.name]["processes"] ~= nil then
                 for process, capacity in pairs(organelles[organelle.name]["processes"]) do
@@ -118,12 +118,12 @@ function SpeciesSystem.template(microbe, species)
     microbe.microbe.speciesName = species.name
     microbe:setMembraneColour(species.colour)
     -- give it organelles
-    for i, orgdata in pairs(species.organelles) do
+    for i, orgdata in pairs(species:getOrganelles()) do
         organelle = OrganelleFactory.makeOrganelle(orgdata)
         microbe:addOrganelle(orgdata.q, orgdata.r, orgdata.rotation, organelle)
     end
 
-    for compoundID, amount in pairs(species.avgCompoundAmounts) do
+    for compoundID, amount in pairs(species:getAvgCompoundAmounts()) do
         if amount ~= 0 then
             microbe:storeCompound(compoundID, amount, false)
         end
@@ -132,11 +132,12 @@ function SpeciesSystem.template(microbe, species)
 end
 
 function SpeciesSystem.fromMicrobe(microbe, species)
-    local microbe_ = microbe.microbe -- shouldn't break, I think
+    local microbe_ = microbe.microbe
     -- self.name = microbe_.speciesName
     species.colour = microbe:getComponent(MembraneComponent.TYPE_ID):getColour()
-    --print("self.name: "..self.name)
+    
     -- Create species' organelle data
+    local organelles = {}
     for i, organelle in pairs(microbe_.organelles) do
         --print(i)
         local data = {}
@@ -144,7 +145,8 @@ function SpeciesSystem.fromMicrobe(microbe, species)
         data.q = organelle.position.q
         data.r = organelle.position.r
         data.rotation = organelle.rotation
-        species.organelles[i] = data
+        organelles[i] = data
     end
+    speciesComponent:loadOrganelles(organelles)
     -- TODO: make this update the ProcessorComponent based on microbe thresholds
 end

@@ -539,6 +539,7 @@ function Microbe:storeCompound(compoundId, amount, bandwidthLimited)
     if bandwidthLimited then
         storedAmount = self.microbe:getBandwidth(amount, compoundId)
     end
+    
     storedAmount = math.min(storedAmount , self.microbe.capacity - self.microbe.stored)
     self.entity:getComponent(CompoundBagComponent.TYPE_ID):giveCompound(compoundId, storedAmount)
     self.microbe.stored = self.microbe.stored + storedAmount

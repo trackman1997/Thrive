@@ -108,7 +108,7 @@ function setupSpecies()
         speciesEntity = Entity(name)
         speciesComponent = SpeciesComponent(name)
         speciesEntity:addComponent(speciesComponent)
-        speciesComponent.organelles = data.organelles -- note, shallow assignment
+        speciesComponent:loadOrganelles(data.organelles)
         processorComponent = ProcessorComponent()
         speciesEntity:addComponent(processorComponent)
         speciesComponent.colour = Vector3(data.colour.r, data.colour.g, data.colour.b)
@@ -119,12 +119,9 @@ function setupSpecies()
             thresholdData = default_thresholds[compound]
              -- we'll need to generate defaults from species template
             processorComponent:setThreshold(compoundID, thresholdData.low, thresholdData.high, thresholdData.vent)
-            compoundData = data.compounds[compound]
-            if compoundData ~= nil then
-                amount = compoundData.amount
-                -- priority = compoundData.priority
-                speciesComponent.avgCompoundAmounts[compoundID] = amount
-                -- speciesComponent.compoundPriorities[compoundID] = priority
+            compoundData = data["compounds"][compound]
+            if compoundData ~= nil and compoundData["amount"] ~= nil then
+                speciesComponent:setAvgCompoundAmount(compoundID, compoundData)
             end
         end
         if data[thresholds] ~= nil then

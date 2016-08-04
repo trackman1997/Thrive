@@ -1,11 +1,12 @@
 #include "species_component.h"
 
-#include <luabind/iterator_policy.hpp>
 #include <OgreMath.h>
 #include "engine/engine.h"
 #include "engine/serialization.h"
 #include "engine/component_factory.h"
 #include "game.h"
+
+#include <iostream>
 
 using namespace thrive;
 
@@ -23,25 +24,23 @@ SpeciesComponent::luaBindings() {
 		]
 		.def(constructor<const std::string&>())
 		.def_readwrite("name", &SpeciesComponent::name)
-		.def_readwrite("organelles", &SpeciesComponent::organelles)
-		.def_readwrite("avgCompoundAmounts", &SpeciesComponent::avgCompoundAmounts)
 		.def_readwrite("colour", &SpeciesComponent::colour)
 		.def("load", &SpeciesComponent::load)
 		.def("storage", &SpeciesComponent::storage)
+		.def("loadOrganelles", &SpeciesComponent::loadOrganelles)
+		.def("getOrganelles", &SpeciesComponent::getOrganelles)
+		.def("setAvgCompoundAmount", &SpeciesComponent::setAvgCompoundAmount)
+		.def("getAvgCompoundAmounts", &SpeciesComponent::getAvgCompoundAmounts)
 	;
 }
 
 SpeciesComponent::SpeciesComponent(const std::string& _name)
-	: colour(1,0,1), name(_name) {
+	: colour(1,0,1), name(_name), organelles(), avgCompoundAmounts()
+{
 	if (name == "") {
 		name = "noname" + SPECIES_NUM;
 		++SPECIES_NUM;
 	}
-
-	lua_State* lua_state = Game::instance().engine().luaState();
-
-	organelles = luabind::newtable(lua_state);
-	avgCompoundAmounts = luabind::newtable(lua_state);
 }
 
 void
@@ -50,30 +49,29 @@ SpeciesComponent::load(const StorageContainer& storage) {
 	name = storage.get<std::string>("name");
 	colour = storage.get<Ogre::Vector3>("colour");
 
-	lua_State* lua_state = Game::instance().engine().luaState();
-
-	organelles = luabind::newtable(lua_state);
+	organelles.clear();
 	StorageContainer orgs = storage.get<StorageContainer>("organelles");
 
 	unsigned int i = 0;
 	while (orgs.contains("" + i)) {
-		StorageContainer org = orgs.get<StorageContainer>("" + i);
-		luabind::object organelle = luabind::newtable(lua_state);
+		StorageContainer org = orgs.get<StorageContainer>(std::to_string(i++));
 
-		organelle["name"] = org.get<std::string>("name");
-		organelle["q"] = org.get<int>("q");
-		organelle["r"] = org.get<int>("r");
-		organelle["rotation"] = org.get<Ogre::Real>("rotation");
-		organelles["" + ++i] = organelle;
+		OrganelleData organelle;
+		organelle.name = org.get<std::string>("name");
+		organelle.q = org.get<int>("q");
+		organelle.r = org.get<int>("r");
+		organelle.rotation = org.get<float>("rotation");
+		organelles.push_back(organelle);
 	}
 
-	avgCompoundAmounts = luabind::newtable(lua_state);
+	avgCompoundAmounts.clear();
 	StorageContainer amts = storage.get<StorageContainer>("avgCompoundAmounts");
 
 	for (const std::string& k : amts.keys()) {
-		avgCompoundAmounts[k] = amts.get<Ogre::Real>(k);
+		avgCompoundAmounts.emplace(std::stoi(k), amts.get<float>(k));
 	}
 }
+
 
 StorageContainer
 SpeciesComponent::storage() const {
@@ -84,30 +82,88 @@ SpeciesComponent::storage() const {
 	StorageContainer orgs;
 
 	unsigned int i = 0;
-	for (luabind::iterator it(organelles), end; it != end; ++it, ++i) {
-        const luabind::object& data = *it;
-
+	for (auto organelle : organelles)
+    {
         StorageContainer org;
-        org.set<std::string>("name", luabind::object_cast<std::string>(data["name"]));
-        org.set<int>("q", luabind::object_cast<int>(data["q"]));
-        org.set<int>("r", luabind::object_cast<int>(data["r"]));
-        org.set<Ogre::Real>("rotation", luabind::object_cast<Ogre::Real>(data["rotation"]));
+        org.set<std::string>("name", organelle.name);
+        org.set<int>("q", organelle.q);
+        org.set<int>("r", organelle.r);
+        org.set<float>("rotation", organelle.rotation);
 
-        orgs.set<StorageContainer>("" + i, org);
+        orgs.set<StorageContainer>(std::to_string(i++), org);
 	}
 
 	storage.set<StorageContainer>("organelles", orgs);
 
 	StorageContainer amts;
-	for (luabind::iterator it(avgCompoundAmounts), end; it != end; ++it) {
-		const std::string& key = luabind::object_cast<std::string>(it.key());
-        const Ogre::Real& data = luabind::object_cast<Ogre::Real>(*it);
-
-        amts.set<Ogre::Real>(key, data);
+	for (auto amount : avgCompoundAmounts)
+    {
+        amts.set<float>(std::to_string(amount.first), amount.second);
 	}
 
 	storage.set<StorageContainer>("avgCompoundAmounts", amts);
 	return storage;
+}
+
+
+void SpeciesComponent::loadOrganelles(const luabind::object& luaOrganelles)
+{
+    organelles.clear();
+    for (luabind::iterator i(luaOrganelles), end; i != end; ++i)
+    {
+        OrganelleData organelle;
+        luabind::object data = *i;
+        organelle.name = luabind::object_cast<std::string>(data["name"]);
+        organelle.q = luabind::object_cast<int>(data["q"]);
+        organelle.r = luabind::object_cast<int>(data["r"]);
+        organelle.rotation = luabind::object_cast<float>(data["rotation"]);
+
+		organelles.push_back(organelle);
+    }
+}
+
+luabind::object SpeciesComponent::getOrganelles()
+{
+    luabind::object organelleContainer = luabind::newtable(Game::instance().engine().luaState());
+
+    unsigned int i = 0;
+	for (auto organelle : organelles)
+    {
+        luabind::object orgdata = luabind::newtable(Game::instance().engine().luaState());
+        orgdata["name"] = organelle.name;
+        orgdata["q"] = organelle.q;
+        orgdata["r"] = organelle.r;
+        orgdata["rotation"] = organelle.rotation;
+
+        organelleContainer[std::to_string(i++)] = orgdata;
+	}
+
+    return organelleContainer;
+}
+
+void SpeciesComponent::setAvgCompoundAmount(int compoundId, const luabind::object& compoundData)
+{
+    auto search = avgCompoundAmounts.find(compoundId);
+    if (search != avgCompoundAmounts.end())
+    {
+        search->second = luabind::object_cast<float>(compoundData["amount"]);
+    }
+    else
+    {
+        avgCompoundAmounts.emplace(compoundId, luabind::object_cast<float>(compoundData["amount"]));
+    }
+}
+
+luabind::object SpeciesComponent::getAvgCompoundAmounts()
+{
+    luabind::object amts = luabind::newtable(Game::instance().engine().luaState());
+
+	for (auto amount : avgCompoundAmounts)
+    {
+        amts[amount.first] = amount.second;
+	}
+
+    return amts;
 }
 
 REGISTER_COMPONENT(SpeciesComponent)
