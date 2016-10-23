@@ -3,21 +3,10 @@ local function setupBackground()
     local entity = Entity("background")
     local skyplane = SkyPlaneComponent()
     skyplane.properties.plane.normal = Vector3(0, 0, 2000)
-    math.randomseed( os.time() )
-    local rand = math.random(0,3)
-    if rand == 0 then
-        skyplane.properties.materialName = "Background"
-    elseif rand == 1 then
-        skyplane.properties.materialName = "Background_Vent"
-    elseif rand == 2 then
-        skyplane.properties.materialName = "Background_Abyss"
-    else 
-        skyplane.properties.materialName = "Background_Shallow"
-    end
+    skyplane.properties.materialName = "Background"
 	skyplane.properties.scale = 200
     skyplane.properties:touch()
     entity:addComponent(skyplane)
-    
 end
 
 local function setupCamera()

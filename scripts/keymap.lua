@@ -14,6 +14,7 @@ kmp.vacuole = {"V"}
 kmp.mitochondrion = {"M"}
 kmp.oxytoxyvacuole = {"T"}
 kmp.flagellum = {"F"}
+kmp.pilus = {"P"}
 kmp.chloroplast = {"P"}
 
 

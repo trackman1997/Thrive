@@ -18,5 +18,7 @@ storage_organelle.lua
 process_organelle.lua
 nucleus_organelle.lua
 agent_vacuole.lua
+pilus_organelle.lua
+
 // Setup
 setup.lua

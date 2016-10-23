@@ -25,7 +25,7 @@ function MicrobeEditorHudSystem:init(gameState)
     self.editor:init(gameState)
 
     -- This seems really cluttered, there must be a better way.
-    for i=1, 42 do
+    for i=1, 42 do --What is this number?
         self.hoverHex[i] = Entity("hover-hex" .. i)
         local sceneNode = OgreSceneNodeComponent()
         sceneNode.transform.position = Vector3(0,0,0)
@@ -33,7 +33,8 @@ function MicrobeEditorHudSystem:init(gameState)
         sceneNode.meshName = "hex.mesh"
         self.hoverHex[i]:addComponent(sceneNode)
     end
-    for i=1, 6 do
+	
+    for i=1, 6 do --What is this number?
         self.hoverOrganelle[i] = Entity("hover-organelle" .. i)    
         local sceneNode = OgreSceneNodeComponent()
         sceneNode.transform.position = Vector3(0,0,0)
@@ -58,6 +59,7 @@ function MicrobeEditorHudSystem:init(gameState)
     local vacuoleButton = root:getChild("scrollablepane"):getChild("AddVacuole")
     local toxinButton = root:getChild("scrollablepane"):getChild("AddToxinVacuole")
     local chloroplastButton = root:getChild("scrollablepane"):getChild("AddChloroplast")
+    local pilusButton = root:getChild("scrollablepane"):getChild("AddPilus")
     
     self.organelleButtons["nucleus"] = nucleusButton
     self.organelleButtons["flagellum"] = flagellumButton
@@ -66,6 +68,7 @@ function MicrobeEditorHudSystem:init(gameState)
     self.organelleButtons["chloroplast"] = chloroplastButton
     self.organelleButtons["vacuole"] = vacuoleButton
     self.organelleButtons["Toxin"] = toxinButton
+    self.organelleButtons["pilus"] = pilusButton
     self.activeButton = nil
     
     nucleusButton:registerEventHandler("Clicked", function() self:nucleusClicked() end)
@@ -75,6 +78,7 @@ function MicrobeEditorHudSystem:init(gameState)
     chloroplastButton:registerEventHandler("Clicked", function() self:chloroplastClicked() end)
     vacuoleButton:registerEventHandler("Clicked", function() self:vacuoleClicked() end)
     toxinButton:registerEventHandler("Clicked", function() self:toxinClicked() end)
+    pilusButton:registerEventHandler("Clicked", function() self:pilusClicked() end)
     
     -- self.saveLoadPanel = root:getChild("SaveLoadPanel")
     -- self.creationsListbox = self.saveLoadPanel:getChild("SavedCreations")
@@ -193,8 +197,11 @@ function MicrobeEditorHudSystem:update(renderTime, logicTime)
         end
     elseif keyCombo(kmp.gotostage) then
         playClicked()
-    elseif keyCombo(kmp.rename) or keyCombo(kmp.rename2) then
+    elseif keyCombo(kmp.rename) then
         self:updateMicrobeName()
+    elseif keyCombo(kmp.pilus) then
+        self:pilusClicked()
+        self.editor:performLocationAction()
     end
     
     if Engine.keyboard:wasKeyPressed(Keyboard.KC_LEFT) or Engine.keyboard:wasKeyPressed(Keyboard.KC_A) then
@@ -266,15 +273,12 @@ function MicrobeEditorHudSystem:nameClicked()
 end
 
 function MicrobeEditorHudSystem:updateMicrobeName()
-    --set genus_picked to false so it knows to update the name properly when microbe_replacement runs
-    global_genusPicked = false
     self.editor.currentMicrobe.microbe.speciesName = self.nameTextbox:getText()
     local name = self.editor.currentMicrobe.microbe.speciesName
     if string.len(name) > 18 then
         name = string.sub(self.editor.currentMicrobe.microbe.speciesName, 1, 15)
         name = name .. "..."
     end
-    global_genusName  = name
     self.nameLabel:setText(name)
     self.nameTextbox:hide()
     self.nameLabel:show()
@@ -359,6 +363,15 @@ function MicrobeEditorHudSystem:toxinClicked()
     self.activeButton = self.organelleButtons["Toxin"]
     self.activeButton:disable()
     self:setActiveAction("oxytoxy")
+end
+
+function MicrobeEditorHudSystem:pilusClicked()
+    if self.activeButton ~= nil then
+        self.activeButton:enable()
+    end
+    self.activeButton = self.organelleButtons["pilus"]
+    self.activeButton:disable()
+    self:setActiveAction("pilus")
 end
 
 
