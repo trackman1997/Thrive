@@ -1,3 +1,5 @@
+main_menu_functions.lua
+options_menu_functions.lua
 
 // Setup
 main_menu_hud.lua

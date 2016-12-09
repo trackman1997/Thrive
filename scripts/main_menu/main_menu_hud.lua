@@ -1,28 +1,87 @@
 -- Updates the hud with relevant information
 class 'MainMenuHudSystem' (System)
 
+--Names of the menus, used in MainMenu.layout
+MAIN_MENU = "MainMenuInteractive"
+OPTIONS_MENU = "OptionsMenuInteractive"
+GRAPHICS_MENU = "GraphicsMenuInteractive"
+SOUND_MENU = "SoundMenuInteractive"
+CONTROLS_MENU = "ControlsMenuInteractive"
+GAMEPLAY_MENU = "GameplayMenuInteractive"
+
+gMainMenuHudSystem = nil
+
 function MainMenuHudSystem:__init()
     System.__init(self)
 end
 
+function MainMenuHudSystem:setButtonBindings()
+    if self.currentMenu == MAIN_MENU then
+        if self.bindings[MAIN_MENU] == nil then
+            --Main menu buttons
+            self:bindButton("EditorMenuButton", mainMenuMicrobeEditorButtonClicked)
+            self:bindButton("NewGameButton", mainMenuMicrobeStageButtonClicked)
+            self:bindButton("LoadGameButton", mainMenuLoadButtonClicked)
+            self:bindButton("ToolsButton", mainMenuToolsButtonClicked)
+            self:bindButton("ExtrasButton", mainMenuExtrasButtonClicked)
+            self:bindButton("CreditsButton", mainMenuCreditsButtonClicked)
+            self:bindButton("OptionsButton", mainMenuOptionsButtonClicked)
+            self:bindButton("ExitGameButton", quitButtonClicked) --defined in microbe_stage_hud.lua
+            self.bindings[MAIN_MENU] = true
+        end
+
+    elseif self.currentMenu == OPTIONS_MENU then
+        if self.bindings[OPTIONS_MENU] == nil then
+            --Options menu buttons
+            self:bindButton("GraphicOptionsButton", optionsMenuGraphicOptionsButtonClicked)
+            self:bindButton("SoundOptionsButton", optionsMenuSoundOptionsButtonClicked)
+            self:bindButton("GameplayOptionsButton", optionsMenuGameplayOptionsButtonClicked)
+            self:bindButton("ControlsOptionsButton", optionsMenuControlsOptionsButtonClicked)
+            self:bindButton("RevertSettingsButton", optionsMenuRevertSettingsButtonClicked)
+            self:bindButton("MainMenuButton", optionsMenuMainMenuButtonClicked)
+            self.bindings[OPTIONS_MENU] = true
+        end
+    end
+end
+    
+function playHoverClickSound()
+    local guiSoundEntity = Entity("gui_sounds")
+    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
+end
+
+function MainMenuHudSystem:bindButton(name, buttonFunction)
+    local button = root:getChild("Background"):getChild(self.currentMenu):getChild(name)
+    button:registerEventHandler("Clicked", buttonFunction)
+end
+
+function MainMenuHudSystem:changeMenu(menu)
+    --Hiding the current menu
+    local menuWidget = root:getChild("Background"):getChild(self.currentMenu)
+    menuWidget:hide()
+
+    self.currentMenu = menu
+    menuWidget = root:getChild("Background"):getChild(self.currentMenu)
+    menuWidget:show()
+
+    self:setButtonBindings()
+end
+
 function MainMenuHudSystem:init(gameState)
+    self.bindings = {} --registers what menus are already binded to avoid repetition
     System.init(self, "MainMenuHudSystem", gameState)
     root = gameState:rootGUIWindow()
-    local microbeButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("NewGameButton")
-    local microbeEditorButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("EditorMenuButton")
-    local quitButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("ExitGameButton")
-    local loadButton = root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton")   
-    microbeButton:registerEventHandler("Clicked", mainMenuMicrobeStageButtonClicked)
-    microbeEditorButton:registerEventHandler("Clicked", mainMenuMicrobeEditorButtonClicked)
-    loadButton:registerEventHandler("Clicked", mainMenuLoadButtonClicked)
-    quitButton:registerEventHandler("Clicked", quitButtonClicked)
+
+    self.currentMenu = MAIN_MENU
+    self:setButtonBindings()
+    self.bindings[MAIN_MENU] = true
+  
 	updateLoadButton();
     self.videoPlayer = CEGUIVideoPlayer("IntroPlayer")
     root:addChild( self.videoPlayer)
     self.hasShownIntroVid = false
     self.vidFadeoutStarted = false
     self.skippedVideo = false
-    
+    gMainMenuHudSystem = self
 end
 
 function MainMenuHudSystem:update(renderTime, logicTime)
@@ -74,26 +133,3 @@ function updateLoadButton()
         root:getChild("Background"):getChild("MainMenuInteractive"):getChild("LoadGameButton"):disable();
     end
 end
-
-
-function mainMenuLoadButtonClicked()
-    local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    Engine:setCurrentGameState(GameState.MICROBE)
-    Engine:load("quick.sav")
-    print("Game loaded");
-end
-
-function mainMenuMicrobeStageButtonClicked()
-    local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    Engine:setCurrentGameState(GameState.MICROBE_TUTORIAL)
-end
-
-function mainMenuMicrobeEditorButtonClicked()
-    local guiSoundEntity = Entity("gui_sounds")
-    guiSoundEntity:getComponent(SoundSourceComponent.TYPE_ID):playSound("button-hover-click")
-    Engine:setCurrentGameState(GameState.MICROBE_EDITOR)
-end
-
--- quitButtonClicked is already defined in microbe_stage_hud.lua
