@@ -145,6 +145,6 @@ function MovementOrganelle:update(microbe, organelle, logicTime)
     organelle.sceneNode.transform.position = translation
     organelle.sceneNode.transform:touch()
 
-    MovementOrganelle:_turnMicrobe(microbe)
-    MovementOrganelle:_moveMicrobe(microbe, organelle, logicTime)
+    self:_turnMicrobe(microbe)
+    self:_moveMicrobe(microbe, organelle, logicTime)
 end
