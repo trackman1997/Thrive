@@ -18,7 +18,7 @@ WantedURL = "https://#{SVNUser}@boostslair.com/svn/Thrive_Content"
 
 puts "Using svn user: #{SVNUser}"
 
-info "Thrive folder setup"
+info "Running Thrive folder setup"
 
 if not File.exist? "Content"
 
@@ -49,6 +49,31 @@ if currenturl != WantedURL
   success "svn URL updated"
   
 end
+
+info "svn URL is correct"
+
+
+# Prints files that SVN should be set to ignore
+def printSVNIgnoreList
+
+  ignoreList = []
+
+  Dir.foreach(".") do |fname|
+
+    if !fname.match(/.*Content.*/i) &&
+       fname != "." && fname != ".." && fname != ".svn"
+       
+       ignoreList.push fname
+      
+    end
+  end
+
+  puts "Suggested SVN ignore list:"
+  puts ignoreList.join"\n"
+  
+end
+
+#printSVNIgnoreList
 
 success "Done"
 
