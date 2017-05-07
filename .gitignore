@@ -1,15 +1,7 @@
-# Asset directory
-assets/*
-
-# asset symlinks
-/cegui_examples
-/definitions
-/fonts
-/gui
-/materials
-/models
-/sounds
-/videos
+# Content directory
+/Content
+/Content/*
+.svn
 
 # Merge tool left over files
 *.orig
@@ -48,6 +40,14 @@ $tf*/
 [Bb]in
 [Dd]ebug*/
 
+# UE4 folders
+/Binaries
+/DerivedDataCache
+/Intermediate
+/Saved
+/Staging
+
+
 # Libraries
 *.lib
 *.a
@@ -81,6 +81,7 @@ $tf*/
 build-win/
 build*/
 /build
+/cmake_build
 # CMake cache
 CMakeCache.txt
 CMakeFiles
@@ -93,6 +94,16 @@ nbproject/
 
 # Vim swap files
 *.swp
+
+# Project folders
+.kdev4
+*.pri
+Thrive.workspace
+ThriveCodeCompletionFolders.txt
+ThriveCodeLitePreProcessor.txt
+Thrive.kdev4
+Thrive.pro
+CMakeLists.txt
 
 
 # Version file

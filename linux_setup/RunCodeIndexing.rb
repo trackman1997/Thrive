@@ -3,7 +3,7 @@
 require 'find'
 
 
-if File.exists? "src"
+if File.exists? "Source"
   runFolder = "."
 else
   runFolder = "../"
@@ -13,8 +13,9 @@ Dir.chdir(runFolder){
 
   file_paths = []
   Find.find('.') do |path|
-    file_paths << path if (not path =~ /.*\/contrib\/.*/) and
-      (not path =~ /.*\/build\/.*/) and ((path =~ /.*\.h/) or
+    file_paths << path if (not path =~ /.*\/Build\/.*/) and
+      (not path =~ /.*\/Staging\/.*/) and
+      (not path =~ /.*\/cmake_build\/.*/) and ((path =~ /.*\.h/) or
                                          (path =~ /.*\.cpp/))
   end
 
