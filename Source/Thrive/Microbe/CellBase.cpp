@@ -11,10 +11,31 @@ ACellBase::ACellBase()
  	// off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+    SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
+    RootComponent = SphereComponent;
+    SphereComponent->InitSphereRadius(40.0f);
+    SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
 
     OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
         TEXT("CustomMovementComponent"));
     OurMovementComponent->UpdatedComponent = RootComponent;
+    
+    
+    UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("VisualRepresentation"));
+    
+    SphereVisual->SetupAttachment(RootComponent);
+    
+    static ConstructorHelpers::FObjectFinder<UStaticMesh>
+        SphereVisualAsset(TEXT("/Engine/BasicShapes/Sphere"));
+    
+    if(SphereVisualAsset.Succeeded()){
+        
+        SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
+        //SphereVisual->SetMaterial(0, class UMaterialInterface *Material)
+        SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+        SphereVisual->SetWorldScale3D(FVector(0.8f));
+    }
 }
 
 // Called when the game starts or when spawned
