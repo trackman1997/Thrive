@@ -5,7 +5,10 @@
 #include "GameFramework/Pawn.h"
 
 #include "Components/SphereComponent.h"
+#include "Components/AudioComponent.h"
 #include "MembraneComponent.h"
+
+//#include "CommonComponents/OggSoundPlayerComponent.h"
 
 #include "OrganelleComponent.h"
 
@@ -52,7 +55,16 @@ protected:
     // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     // TSubclassOf<UOrganelleComponent> VacuoleClass;
 
+    //UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+    //USoundVisComponent* SoundVisComponent;
+
     // UPROPERTY(BlueprintReadOnly, Category="CellParts")
     // UOrganelleComponent* Vacuole;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Thrive|Sound Player")
+    UAudioComponent* AudioComponent;
+
+    UPROPERTY()
+    USoundWave* CompressedSoundWaveRef;
 	
 };

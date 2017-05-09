@@ -6,7 +6,20 @@ public class Thrive : ModuleRules
 {
 	public Thrive(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[] {
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "InputCore",
+
+                // Victory requires these.
+                // We would probably require Slate and UMG things anyway 
+                "VictoryBPLibrary",
+                "UMG",
+                "Slate",
+                "SlateCore",
+                "ImageWrapper",
+            });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

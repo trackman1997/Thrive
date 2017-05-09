@@ -1,1 +1,4 @@
 
+[submodule "Plugins/VictoryPlugin"]
+	path = Plugins/VictoryPlugin
+	url = git@github.com:EverNewJoy/VictoryPlugin.git
