@@ -75,6 +75,28 @@ end
 
 #printSVNIgnoreList
 
+
+info "Making sure submodules are fine"
+
+if !File.exists? "Plugins/VictoryPlugin/VictoryBPLibrary.uplugin"
+
+  info "Submodules aren't initialized..."
+
+  system "git submodule init"
+  onError "Failed to initialize submodules" if $?.exitstatus > 0
+
+  success "git submodules have been initialized"
+  
+end
+
+system "git submodule update"
+if $?.exitstatus > 0
+
+  warning "Failed to update submodules, this may or may not be a problem"
+  
+end
+  
+
 success "Done"
 
 exit 0
