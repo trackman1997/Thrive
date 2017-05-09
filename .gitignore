@@ -1,6 +1,7 @@
 # Content directory
 /Content
 /Content/*
+/RawContent
 .svn
 
 # Merge tool left over files
