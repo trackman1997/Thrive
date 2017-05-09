@@ -5,6 +5,7 @@
 #include "GameFramework/Pawn.h"
 
 #include "Components/SphereComponent.h"
+#include "MembraneComponent.h"
 
 #include "OrganelleComponent.h"
 
@@ -46,7 +47,7 @@ protected:
     UCellPawnMovementComponent* OurMovementComponent;
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
-    USphereComponent* SphereComponent;
+    UMembraneComponent* MembraneComponent;
 
     // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     // TSubclassOf<UOrganelleComponent> VacuoleClass;

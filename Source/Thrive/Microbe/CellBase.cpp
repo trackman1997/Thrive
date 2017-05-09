@@ -11,31 +11,32 @@ ACellBase::ACellBase()
  	// off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-    RootComponent = SphereComponent;
-    SphereComponent->InitSphereRadius(40.0f);
-    SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
+    MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("RootMembrane"));
+    RootComponent = MembraneComponent;
+    
+    //MembraneComponent->InitSphereRadius(40.0f);
+    //MembraneComponent->SetCollisionProfileName(TEXT("Pawn"));
 
     OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
         TEXT("CustomMovementComponent"));
     OurMovementComponent->UpdatedComponent = RootComponent;
     
     
-    UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
-        TEXT("VisualRepresentation"));
+    // UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
+    //     TEXT("VisualRepresentation"));
     
-    SphereVisual->SetupAttachment(RootComponent);
+    // SphereVisual->SetupAttachment(RootComponent);
     
-    static ConstructorHelpers::FObjectFinder<UStaticMesh>
-        SphereVisualAsset(TEXT("/Engine/BasicShapes/Sphere"));
+    // static ConstructorHelpers::FObjectFinder<UStaticMesh>
+    //     SphereVisualAsset(TEXT("/Engine/BasicShapes/Sphere"));
     
-    if(SphereVisualAsset.Succeeded()){
+    // if(SphereVisualAsset.Succeeded()){
         
-        SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
-        //SphereVisual->SetMaterial(0, class UMaterialInterface *Material)
-        SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-        SphereVisual->SetWorldScale3D(FVector(0.8f));
-    }
+    //     SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
+    //     //SphereVisual->SetMaterial(0, class UMaterialInterface *Material)
+    //     SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+    //     SphereVisual->SetWorldScale3D(FVector(0.8f));
+    // }
 }
 
 // Called when the game starts or when spawned
