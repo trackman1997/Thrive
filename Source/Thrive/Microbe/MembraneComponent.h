@@ -30,6 +30,13 @@ public:
 
     //! Creates the mesh, needs to be called in actor OnConstruction
     void CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver);
+
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    float ScaleUp = 10.f;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    float Height = 3.f;
 	
 protected:
 
@@ -90,6 +97,9 @@ protected:
 
     //! These are initially placed far away and shrink towards the organelles
     TArray<FVector2D> Vertices2D;
+
+    //! Temporary for increasing copying efficiency of Vertices2D in DoMembraneIterativeShrink
+    TArray<FVector2D> NewPositions;
 
     // Temporary data for generation //
 

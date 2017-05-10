@@ -51,14 +51,26 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
 
     // Create renderable from the mesh data //
 
-    TArray<FVector> Vertices;
+
     TArray<FVector> Normals;
     TArray<FRuntimeMeshTangent> Tangents;
-    TArray<FVector2D> TextureCoordinates;
+    
     TArray<int32> Triangles;
 
-    URuntimeMeshLibrary::CreateBoxMesh(FVector(50, 50, 50), Vertices, Triangles, Normals,
-        TextureCoordinates, Tangents);
+    // URuntimeMeshLibrary::CreateBoxMesh(FVector(50, 50, 50), Vertices, Triangles, Normals,
+    //     TextureCoordinates, Tangents);
+
+    TArray<FVector>& Vertices = MeshPoints;
+    TArray<FVector2D>& TextureCoordinates = UVs;
+
+    Triangles.SetNum(Vertices.Num());
+
+    for(size_t i = 0; i < Triangles.Num(); ++i){
+
+        // 1 to 1 vertex mapping to traingles
+        Triangles[i] = i;
+        
+    }
 
     // Create the mesh section specifying collision
     GeometryReceiver->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates,
@@ -122,7 +134,7 @@ void UMembraneComponent::DoMembraneIterativeShrink(){
 void UMembraneComponent::DrawMembrane(){
 
     // Stores the temporary positions of the membrane.
-	TArray<FVector2D> NewPositions = Vertices2D;
+	NewPositions = Vertices2D;
 
     // Loops through all the points in the membrane and relocates them as necessary.
 	for(size_t i = 0, end = NewPositions.Num(); i < end; i++)
@@ -173,45 +185,47 @@ void UMembraneComponent::DrawMembrane(){
 
 void UMembraneComponent::MakePrism(){
 
-    const double Height = .1;
-
     MeshPoints.Empty();
 
 	for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
 	{
-		MeshPoints.Emplace(Vertices2D[i%end].X, Vertices2D[i%end].Y,
+		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X, Vertices2D[(i+1)%end].Y,
+		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+            Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[i%end].X, Vertices2D[i%end].Y,
+		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[i%end].X, Vertices2D[i%end].Y,
+		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X, Vertices2D[(i+1)%end].Y,
+		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+            Vertices2D[(i+1)%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X, Vertices2D[(i+1)%end].Y,
+		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+            Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
 	}
 
 	for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
 	{
-		MeshPoints.Emplace(Vertices2D[i%end].X, Vertices2D[i%end].Y,
+		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
 		MeshPoints.Emplace(0,0,Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X, Vertices2D[(i+1)%end].Y,
+		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp, Vertices2D[(i+1)%end].Y * ScaleUp,
             +Height/2);
 
-		MeshPoints.Emplace(Vertices2D[i%end].X, Vertices2D[i%end].Y,
+		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X, Vertices2D[(i+1)%end].Y,
+		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+            Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
         
 		MeshPoints.Emplace(0,0,-Height/2);
