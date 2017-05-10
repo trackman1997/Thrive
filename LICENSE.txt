@@ -19,3 +19,18 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+Thrive uses the Unreal® Engine. Unreal® is a trademark or registered
+trademark of Epic Games, Inc. in the United States of America and
+elsewhere.
+
+Unreal® Engine, Copyright 1998 – 2017, Epic Games, Inc. All rights
+reserved.
+
+
+Thrive uses the following additional Unreal Engine plugins:
+
+Rama's Victory Blueprint Library
+
+Runtime Mesh Component, Copyright (c) 2016 Chris Conway (Koderz)

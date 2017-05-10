@@ -12,13 +12,15 @@ public class Thrive : ModuleRules
                 "Engine",
                 "InputCore",
 
+                "RuntimeMeshComponent",
+
                 // Victory requires these.
                 // We would probably require Slate and UMG things anyway 
                 "VictoryBPLibrary",
                 "UMG",
                 "Slate",
                 "SlateCore",
-                "ImageWrapper",
+                "ImageWrapper"
             });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

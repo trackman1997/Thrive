@@ -1,4 +1,8 @@
 
 [submodule "Plugins/VictoryPlugin"]
 	path = Plugins/VictoryPlugin
-	url = git@github.com:EverNewJoy/VictoryPlugin.git
+	url = https://github.com/EverNewJoy/VictoryPlugin.git
+
+[submodule "Plugins/RuntimeMeshComponent"]
+	path = Plugins/RuntimeMeshComponent
+	url = https://github.com/Koderz/UE4RuntimeMeshComponent.git
