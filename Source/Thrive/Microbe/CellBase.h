@@ -49,8 +49,10 @@ public:
 protected:
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
-        UCellPawnMovementComponent* OurMovementComponent;
-        //UFloatingPawnMovement* OurMovementComponent;
+    UCellPawnMovementComponent* OurMovementComponent = nullptr;
+
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
+    UFloatingPawnMovement* FloatingMovementComponent = nullptr;
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     UMembraneComponent* MembraneComponent;
@@ -75,4 +77,8 @@ protected:
 
     //UPROPERTY()
     //UBoxComponent* BoxComponent;
+
+    //! If true uses a UFloatingPawnMovement instead of applying force to move
+    //! \warning If this is changed the whole editor needs to be restarted
+    const bool bUsingFloatingMovement = true;
 };

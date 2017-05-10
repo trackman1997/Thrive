@@ -31,7 +31,10 @@ ACellBase::ACellBase()
     //MembraneComponent->SetupAttachment(RootComponent);
     //RootComponent = MembraneComponent;
 
-    RuntimeMesh->SetSimulatePhysics(true);
+    if(!bUsingFloatingMovement){
+        RuntimeMesh->SetSimulatePhysics(true);
+    }
+    
     RuntimeMesh->bUseComplexAsSimpleCollision = false;
 
     MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("Membrane"));
@@ -40,23 +43,25 @@ ACellBase::ACellBase()
     //MembraneComponent->SetSimulatePhysics(true);
     //MembraneComponent->bUseComplexAsSimpleCollision = false;
     
-    OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
-         TEXT("CustomMovementComponent"));
-    OurMovementComponent->UpdatedComponent = RootComponent;
-    OurMovementComponent->PushComponent = RuntimeMesh;
-    //OurMovementComponent->PushComponent = MembraneComponent;
+    if(!bUsingFloatingMovement){
 
-    //OurMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
-    //    TEXT("Movement"));
-    //OurMovementComponent->UpdatedComponent = RootComponent;
+        OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
+            TEXT("CustomMovementComponent"));
+        OurMovementComponent->UpdatedComponent = RootComponent;
+        OurMovementComponent->PushComponent = RuntimeMesh;        
+
+    } else {
+    
+        FloatingMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
+            TEXT("Floating Movement"));
+        FloatingMovementComponent->UpdatedComponent = RootComponent;
+    }
 
     // This prevents the collision mesh to fall on z axis, but only
     // when using floating pawn component, which would break the
     // collision
     //OurMovementComponent->SetPlaneConstraintEnabled(true);
     //OurMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
-
-    //SoundVisComponent = CreateDefaultSubobject<USoundVisComponent>(TEXT("TestMusic"));
     
     
     // UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
@@ -134,22 +139,29 @@ UPawnMovementComponent* ACellBase::GetMovementComponent() const
 
 void ACellBase::MoveForward(float AxisValue){
 
-    if(OurMovementComponent
-        && (OurMovementComponent->UpdatedComponent == RootComponent)
-    ){
+    // if(OurMovementComponent
+    //     && (OurMovementComponent->UpdatedComponent == RootComponent)
+    // ){
         // This GetActorForwardVector() call makes the movement
         // relative to the cell heading
-        OurMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
-    }
+
+        if(OurMovementComponent)
+            OurMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
+        if(FloatingMovementComponent)
+            FloatingMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
+        //}
 }
 
 void ACellBase::MoveRight(float AxisValue){
 
-    if(OurMovementComponent
-        && (OurMovementComponent->UpdatedComponent == RootComponent)
-    ){
-        OurMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
-    }
+    // if(OurMovementComponent
+    //     && (OurMovementComponent->UpdatedComponent == RootComponent)
+    // ){
+        if(OurMovementComponent)
+            OurMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
+        if(FloatingMovementComponent)
+            FloatingMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
+        //}
 }
 
 void ACellBase::ToggleEngulf(){
