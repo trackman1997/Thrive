@@ -24,9 +24,8 @@ ACellBase::ACellBase()
     // SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
     
 
-    //MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("RootMembrane"));
-    
-    RuntimeMesh = CreateDefaultSubobject<URuntimeMeshComponent>(TEXT("Runtime Mesh"));
+
+    RuntimeMesh = CreateDefaultSubobject<URuntimeMeshComponent>(TEXT("Runtime Mesh"));    
     RootComponent = RuntimeMesh;
     
     //MembraneComponent->SetupAttachment(RootComponent);
@@ -34,29 +33,28 @@ ACellBase::ACellBase()
 
     RuntimeMesh->SetSimulatePhysics(true);
     RuntimeMesh->bUseComplexAsSimpleCollision = false;
-    
-    //SetSimulatePhysics(true);
-    //MembraneComponent->WakeRigidBody();
-    
-    //MembraneComponent->InitSphereRadius(40.0f);
-    //MembraneComponent->SetCollisionProfileName(TEXT("Pawn"));
 
-    
+    MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("Membrane"));
+    //MembraneComponent->SetupAttachment(RuntimeMesh);
+
+    //MembraneComponent->SetSimulatePhysics(true);
+    //MembraneComponent->bUseComplexAsSimpleCollision = false;
     
     OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
          TEXT("CustomMovementComponent"));
     OurMovementComponent->UpdatedComponent = RootComponent;
     OurMovementComponent->PushComponent = RuntimeMesh;
+    //OurMovementComponent->PushComponent = MembraneComponent;
 
     //OurMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
     //    TEXT("Movement"));
     //OurMovementComponent->UpdatedComponent = RootComponent;
 
-    // This prevents the collision mesh to fall on z axis which would break the collision
-    OurMovementComponent->SetPlaneConstraintEnabled(true);
-    OurMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
-    
-
+    // This prevents the collision mesh to fall on z axis, but only
+    // when using floating pawn component, which would break the
+    // collision
+    //OurMovementComponent->SetPlaneConstraintEnabled(true);
+    //OurMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
 
     //SoundVisComponent = CreateDefaultSubobject<USoundVisComponent>(TEXT("TestMusic"));
     
@@ -87,9 +85,10 @@ ACellBase::ACellBase()
 void ACellBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-    
-
+void ACellBase::OnConstruction(const FTransform& Transform)
+{
     // if(VacuoleClass){
 
     //     Vacuole = NewObject<UOrganelleComponent>(this, *VacuoleClass);
@@ -99,38 +98,8 @@ void ACellBase::BeginPlay()
     //         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Blue,
     //             TEXT("Vacuole spawned"));
     // }
-}
-
-void ACellBase::OnConstruction(const FTransform& Transform)
-{
-    RuntimeMesh->bUseComplexAsSimpleCollision = false;
     
-	TArray<FVector> Vertices;
-	TArray<FVector> Normals;
-	TArray<FRuntimeMeshTangent> Tangents;
-	TArray<FVector2D> TextureCoordinates;
-	TArray<int32> Triangles;
-
-	URuntimeMeshLibrary::CreateBoxMesh(FVector(50, 50, 50), Vertices, Triangles, Normals,
-        TextureCoordinates, Tangents);
-
-
-
-	// Create the mesh section specifying collision
-	RuntimeMesh->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates,
-        TArray<FColor>(), Tangents, true, EUpdateFrequency::Infrequent);
-
-    RuntimeMesh->AddCollisionConvexMesh(Vertices);
-
-    if(RuntimeMesh && RuntimeMesh->GetBodyInstance())
-    {
-        // RuntimeMesh->GetBodyInstance()->bLockZTranslation = true;
-        
-        RuntimeMesh->GetBodyInstance()->bLockXRotation = true;
-        RuntimeMesh->GetBodyInstance()->bLockYRotation = true;
-
-        RuntimeMesh->GetBodyInstance()->SetDOFLock(EDOFMode::XYPlane);
-    }
+    MembraneComponent->CreateMembraneMesh(RuntimeMesh);
 }
 
 

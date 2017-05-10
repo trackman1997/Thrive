@@ -6,18 +6,7 @@
 
 
 UMembraneComponent::UMembraneComponent() : Super(){
-
-    SetUsesPhysics(true);
-    //bUsesPhysics = true;
-
-    // Maybe call SetCollisionProfileName(TEXT("Pawn")); here
-    SetCollisionProfileName(TEXT("Pawn"));
-    //SetCollisionProfileName(TEXT("BlockAll"));
-
-    //SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
-
     
-    //SetMaterial(0, );
 }
 
 // ------------------------------------ //
@@ -25,18 +14,37 @@ void UMembraneComponent::BeginPlay(){
 
     Super::BeginPlay();
 
-    if(OrganelleContainerComponent){
+}
 
+void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver){
+
+    if(OrganelleContainerComponent){
         
         
     } else {
 
-        TArray<FGeneratedTriangle> box;
+        TArray<FVector> Vertices;
+        TArray<FVector> Normals;
+        TArray<FRuntimeMeshTangent> Tangents;
+        TArray<FVector2D> TextureCoordinates;
+        TArray<int32> Triangles;
 
-        FGeometryGenerator::CreateBoxGeometry(60, box);
-        
-        SetGeneratedMeshTriangles(box);
-        UpdateCollision();
+        URuntimeMeshLibrary::CreateBoxMesh(FVector(50, 50, 50), Vertices, Triangles, Normals,
+            TextureCoordinates, Tangents);
+
+        // Create the mesh section specifying collision
+        GeometryReceiver->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates,
+            TArray<FColor>(), Tangents, true, EUpdateFrequency::Infrequent);
+
+        GeometryReceiver->AddCollisionConvexMesh(Vertices);
+
+        if(GeometryReceiver->GetBodyInstance())
+        {
+            GeometryReceiver->GetBodyInstance()->bLockXRotation = true;
+            GeometryReceiver->GetBodyInstance()->bLockYRotation = true;
+
+            GeometryReceiver->GetBodyInstance()->SetDOFLock(EDOFMode::XYPlane);
+        }
     }
 }
 

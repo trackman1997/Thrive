@@ -3,22 +3,15 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+
 #include "GameFramework/FloatingPawnMovement.h"
-
-#include "Components/SphereComponent.h"
-#include "Components/AudioComponent.h"
-#include "Components/BoxComponent.h"
-#include "MembraneComponent.h"
-
-#include "OrganelleComponent.h"
-
 #include "CellPawnMovementComponent.h"
-
 
 #include "RuntimeMeshComponent.h"
 
-
-#include "ProceduralMeshComponent.h"
+#include "Components/AudioComponent.h"
+#include "MembraneComponent.h"
+#include "OrganelleComponent.h"
 
 #include "CellBase.generated.h"
 
@@ -59,8 +52,8 @@ protected:
         UCellPawnMovementComponent* OurMovementComponent;
         //UFloatingPawnMovement* OurMovementComponent;
 
-    //UPROPERTY(EditAnyWhere, BlueprintReadOnly)
-    //UMembraneComponent* MembraneComponent;
+    UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+    UMembraneComponent* MembraneComponent;
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
