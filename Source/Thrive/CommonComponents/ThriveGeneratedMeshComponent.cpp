@@ -259,21 +259,47 @@ UThriveGeneratedMeshComponent::UThriveGeneratedMeshComponent() {
 
     PrimaryComponentTick.bCanEverTick = false;
 
-    SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
+    SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
 }
 
 void UThriveGeneratedMeshComponent::SetUsesPhysics(bool CreatePhysics) {
 
+    LOG_LOG("uses physics called");
     bUsesPhysics = CreatePhysics;
 }
 //////////////////////////////////////////////////////////////////////////
 bool UThriveGeneratedMeshComponent::SetGeneratedMeshTriangles(
     const TArray<FGeneratedTriangle> &Triangles)
 {
+    LOG_LOG("mesh updated");
     GeneratedMeshTris = Triangles;
 
-    if(bUsesPhysics)
+    if(bUsesPhysics){
+
+		// Physics thing
+		FKConvexElem NewConvexElem;
+        
+		// Copy in vertex info
+        TArray<FVector> ConvexVerts;
+
+        ConvexVerts.SetNum(Triangles.Num() * 3);
+
+        for(size_t i = 0; i < Triangles.Num(); ++i){
+
+            ConvexVerts[(i * 3)] = Triangles[i].Vertex1;
+            ConvexVerts[(i * 3) + 1] = Triangles[i].Vertex2;
+            ConvexVerts[(i * 3) + 2] = Triangles[i].Vertex2;
+        }
+        
+		NewConvexElem.VertexData = ConvexVerts;
+		// Update bounding box
+		NewConvexElem.ElemBox = FBox(NewConvexElem.VertexData);
+		// Add to array of convex elements
+        OurCollisionConvexElems.SetNum(1);
+		OurCollisionConvexElems[0] = NewConvexElem;
+        
         UpdateCollision();
+    }
 
     // Need to recreate scene proxy to send it over
     MarkRenderStateDirty();
@@ -387,7 +413,9 @@ bool UThriveGeneratedMeshComponent::GetPhysicsTriMeshData(FTriMeshCollisionData*
         CollisionData->MaterialIndices.Add(i);
     }
 
-    CollisionData->bFlipNormals = true;
+	CollisionData->bFlipNormals = true;
+	CollisionData->bDeformableMesh = true;
+	CollisionData->bFastCook = true;
 
     return true;
 }
@@ -399,6 +427,9 @@ bool UThriveGeneratedMeshComponent::ContainsPhysicsTriMeshData(bool InUseAllTriD
 void UThriveGeneratedMeshComponent::UpdateBodySetup() {
 
     if (ModelBodySetup == NULL) {
+
+        LOG_LOG("updating body setup");
+        
         ModelBodySetup = NewObject<UBodySetup>(this);
         ModelBodySetup->BodySetupGuid = FGuid::NewGuid();
 
@@ -412,6 +443,8 @@ void UThriveGeneratedMeshComponent::UpdateBodySetup() {
 
 void UThriveGeneratedMeshComponent::UpdateCollision() {
 
+    LOG_LOG("update collision called");
+
     bool bCreatePhysState = false; // Should we create physics state at the end of this function?
 
     if (bPhysicsStateCreated)
@@ -422,6 +455,14 @@ void UThriveGeneratedMeshComponent::UpdateCollision() {
 
     // Ensure we have a BodySetup
     UpdateBodySetup();
+
+    ModelBodySetup->AggGeom.ConvexElems = OurCollisionConvexElems;
+
+    // New stuff to hopefully fix pawn movement like in UProceduralMeshComponent
+    ModelBodySetup->bHasCookedCollisionData = true;
+
+    // New GUID, maybe this updates something
+    ModelBodySetup->BodySetupGuid = FGuid::NewGuid();
 
 #if WITH_RUNTIME_PHYSICS_COOKING || WITH_EDITOR
 
@@ -441,8 +482,10 @@ void UThriveGeneratedMeshComponent::UpdateCollision() {
 
 UBodySetup* UThriveGeneratedMeshComponent::GetBodySetup() {
 
-    if (!bUsesPhysics)
-        return nullptr;
+    LOG_LOG("Get body setup called");
+
+    // if (!bUsesPhysics)
+    //     return nullptr;
 
     UpdateBodySetup();
     return ModelBodySetup;

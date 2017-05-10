@@ -18,5 +18,6 @@ public:
     virtual void TickComponent(float DeltaTime, enum ELevelTick TickType,
         FActorComponentTickFunction *ThisTickFunction) override; 
 	
-	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UPrimitiveComponent* PushComponent = nullptr;
 };

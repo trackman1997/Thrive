@@ -3,16 +3,22 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "GameFramework/FloatingPawnMovement.h"
 
 #include "Components/SphereComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/BoxComponent.h"
 #include "MembraneComponent.h"
-
-//#include "CommonComponents/OggSoundPlayerComponent.h"
 
 #include "OrganelleComponent.h"
 
 #include "CellPawnMovementComponent.h"
+
+
+#include "RuntimeMeshComponent.h"
+
+
+#include "ProceduralMeshComponent.h"
 
 #include "CellBase.generated.h"
 
@@ -28,6 +34,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+
+    void OnConstruction(const FTransform& Transform) override;
 
 public:	
 	// Called every frame
@@ -46,11 +55,15 @@ public:
     
 protected:
 
-    UPROPERTY(BlueprintReadOnly)
-    UCellPawnMovementComponent* OurMovementComponent;
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
+        UCellPawnMovementComponent* OurMovementComponent;
+        //UFloatingPawnMovement* OurMovementComponent;
+
+    //UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+    //UMembraneComponent* MembraneComponent;
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
-    UMembraneComponent* MembraneComponent;
+    URuntimeMeshComponent* RuntimeMesh;
 
     // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     // TSubclassOf<UOrganelleComponent> VacuoleClass;
@@ -61,10 +74,12 @@ protected:
     // UPROPERTY(BlueprintReadOnly, Category="CellParts")
     // UOrganelleComponent* Vacuole;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Thrive|Sound Player")
-    UAudioComponent* AudioComponent;
+    //UPROPERTY(BlueprintReadOnly, Category = "Thrive|Sound Player")
+    //UAudioComponent* AudioComponent;
 
-    UPROPERTY()
-    USoundWave* CompressedSoundWaveRef;
-	
+    //UPROPERTY()
+    //USoundWave* CompressedSoundWaveRef;
+
+    //UPROPERTY()
+    //UBoxComponent* BoxComponent;
 };

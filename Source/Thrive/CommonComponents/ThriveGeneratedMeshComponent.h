@@ -64,6 +64,10 @@ private:
     //! This is the mesh data that has been generated
     TArray<FGeneratedTriangle> GeneratedMeshTris;
 
+    //! Convex shapes used for simple collision
+	UPROPERTY()
+    TArray<FKConvexElem> OurCollisionConvexElems;
+
     //! True if should generate physics bodies
     bool bUsesPhysics = false;
 

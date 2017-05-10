@@ -3,20 +3,6 @@
 #include "Thrive.h"
 #include "CellBase.h"
 
-
-
-#include "Sound/SoundWave.h"
-
-
-#include "VictoryBPLibrary/Public/VictoryBPFunctionLibrary.h"
-
-//#include "AudioDevice.h"
-//#include "Runtime/Engine/Public/VorbisAudioInfo.h"
-//#include "Developer/TargetPlatform/Public/Interfaces/IAudioFormat.h"
-
-
-//#include <memory>
-
 // Sets default values
 ACellBase::ACellBase()
 {
@@ -24,16 +10,52 @@ ACellBase::ACellBase()
  	// off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("RootMembrane"));
-    RootComponent = MembraneComponent;
 
+    // BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+    // RootComponent = BoxComponent;
+    // BoxComponent->InitBoxExtent(FVector(50, 50, 50));
+    // BoxComponent->SetCollisionProfileName(TEXT("Pawn"));
+    //BoxComponent->SetCollisionProfileName(TEXT("BlockAll"));
+
+    // USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(
+    //     TEXT("RootComponent"));
+    // RootComponent = SphereComponent;
+    // SphereComponent->InitSphereRadius(40.0f);
+    // SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
+    
+
+    //MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("RootMembrane"));
+    
+    RuntimeMesh = CreateDefaultSubobject<URuntimeMeshComponent>(TEXT("Runtime Mesh"));
+    RootComponent = RuntimeMesh;
+    
+    //MembraneComponent->SetupAttachment(RootComponent);
+    //RootComponent = MembraneComponent;
+
+    RuntimeMesh->SetSimulatePhysics(true);
+    RuntimeMesh->bUseComplexAsSimpleCollision = false;
+    
+    //SetSimulatePhysics(true);
+    //MembraneComponent->WakeRigidBody();
     
     //MembraneComponent->InitSphereRadius(40.0f);
     //MembraneComponent->SetCollisionProfileName(TEXT("Pawn"));
 
+    
+    
     OurMovementComponent = CreateDefaultSubobject<UCellPawnMovementComponent>(
-        TEXT("CustomMovementComponent"));
+         TEXT("CustomMovementComponent"));
     OurMovementComponent->UpdatedComponent = RootComponent;
+    OurMovementComponent->PushComponent = RuntimeMesh;
+
+    //OurMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
+    //    TEXT("Movement"));
+    //OurMovementComponent->UpdatedComponent = RootComponent;
+
+    // This prevents the collision mesh to fall on z axis which would break the collision
+    OurMovementComponent->SetPlaneConstraintEnabled(true);
+    OurMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
+    
 
 
     //SoundVisComponent = CreateDefaultSubobject<USoundVisComponent>(TEXT("TestMusic"));
@@ -56,7 +78,8 @@ ACellBase::ACellBase()
     // }
 
 
-    AudioComponent = CreateDefaultSubobject<UAudioComponent>(FName("AudioComponent"));
+    //AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    //AudioComponent->SetupAttachment(RootComponent);
     
 }
 
@@ -65,175 +88,7 @@ void ACellBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-    FString testSound = FPaths::GameContentDir() +
-        "/ExtraContent/Music/main-menu-theme-1.ogg";
-
-    if(FPaths::FileExists(testSound)){
-
-        DISPLAY_MESSAGE(TEXT("playing stuff"));
-
-        //CompressedSoundWaveRef = NewObject<USoundWave>(USoundWave::StaticClass());
-
-        CompressedSoundWaveRef = UVictoryBPFunctionLibrary::GetSoundWaveFromFile(testSound);
-
-        // Make sure the SoundWave Object is Valid
-        if(!CompressedSoundWaveRef){
-
-            LOG_ERROR("Failed to create new SoundWave Object");
-            return;
-        }
-
-    //     TArray<uint8> rawFile;
-
-    //     // Load file into RawFile Array
-    //     bool loadSuccess = FFileHelper::LoadFileToArray(rawFile,
-    //         testSound.GetCharArray().GetData());
-
-    //     if(!loadSuccess){
-
-    //         LOG_ERROR("failed to load sound");
-    //         return;
-    //     }
-
-    //     if(rawFile.Num() > 0){
-
-	// 		//bLoaded = FillSoundWaveInfo(CompressedSoundWaveRef, &RawFile);
-    //         FSoundQualityInfo SoundQualityInfo;
-    //         FVorbisAudioInfo VorbisAudioInfo;
-	
-    //         // Save the Info into SoundQualityInfo
-    //         if(!VorbisAudioInfo.ReadCompressedInfo(rawFile.GetData(), rawFile.Num(),
-    //                 &SoundQualityInfo))
-    //         {
-    //             LOG_ERROR("failed to read vorbis compressed audio info");
-    //             return;
-    //         }
-
-    //         // Fill in all the Data we have
-    //         //CompressedSoundWaveRef->DecompressionType = EDecompressionType::DTYPE_RealTime;
-    //         CompressedSoundWaveRef->DecompressionType = EDecompressionType::DTYPE_Native;
-    //         CompressedSoundWaveRef->SoundGroup = ESoundGroup::SOUNDGROUP_Default;
-    //         CompressedSoundWaveRef->NumChannels = SoundQualityInfo.NumChannels;
-    //         CompressedSoundWaveRef->Duration = SoundQualityInfo.Duration;
-    //         CompressedSoundWaveRef->RawPCMDataSize = SoundQualityInfo.SampleDataSize;
-    //         CompressedSoundWaveRef->SampleRate = SoundQualityInfo.SampleRate;
-            
-	// 	} else {
-
-	// 		LOG_ERROR("Loaded sound data is empty");
-
-	// 		return;
-	// 	}
-
-	// 	// Get Pointer to the Compressed OGG Data
-	// 	FByteBulkData* BulkData = &CompressedSoundWaveRef->CompressedFormatData.GetFormat(
-    //         FName("OGG"));
-
-	// 	// Set the Lock of the BulkData to ReadWrite
-	// 	BulkData->Lock(LOCK_READ_WRITE);
-
-	// 	// Copy compressed RawFile Data to the Address of the OGG Data of the SW File
-	// 	FMemory::Memmove(BulkData->Realloc(rawFile.Num()), rawFile.GetData(), rawFile.Num());
-
-	// 	// Unlock the BulkData again
-	// 	BulkData->Unlock();
-
-
-    //     //GetPCMDataFromFile(CompressedSoundWaveRef);
-    //     if(CompressedSoundWaveRef->NumChannels < 1 ||
-    //         CompressedSoundWaveRef->NumChannels > 2)
-    //     {
-    //         LOG_ERROR("sound has invalid number of channels");
-    //         return;
-    //     }
-
-    //     if (GEngine)
-    //     {
-    //         // Get a Pointer to the Main Audio Device
-    //         FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice();
-
-    //         if(AudioDevice){
-
-    //             CompressedSoundWaveRef->InitAudioResource(
-    //                 AudioDevice->GetRuntimeFormat(CompressedSoundWaveRef));
-
-    //             // Creates a new DecompressWorker and starts it
-    //             //InitNewDecompressTask(CompressedSoundWaveRef);
-
-    //             //CompressedSoundWaveRef->Play();
-
-                
-    //             // Decompressing the audio //
-    //             {
-    //                 std::unique_ptr<ICompressedAudioInfo> AudioInfo(
-    //                     GEngine->GetMainAudioDevice()->CreateCompressedAudioInfo(
-    //                         CompressedSoundWaveRef));
-                    
-    //                 if(!AudioInfo){
-
-    //                     LOG_ERROR("Failed to create audio info");
-    //                     return;
-    //                 }
-                    
-                    
-    //                 FSoundQualityInfo QualityInfo = { 0 };
-
-    //                 // Parse the audio header for the relevant information
-    //                 if(!(CompressedSoundWaveRef->ResourceData))
-    //                 {
-    //                     LOG_ERROR("empty soundwave resource data");
-    //                     return;
-    //                 }
-
-    //                 if(AudioInfo->ReadCompressedInfo(CompressedSoundWaveRef->ResourceData,
-    //                         CompressedSoundWaveRef->ResourceSize, &QualityInfo))
-    //                 {
-    //                     FScopeCycleCounterUObject WaveObject(CompressedSoundWaveRef);
-
-    //                     // Extract the data
-    //                     CompressedSoundWaveRef->SampleRate = QualityInfo.SampleRate;
-    //                     CompressedSoundWaveRef->NumChannels = QualityInfo.NumChannels;
-
-    //                     if(QualityInfo.Duration > 0.0f)
-    //                     {
-    //                         CompressedSoundWaveRef->Duration = QualityInfo.Duration;
-    //                     }
-
-    //                     const uint32 PCMBufferSize = CompressedSoundWaveRef->Duration *
-    //                         CompressedSoundWaveRef->SampleRate *
-    //                         CompressedSoundWaveRef->NumChannels;
-
-    //                     CompressedSoundWaveRef->CachedRealtimeFirstBuffer =
-    //                         new uint8[PCMBufferSize * 2];
-
-    //                     AudioInfo->SeekToTime(0.0f);
-    //                     AudioInfo->ReadCompressedData(
-    //                         CompressedSoundWaveRef->CachedRealtimeFirstBuffer, false,
-    //                         PCMBufferSize * 2);
-                        
-    //                 } else {
-
-    //                     LOG_ERROR("failed to read compressed audio header");
-    //                     return;
-    //                 }
-    //             }
-
-    //             LOG_LOG("done with setup");
-    //             AudioComponent->SetSound(CompressedSoundWaveRef);
-    //             AudioComponent->Play();
-    //         }
-    //         else {
-
-    //             LOG_ERROR("failed to get pointer to AudioDevice");
-    //             return;
-    //         }
-    //     }
-
-        LOG_LOG("done with setup");
-        AudioComponent->SetSound(CompressedSoundWaveRef);
-        AudioComponent->Play();
-    }
-
+    
 
     // if(VacuoleClass){
 
@@ -245,6 +100,39 @@ void ACellBase::BeginPlay()
     //             TEXT("Vacuole spawned"));
     // }
 }
+
+void ACellBase::OnConstruction(const FTransform& Transform)
+{
+    RuntimeMesh->bUseComplexAsSimpleCollision = false;
+    
+	TArray<FVector> Vertices;
+	TArray<FVector> Normals;
+	TArray<FRuntimeMeshTangent> Tangents;
+	TArray<FVector2D> TextureCoordinates;
+	TArray<int32> Triangles;
+
+	URuntimeMeshLibrary::CreateBoxMesh(FVector(50, 50, 50), Vertices, Triangles, Normals,
+        TextureCoordinates, Tangents);
+
+
+
+	// Create the mesh section specifying collision
+	RuntimeMesh->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates,
+        TArray<FColor>(), Tangents, true, EUpdateFrequency::Infrequent);
+
+    RuntimeMesh->AddCollisionConvexMesh(Vertices);
+
+    if(RuntimeMesh && RuntimeMesh->GetBodyInstance())
+    {
+        // RuntimeMesh->GetBodyInstance()->bLockZTranslation = true;
+        
+        RuntimeMesh->GetBodyInstance()->bLockXRotation = true;
+        RuntimeMesh->GetBodyInstance()->bLockYRotation = true;
+
+        RuntimeMesh->GetBodyInstance()->SetDOFLock(EDOFMode::XYPlane);
+    }
+}
+
 
 // Called every frame
 void ACellBase::Tick(float DeltaTime)
