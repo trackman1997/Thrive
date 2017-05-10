@@ -17,6 +17,7 @@ public:
 
     AMicrobePlayerControllerBase();
 
-    
+
+    void BeginPlay() override;
 	
 };
