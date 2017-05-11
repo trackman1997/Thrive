@@ -22,7 +22,6 @@ ACellBase::ACellBase()
     // RootComponent = SphereComponent;
     // SphereComponent->InitSphereRadius(40.0f);
     // SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
-    
 
 
     RuntimeMesh = CreateDefaultSubobject<URuntimeMeshComponent>(TEXT("Runtime Mesh"));    
@@ -55,13 +54,15 @@ ACellBase::ACellBase()
         FloatingMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
             TEXT("Floating Movement"));
         FloatingMovementComponent->UpdatedComponent = RootComponent;
+
+        // This prevents the collision mesh to fall on z axis, but only
+        // when using floating pawn component, which would break the
+        // collision
+        FloatingMovementComponent->SetPlaneConstraintEnabled(true);
+        FloatingMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
     }
 
-    // This prevents the collision mesh to fall on z axis, but only
-    // when using floating pawn component, which would break the
-    // collision
-    //OurMovementComponent->SetPlaneConstraintEnabled(true);
-    //OurMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
+
     
     
     // UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
@@ -83,7 +84,21 @@ ACellBase::ACellBase()
 
     //AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
     //AudioComponent->SetupAttachment(RootComponent);
+
+    // Extra constraint stuff
+    // None of these seem to help with floating pawn movement
+    PhysicsConstraintComponent = CreateDefaultSubobject<UPhysicsConstraintComponent>(
+        TEXT("Z Axis Constraint 2"));
+
+    FConstraintInstance& Constraint = PhysicsConstraintComponent->ConstraintInstance;
+    Constraint.SetLinearZLimit(ELinearConstraintMotion::LCM_Locked, 0.0f);
+
+    //Constraint.SetLinearPositionDrive(false, false, true);
+    //Constraint.SetLinearPositionTarget(FVector(0, 0, 60));
     
+
+    PhysicsConstraintComponent->SetConstrainedComponents(RuntimeMesh, NAME_None, nullptr,
+        NAME_None);
 }
 
 // Called when the game starts or when spawned

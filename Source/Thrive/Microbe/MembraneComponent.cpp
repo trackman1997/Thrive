@@ -7,7 +7,12 @@
 
 
 UMembraneComponent::UMembraneComponent() : Super(){
-    
+
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> MembraneMaterialFinder(
+        TEXT("/Game/Microbe/Materials/MembraneMaterial"));
+
+    if(MembraneMaterialFinder.Object)
+        MembraneMaterialBase = MembraneMaterialFinder.Object;
 }
 
 // ------------------------------------ //
@@ -33,6 +38,11 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
             OrganellePositions.Emplace(FVector2D(x, y));
         }
     }
+
+    // OrganellePositions.Emplace(FVector2D(0, 6));
+    // OrganellePositions.Emplace(FVector2D(0, 7));
+    // OrganellePositions.Emplace(FVector2D(1, 7));
+    // OrganellePositions.Emplace(FVector2D(1, 6));
 
     // Generate mesh data //
 
@@ -80,11 +90,30 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
 
     if(GeometryReceiver->GetBodyInstance())
     {
+        // All of this doesn't seem to be enough
+        GeometryReceiver->GetBodyInstance()->bLockZTranslation = true;
         GeometryReceiver->GetBodyInstance()->bLockXRotation = true;
         GeometryReceiver->GetBodyInstance()->bLockYRotation = true;
 
         GeometryReceiver->GetBodyInstance()->SetDOFLock(EDOFMode::XYPlane);
     }
+
+
+    if(!MembraneMaterialBase){
+
+        LOG_ERROR("Membrane didn't find the base material for membrane");
+        
+    } else {
+
+        UMaterialInstanceDynamic* DynMaterial =
+            UMaterialInstanceDynamic::Create(MembraneMaterialBase, this);
+
+        // Set colour //
+        DynMaterial->SetVectorParameterValue("MembraneColourTint", MembraneColourTint);
+        
+        GeometryReceiver->SetMaterial(0, DynMaterial);
+    }
+
 }
 
 // ------------------------------------ //

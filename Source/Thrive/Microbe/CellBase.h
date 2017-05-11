@@ -10,6 +10,7 @@
 #include "RuntimeMeshComponent.h"
 
 #include "Components/AudioComponent.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MembraneComponent.h"
 #include "OrganelleComponent.h"
 
@@ -59,6 +60,14 @@ protected:
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
+
+
+    //! As it seems like cells really don't like being constrained to an axis
+    //! this should do something
+    //! But this doesn't work with floating pawn movement so if that is used
+    //! we probably need to teleport the cell to the right z position every now and then
+    UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+    UPhysicsConstraintComponent* PhysicsConstraintComponent;
 
     // UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     // TSubclassOf<UOrganelleComponent> VacuoleClass;

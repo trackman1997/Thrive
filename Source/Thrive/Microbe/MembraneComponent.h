@@ -7,6 +7,8 @@
 
 #include "RuntimeMeshComponent.h"
 
+#include "Materials/MaterialInterface.h"
+
 #include <tuple>
 
 #include "MembraneComponent.generated.h"
@@ -37,6 +39,12 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     float Height = 3.f;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    UMaterialInterface* MembraneMaterialBase = nullptr;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    FVector MembraneColourTint = FVector(1.0f, 1.2f, 1.0f);
 	
 protected:
 
