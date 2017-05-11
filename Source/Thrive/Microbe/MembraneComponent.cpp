@@ -84,7 +84,9 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
 
     // Create the mesh section specifying collision
     GeometryReceiver->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates,
-        TArray<FColor>(), Tangents, true, EUpdateFrequency::Infrequent);
+        // The membrane is animated using the vertex buffer (once
+        // that's done) so this should be marked as frequently updated
+        TArray<FColor>(), Tangents, true, EUpdateFrequency::Frequent);
 
     GeometryReceiver->AddCollisionConvexMesh(Vertices);
 
@@ -105,10 +107,14 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
         
     } else {
 
+        // TODO: cache this for future updates where this can be reused
+        // also this could be moved to a species class to share one instance between all cells
+        // of the same species
         UMaterialInstanceDynamic* DynMaterial =
             UMaterialInstanceDynamic::Create(MembraneMaterialBase, this);
 
         // Set colour //
+        // TODO: this also needs to be called only when the colour changes
         DynMaterial->SetVectorParameterValue("MembraneColourTint", MembraneColourTint);
         
         GeometryReceiver->SetMaterial(0, DynMaterial);
