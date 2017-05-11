@@ -13,12 +13,13 @@
  * Helper for dynamic meshes.
  * hh: taken from another project of mine with fixes from:
  * https://wiki.unrealengine.com/Procedural_Mesh_Generation
+ * THIS ISN'T USED. Use RuntimeMeshComponent.h instead
  */
 UCLASS()
 class THRIVE_API UThriveGeneratedMeshComponent : public UProceduralMeshComponent
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
 
     UThriveGeneratedMeshComponent();
@@ -37,7 +38,7 @@ public:
     // Begin UMeshComponent interface.
     virtual int32 GetNumMaterials() const override;
     // End UMeshComponent interface.
-	
+    
     // Begin Interface_CollisionDataProvider Interface
     virtual bool GetPhysicsTriMeshData(FTriMeshCollisionData* CollisionData,
         bool InUseAllTriData) override;
@@ -65,12 +66,12 @@ private:
     TArray<FGeneratedTriangle> GeneratedMeshTris;
 
     //! Convex shapes used for simple collision
-	UPROPERTY()
+    UPROPERTY()
     TArray<FKConvexElem> OurCollisionConvexElems;
 
     //! True if should generate physics bodies
     bool bUsesPhysics = false;
 
     friend class FGeneratedMeshSceneProxy;
-	
+    
 };

@@ -109,6 +109,11 @@ Thrive.pro
 CMakeLists.txt
 LaunchEditor.sh
 
+# Visual studio
+Thrive.VC.VC.opendb
+Thrive.VC.db
+Thrive.sln
+
 # Version file
 
 !thriveversion.ver

@@ -139,28 +139,28 @@ void UMembraneComponent::DoMembraneIterativeShrink(){
 
     Vertices2D.Empty();
 
-	for(int i = 0; i < MembraneResolution; i++)
-	{
-		Vertices2D.Emplace(-CellDimensions + 2*CellDimensions/MembraneResolution*i,
+    for(int i = 0; i < MembraneResolution; i++)
+    {
+        Vertices2D.Emplace(-CellDimensions + 2*CellDimensions/MembraneResolution*i,
             -CellDimensions);
-	}
-	for(int i = 0; i < MembraneResolution; i++)
-	{
-		Vertices2D.Emplace(CellDimensions,
+    }
+    for(int i = 0; i < MembraneResolution; i++)
+    {
+        Vertices2D.Emplace(CellDimensions,
             -CellDimensions + 2*CellDimensions/MembraneResolution*i);
-	}
-	for(int i = 0; i < MembraneResolution; i++)
-	{
-		Vertices2D.Emplace(CellDimensions - 2*CellDimensions/MembraneResolution*i,
+    }
+    for(int i = 0; i < MembraneResolution; i++)
+    {
+        Vertices2D.Emplace(CellDimensions - 2*CellDimensions/MembraneResolution*i,
             CellDimensions);
-	}
-	for(int i = 0; i < MembraneResolution; i++)
-	{
-		Vertices2D.Emplace(-CellDimensions,
+    }
+    for(int i = 0; i < MembraneResolution; i++)
+    {
+        Vertices2D.Emplace(-CellDimensions,
             CellDimensions - 2*CellDimensions/MembraneResolution*i);
-	}
+    }
 
-	for(int i = 0; i < 50*CellDimensions; i++)
+    for(int i = 0; i < 50*CellDimensions; i++)
     {
         DrawMembrane();
     }
@@ -169,102 +169,102 @@ void UMembraneComponent::DoMembraneIterativeShrink(){
 void UMembraneComponent::DrawMembrane(){
 
     // Stores the temporary positions of the membrane.
-	NewPositions = Vertices2D;
+    NewPositions = Vertices2D;
 
     // Loops through all the points in the membrane and relocates them as necessary.
-	for(size_t i = 0, end = NewPositions.Num(); i < end; i++)
-	{
-		const auto ClosestOrganelle = FindClosestOrganelles(Vertices2D[i]);
+    for(size_t i = 0, end = NewPositions.Num(); i < end; i++)
+    {
+        const auto ClosestOrganelle = FindClosestOrganelles(Vertices2D[i]);
         
-		if(!std::get<1>(ClosestOrganelle))
-		{
-			NewPositions[i] = (Vertices2D[(end+i-1)%end] + Vertices2D[(i+1)%end])/2;
-		}
-		else
-		{
-			const auto movementDirection = GetMovement(Vertices2D[i],
+        if(!std::get<1>(ClosestOrganelle))
+        {
+            NewPositions[i] = (Vertices2D[(end+i-1)%end] + Vertices2D[(i+1)%end])/2;
+        }
+        else
+        {
+            const auto movementDirection = GetMovement(Vertices2D[i],
                 std::get<0>(ClosestOrganelle));
             
-			NewPositions[i].X -= movementDirection.X;
-			NewPositions[i].Y -= movementDirection.Y;
-		}
-	}
+            NewPositions[i].X -= movementDirection.X;
+            NewPositions[i].Y -= movementDirection.Y;
+        }
+    }
 
-	// Allows for the addition and deletion of points in the membrane.
-	for(size_t i = 0; i < NewPositions.Num() - 1; i++)
-	{
-		// Check to see if the gap between two points in the membrane is too big.
-		if(FVector2D::Distance(NewPositions[i], NewPositions[(i+1)%NewPositions.Num()]) >
+    // Allows for the addition and deletion of points in the membrane.
+    for(size_t i = 0; i < NewPositions.Num() - 1; i++)
+    {
+        // Check to see if the gap between two points in the membrane is too big.
+        if(FVector2D::Distance(NewPositions[i], NewPositions[(i+1)%NewPositions.Num()]) >
             CellDimensions/MembraneResolution)
-		{
-			// Add an element after the ith term that is the average of the i and i+1 term.
-			const auto tempPoint = (NewPositions[(i + 1) % NewPositions.Num()] +
+        {
+            // Add an element after the ith term that is the average of the i and i+1 term.
+            const auto tempPoint = (NewPositions[(i + 1) % NewPositions.Num()] +
                 NewPositions[i])/2;
             
-			NewPositions.Insert(tempPoint, i+1);
+            NewPositions.Insert(tempPoint, i+1);
 
-			i++;
-		}
+            i++;
+        }
 
-		// Check to see if the gap between two points in the membrane is too small.
-		if(FVector2D::Distance(NewPositions[(i+1)%NewPositions.Num()], (NewPositions[(i-1) %
+        // Check to see if the gap between two points in the membrane is too small.
+        if(FVector2D::Distance(NewPositions[(i+1)%NewPositions.Num()], (NewPositions[(i-1) %
                         NewPositions.Num()])) < CellDimensions/MembraneResolution)
-		{
-			// Delete the ith term.
-			NewPositions.RemoveAt(i);
-		}
-	}
+        {
+            // Delete the ith term.
+            NewPositions.RemoveAt(i);
+        }
+    }
 
-	Vertices2D = NewPositions;    
+    Vertices2D = NewPositions;    
 }
 
 void UMembraneComponent::MakePrism(){
 
     MeshPoints.Empty();
 
-	for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
-	{
-		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
+    for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
+    {
+        MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
             Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
             Vertices2D[(i+1)%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
             Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
-	}
+    }
 
-	for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
-	{
-		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
+    for(size_t i = 0, end = Vertices2D.Num(); i < end; i++)
+    {
+        MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             +Height/2);
         
-		MeshPoints.Emplace(0,0,Height/2);
+        MeshPoints.Emplace(0,0,Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp, Vertices2D[(i+1)%end].Y * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp, Vertices2D[(i+1)%end].Y * ScaleUp,
             +Height/2);
 
-		MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[i%end].X * ScaleUp, Vertices2D[i%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
+        MeshPoints.Emplace(Vertices2D[(i+1)%end].X * ScaleUp,
             Vertices2D[(i+1)%end].Y * ScaleUp,
             -Height/2);
         
-		MeshPoints.Emplace(0,0,-Height/2);
-	}
+        MeshPoints.Emplace(0,0,-Height/2);
+    }
 }
 
 void UMembraneComponent::CalcUVCircle(){
@@ -294,25 +294,25 @@ void UMembraneComponent::CalcUVCircle(){
 std::tuple<FVector2D, bool> UMembraneComponent::FindClosestOrganelles(FVector2D Target){
     
     // The distance we want the membrane to be from the organelles squared.
-	double closestSoFar = 4;
-	int closestIndex = -1;
+    double closestSoFar = 4;
+    int closestIndex = -1;
 
-	for (size_t i = 0, end = OrganellePositions.Num(); i < end; i++)
-	{
-		double lenToObject =  FVector2D::DistSquared(Target, OrganellePositions[i]);
+    for (size_t i = 0, end = OrganellePositions.Num(); i < end; i++)
+    {
+        double lenToObject =  FVector2D::DistSquared(Target, OrganellePositions[i]);
 
-		if(lenToObject < 4 && lenToObject < closestSoFar)
-		{
-			closestSoFar = lenToObject;
+        if(lenToObject < 4 && lenToObject < closestSoFar)
+        {
+            closestSoFar = lenToObject;
 
-			closestIndex = i;
-		}
-	}
+            closestIndex = i;
+        }
+    }
 
-	if(closestIndex != -1)
-		return std::make_tuple(OrganellePositions[closestIndex], true);
-	else
-		return std::make_tuple(FVector2D(0, 0), false);
+    if(closestIndex != -1)
+        return std::make_tuple(OrganellePositions[closestIndex], true);
+    else
+        return std::make_tuple(FVector2D(0, 0), false);
     
 }
 
@@ -320,6 +320,6 @@ FVector2D UMembraneComponent::GetMovement(FVector2D Target, FVector2D ClosestOrg
 
     double power = pow(2.7, FVector2D::Distance(-Target, ClosestOrganelle)/10)/50;
 
-	return (ClosestOrganelle - Target)*power;
+    return (ClosestOrganelle - Target)*power;
 }
 

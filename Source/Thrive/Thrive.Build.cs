@@ -11,8 +11,12 @@ public class Thrive : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "InputCore",
-
+                
+                // RTC requires these
                 "RuntimeMeshComponent",
+                "RHI",
+                "RenderCore",
+                "ShaderCore",
 
                 // Victory requires these.
                 // We would probably require Slate and UMG things anyway 

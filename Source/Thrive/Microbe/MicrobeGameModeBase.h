@@ -11,7 +11,7 @@
 UCLASS()
 class THRIVE_API AMicrobeGameModeBase : public AGameModeBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
     
 public:
         

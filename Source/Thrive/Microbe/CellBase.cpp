@@ -6,29 +6,15 @@
 // Sets default values
 ACellBase::ACellBase()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this
- 	// off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-
-    // BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-    // RootComponent = BoxComponent;
-    // BoxComponent->InitBoxExtent(FVector(50, 50, 50));
-    // BoxComponent->SetCollisionProfileName(TEXT("Pawn"));
-    //BoxComponent->SetCollisionProfileName(TEXT("BlockAll"));
-
-    // USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(
-    //     TEXT("RootComponent"));
-    // RootComponent = SphereComponent;
-    // SphereComponent->InitSphereRadius(40.0f);
-    // SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
+    // Set this pawn to call Tick() every frame.  You can turn this
+    // off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
 
     RuntimeMesh = CreateDefaultSubobject<URuntimeMeshComponent>(TEXT("Runtime Mesh"));    
     RootComponent = RuntimeMesh;
-    
-    //MembraneComponent->SetupAttachment(RootComponent);
-    //RootComponent = MembraneComponent;
+
+    // RuntimeMesh->SetCollisionProfileName(TEXT("Pawn"));
 
     if(!bUsingFloatingMovement){
         RuntimeMesh->SetSimulatePhysics(true);
@@ -38,9 +24,6 @@ ACellBase::ACellBase()
 
     MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("Membrane"));
     //MembraneComponent->SetupAttachment(RuntimeMesh);
-
-    //MembraneComponent->SetSimulatePhysics(true);
-    //MembraneComponent->bUseComplexAsSimpleCollision = false;
     
     if(!bUsingFloatingMovement){
 
@@ -62,29 +45,6 @@ ACellBase::ACellBase()
         FloatingMovementComponent->SetPlaneConstraintNormal(FVector(0, 0, 1));
     }
 
-
-    
-    
-    // UStaticMeshComponent* SphereVisual = CreateDefaultSubobject<UStaticMeshComponent>(
-    //     TEXT("VisualRepresentation"));
-    
-    // SphereVisual->SetupAttachment(RootComponent);
-    
-    // static ConstructorHelpers::FObjectFinder<UStaticMesh>
-    //     SphereVisualAsset(TEXT("/Engine/BasicShapes/Sphere"));
-    
-    // if(SphereVisualAsset.Succeeded()){
-        
-    //     SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
-    //     //SphereVisual->SetMaterial(0, class UMaterialInterface *Material)
-    //     SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-    //     SphereVisual->SetWorldScale3D(FVector(0.8f));
-    // }
-
-
-    //AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
-    //AudioComponent->SetupAttachment(RootComponent);
-
     // Extra constraint stuff
     // None of these seem to help with floating pawn movement
     PhysicsConstraintComponent = CreateDefaultSubobject<UPhysicsConstraintComponent>(
@@ -96,7 +56,6 @@ ACellBase::ACellBase()
     //Constraint.SetLinearPositionDrive(false, false, true);
     //Constraint.SetLinearPositionTarget(FVector(0, 0, 60));
     
-
     PhysicsConstraintComponent->SetConstrainedComponents(RuntimeMesh, NAME_None, nullptr,
         NAME_None);
 }
@@ -104,36 +63,26 @@ ACellBase::ACellBase()
 // Called when the game starts or when spawned
 void ACellBase::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 }
 
 void ACellBase::OnConstruction(const FTransform& Transform)
 {
-    // if(VacuoleClass){
-
-    //     Vacuole = NewObject<UOrganelleComponent>(this, *VacuoleClass);
-    //     AddInstanceComponent(Vacuole);
-
-    //     if(GEngine)
-    //         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Blue,
-    //             TEXT("Vacuole spawned"));
-    // }
     
     MembraneComponent->CreateMembraneMesh(RuntimeMesh);
 }
 
-
 // Called every frame
 void ACellBase::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
 }
 
 // Called to bind functionality to input
 void ACellBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
     PlayerInputComponent->BindAction("ToggleEngulf", IE_Pressed, this,
         &ACellBase::ToggleEngulf);
@@ -149,34 +98,27 @@ void ACellBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 UPawnMovementComponent* ACellBase::GetMovementComponent() const
 {
-    return OurMovementComponent;
+    if(OurMovementComponent)
+        return OurMovementComponent;
+    if(FloatingMovementComponent)
+        return FloatingMovementComponent;
+    return nullptr;
 }
 
 void ACellBase::MoveForward(float AxisValue){
 
-    // if(OurMovementComponent
-    //     && (OurMovementComponent->UpdatedComponent == RootComponent)
-    // ){
-        // This GetActorForwardVector() call makes the movement
-        // relative to the cell heading
-
-        if(OurMovementComponent)
-            OurMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
-        if(FloatingMovementComponent)
-            FloatingMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
-        //}
+    if(OurMovementComponent)
+        OurMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
+    if(FloatingMovementComponent)
+        FloatingMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
 }
 
 void ACellBase::MoveRight(float AxisValue){
 
-    // if(OurMovementComponent
-    //     && (OurMovementComponent->UpdatedComponent == RootComponent)
-    // ){
-        if(OurMovementComponent)
-            OurMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
-        if(FloatingMovementComponent)
-            FloatingMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
-        //}
+    if(OurMovementComponent)
+        OurMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
+    if(FloatingMovementComponent)
+        FloatingMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
 }
 
 void ACellBase::ToggleEngulf(){

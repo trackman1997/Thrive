@@ -11,13 +11,13 @@
 UCLASS()
 class THRIVE_API AMicrobePlayerControllerBase : public APlayerController
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
 
     AMicrobePlayerControllerBase();
 
 
     void BeginPlay() override;
-	
+    
 };

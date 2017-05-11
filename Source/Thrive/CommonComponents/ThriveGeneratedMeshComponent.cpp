@@ -276,10 +276,10 @@ bool UThriveGeneratedMeshComponent::SetGeneratedMeshTriangles(
 
     if(bUsesPhysics){
 
-		// Physics thing
-		FKConvexElem NewConvexElem;
+        // Physics thing
+        FKConvexElem NewConvexElem;
         
-		// Copy in vertex info
+        // Copy in vertex info
         TArray<FVector> ConvexVerts;
 
         ConvexVerts.SetNum(Triangles.Num() * 3);
@@ -291,12 +291,12 @@ bool UThriveGeneratedMeshComponent::SetGeneratedMeshTriangles(
             ConvexVerts[(i * 3) + 2] = Triangles[i].Vertex2;
         }
         
-		NewConvexElem.VertexData = ConvexVerts;
-		// Update bounding box
-		NewConvexElem.ElemBox = FBox(NewConvexElem.VertexData);
-		// Add to array of convex elements
+        NewConvexElem.VertexData = ConvexVerts;
+        // Update bounding box
+        NewConvexElem.ElemBox = FBox(NewConvexElem.VertexData);
+        // Add to array of convex elements
         OurCollisionConvexElems.SetNum(1);
-		OurCollisionConvexElems[0] = NewConvexElem;
+        OurCollisionConvexElems[0] = NewConvexElem;
         
         UpdateCollision();
     }
@@ -413,9 +413,9 @@ bool UThriveGeneratedMeshComponent::GetPhysicsTriMeshData(FTriMeshCollisionData*
         CollisionData->MaterialIndices.Add(i);
     }
 
-	CollisionData->bFlipNormals = true;
-	CollisionData->bDeformableMesh = true;
-	CollisionData->bFastCook = true;
+    CollisionData->bFlipNormals = true;
+    CollisionData->bDeformableMesh = true;
+    CollisionData->bFastCook = true;
 
     return true;
 }

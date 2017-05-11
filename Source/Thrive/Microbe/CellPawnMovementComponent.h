@@ -11,13 +11,13 @@
 UCLASS()
 class THRIVE_API UCellPawnMovementComponent : public UPawnMovementComponent
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
     //! Update movement
     virtual void TickComponent(float DeltaTime, enum ELevelTick TickType,
         FActorComponentTickFunction *ThisTickFunction) override; 
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
     UPrimitiveComponent* PushComponent = nullptr;
 };

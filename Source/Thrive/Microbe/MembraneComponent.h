@@ -19,8 +19,8 @@
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Thrive), meta=(BlueprintSpawnableComponent))
 class THRIVE_API UMembraneComponent : public UActorComponent
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
 
     UMembraneComponent();
@@ -45,7 +45,7 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FVector MembraneColourTint = FVector(1.0f, 1.2f, 1.0f);
-	
+    
 protected:
 
     // Methods adapted from the old membrane system
@@ -57,13 +57,13 @@ protected:
     void DoMembraneIterativeShrink();
     
     //! Creates the 2D points in the membrane by looking at the positions of the organelles.
-	void DrawMembrane();
+    void DrawMembrane();
 
     //! Creates a 3D prism from the 2D vertices.
-	void MakePrism();
+    void MakePrism();
 
     //! Finds the UV coordinates be projecting onto a plane and stretching to fit a circle.
-	void CalcUVCircle();
+    void CalcUVCircle();
 
 
     // Helpers for the current "iterative shrink" method of making the
@@ -74,8 +74,8 @@ protected:
     //! \returns Second element is false if nothing was found
     std::tuple<FVector2D, bool> FindClosestOrganelles(FVector2D Target);
 
-	//! Decides where the point needs to move based on the position of the closest organelle.
-	FVector2D GetMovement(FVector2D Target, FVector2D ClosestOrganelle);
+    //! Decides where the point needs to move based on the position of the closest organelle.
+    FVector2D GetMovement(FVector2D Target, FVector2D ClosestOrganelle);
 
 protected:
 
@@ -90,7 +90,7 @@ protected:
     //! The amount of points on the side of the membrane.
     //! Amount of segments on one side of the above described square.
     UPROPERTY(BlueprintReadOnly)
-	int32 MembraneResolution = 10;
+    int32 MembraneResolution = 10;
 
     
 
