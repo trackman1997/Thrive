@@ -3,7 +3,9 @@ Thrive
 
 TODO: rewrite stuff. Add notes about running the SetupThrive.rb on windows, too. 
 And remind people to Press the "Source Control" button in the editor. 
-And committing with the ./SVNCommit.rb to avoid including Source folder files
+And committing with the ./SVNCommit.rb to avoid including Source folder files.
+
+Run as `ruby SetupThrive.rb username` where username is `thrive` or `thrivedev`
 
 
 This is the code repository for Thrive. For more information, visit

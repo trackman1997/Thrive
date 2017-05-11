@@ -95,6 +95,9 @@ if $?.exitstatus > 0
   warning "Failed to update submodules, this may or may not be a problem"
   
 end
+
+# Create staging folder
+FileUtils.mkdir_p "Staging"
   
 
 success "Done"
