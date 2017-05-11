@@ -61,9 +61,21 @@ if commitCount == 0
   
 end
 
-info "committing #{commitCount} changes with message: \"#{COMMIT_MESSAGE}\""
+# Detect username
+match = `svn info`.strip.match(/.*URL:\s?.+\/\/(.+)@.*thrive\S+.*/i)
 
-system "svn commit -m \"#{COMMIT_MESSAGE}\""
+if !match
+  asUser = "thrivedev"
+  warning "Could not detect username, using 'thrivedev'"
+else
+  asUser = match.captures[0]
+end
+
+
+info "committing #{commitCount} changes as user '#{asUser}' with message: \"#{COMMIT_MESSAGE}\""
+
+
+system "svn commit --username #{asUser} -m \"#{COMMIT_MESSAGE}\""
 if $?.exitstatus > 0
   onError "Committing failed!"
   exit 1

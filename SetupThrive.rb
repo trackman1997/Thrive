@@ -24,7 +24,7 @@ if not File.exist? "Content"
 
   info "Content folder doesn't exist, checking it out"
   
-  system "svn co --force #{WantedURL} ."
+  system "svn co --force #{WantedURL} --username #{SVNUser} ."
   onError "Failed to clone repository" if $?.exitstatus > 0
 
   success "Checkout succeeded"
