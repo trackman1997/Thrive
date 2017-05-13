@@ -3,6 +3,9 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+
+#include "CompoundCloudManager.h"
+
 #include "MicrobeGameModeBase.generated.h"
 
 /**
@@ -30,6 +33,15 @@ public:
     //    //! Respawn a player
     //    void RestartPlayer(AController* NewPlayer) override;
 
+
+    //! Called immediately before gameplay begins. This sets up all spawn systems and stuff
+    void PreInitializeComponents() override;
+
+
+    ACompoundCloudManager* GetCompoundCloudManager(){
+        return CompoundCloudManager;
+    }
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -42,5 +54,10 @@ protected:
     //! Player respawning allowed
     //bool PlayerCanRestart_Implementation(APlayerController* Player) override;
 
+
+protected:
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+    ACompoundCloudManager* CompoundCloudManager = nullptr;
     
 };

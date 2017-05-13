@@ -26,3 +26,24 @@ void AMicrobeGameModeBase::InitGame(const FString& MapName, const FString& Optio
     Super::InitGame(MapName, Options, ErrorMessage);
     
 }
+
+void AMicrobeGameModeBase::PreInitializeComponents(){
+
+    Super::PreInitializeComponents();
+
+    // Create compounds spawn manager //
+    FActorSpawnParameters SpawnParameters;
+    SpawnParameters.Name = FName("World's_compound_manager");
+    SpawnParameters.Owner = this;
+    
+    CompoundCloudManager = static_cast<ACompoundCloudManager*>(GetWorld()->SpawnActor(
+            ACompoundCloudManager::StaticClass(), nullptr, SpawnParameters));
+
+    if(!CompoundCloudManager){
+
+        LOG_ERROR("Failed to spawn CompoundCloudManager");
+    }
+
+        
+    
+}
