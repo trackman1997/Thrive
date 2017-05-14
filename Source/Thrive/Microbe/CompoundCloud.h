@@ -26,6 +26,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+    //! Sets up the materials to look nice in the editor
+    void OnConstruction(const FTransform& Transform) override;
+
 
 protected:
 
@@ -34,5 +37,8 @@ protected:
 
     UPROPERTY()
     UTexture2D* DensityMaterial = nullptr;
+
+    UPROPERTY()
+    UStaticMeshComponent* PlaneMesh;
     
 };
