@@ -3,6 +3,9 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
+#include "CompoundCloud.h"
+
 #include "CompoundCloudManager.generated.h"
 
 /**
@@ -26,6 +29,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	
+
+protected:
+
+    UPROPERTY()
+    ACompoundCloud* TestCloud = nullptr;
 	
 };

@@ -16,7 +16,21 @@ ACompoundCloudManager::ACompoundCloudManager()
 void ACompoundCloudManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    FActorSpawnParameters SpawnParameters;
+    SpawnParameters.Name = FName("test cloud");
+    SpawnParameters.Owner = this;
+
+    FTransform Position(FVector(0, 0, 0));
+    
+    TestCloud = static_cast<ACompoundCloud*>(GetWorld()->SpawnActor(
+            ACompoundCloud::StaticClass(), &Position, SpawnParameters));
+
+    if(!TestCloud){
+
+        LOG_FATAL("Failed to spawn test cloud");
+    }
+    
 }
 
 // Called every frame
