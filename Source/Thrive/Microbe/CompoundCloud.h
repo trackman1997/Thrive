@@ -32,13 +32,13 @@ public:
 
 protected:
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly, EditAnyWhere)
     UMaterialInterface* CloudMaterialBase = nullptr;
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly, EditAnyWhere)
     UTexture2D* DensityMaterial = nullptr;
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly, EditAnyWhere)
     UStaticMeshComponent* PlaneMesh;
     
 };

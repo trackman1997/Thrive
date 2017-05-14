@@ -48,7 +48,9 @@ void ACompoundCloud::OnConstruction(const FTransform& Transform){
         UMaterialInstanceDynamic::Create(CloudMaterialBase, this);
 
     
-    DensityMaterial = UTexture2D::CreateTransient(1024, 1024, PF_R8_UINT);
+    //DensityMaterial = UTexture2D::CreateTransient(1024, 1024, PF_R8_UINT);
+    DensityMaterial = UTexture2D::CreateTransient(1024, 1024, PF_G8);
+    //DensityMaterial = UTexture2D::CreateTransient(1024, 1024);
 
     if(!DensityMaterial){
 
@@ -85,10 +87,18 @@ void ACompoundCloud::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
 }
 
 void ACompoundCloud::UpdateTexture(){
 
+    if(!DensityMaterial || !DensityMaterial->Resource){
+
+        LOG_ERROR("Texture not initialized in update texture");
+        return;
+    }
+
+    //constexpr uint8_t BytesPerPixel = 4;
     constexpr uint8_t BytesPerPixel = 1;
 
     const auto Width = DensityMaterial->GetSizeX();
@@ -97,12 +107,24 @@ void ACompoundCloud::UpdateTexture(){
     const auto TotalBytes = Width * Height * BytesPerPixel;
     const auto Pitch = Width * BytesPerPixel;
 
-    void* TextureData = FMemory::Malloc(TotalBytes, 4);
+    uint8_t* TextureData = reinterpret_cast<uint8_t*>(FMemory::Malloc(TotalBytes, 4));
 
     FMemory::Memzero(TextureData, TotalBytes);
+
+    // for(size_t x = 0; x < Width; ++x){
+    //     for(size_t y = 0; y < Height; ++y){
+
+    //         TextureData[(y * Pitch) + (x * BytesPerPixel)] = x % 255;
+    //     }
+    // }
+
+    //FMemory::Memset(TextureData, 255, TotalBytes);
+
+    for(size_t i = 0; i < TotalBytes; ++i)
+        TextureData[i] = 255;
     
     FTextureHelper::UpdateTextureRegions(DensityMaterial, 0, 1,
         new FUpdateTextureRegion2D(0, 0, 0, 0, Width, Height), 
-        Pitch, BytesPerPixel, reinterpret_cast<uint8_t*>(TextureData), true);
+        Pitch, BytesPerPixel, TextureData, true);
 }
 
