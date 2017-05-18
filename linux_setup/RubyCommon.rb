@@ -9,6 +9,7 @@ require 'colorize'
 def onError(errordescription)
 
   puts ("ERROR: " + errordescription).red
+  #raise "onError called!"
   exit 1
 end
 
