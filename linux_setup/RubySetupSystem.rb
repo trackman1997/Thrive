@@ -53,6 +53,8 @@ VSToolsEnv = "VS140COMNTOOLS"
 ### Commandline handling
 # TODO: add this
 
+HasDNF = which("dnf") != nil
+
 
 # This verifies that CurrentDir is good and assigns it to CurrentDir
 CurrentDir = checkRunFolder Dir.pwd
@@ -70,6 +72,11 @@ ProjectDebDirInclude = File.join ProjectDebDir, "include"
 
 
 info "Running in dir '#{CurrentDir}'"
+puts "Project dir is '#{ProjectDir}'"
+
+if HasDNF
+  info "Using dnf package manager"
+end
 
 if BuildPlatform == "windows"
   puts "This is not properly tested so be careful"
@@ -104,6 +111,35 @@ class Installer
   # calls onError if fails
   def run()
 
+    if not OnlyMainProject
+      @Libraries.each do |x|
+
+        if x.respond_to?(:installPrerequisites)
+
+          if !DoSudoInstalls
+
+            os = getLinuxOS
+
+            deps = x.depsList
+            
+            deps.map!{|dep|
+              translatePackageName dep, os
+            }
+
+            warning "Automatic dependency installation is disabled!: please install: " +
+                    "'#{deps.join(' ')}' manually for #{x.Name}"
+          else
+            # Require that this list method exists
+            x.depsList
+
+            # Actually install
+            x.installPrerequisites
+            
+          end
+        end
+      end
+    end
+
     if not SkipPullUpdates and not OnlyMainProject
       info "Retrieving dependencies"
 
@@ -130,6 +166,14 @@ class Installer
 
       info "Dependencies done, configuring main project"
       
+    else
+
+      @Libraries.each do |x|
+        
+        if x.respond_to?(:DoFindBuiltObjects)
+          x.Install
+        end
+      end
     end
 
     if OnlyDependencies
@@ -248,7 +292,7 @@ def getLinuxOS()
 
   onError "Failed to run lsb_release" if osrelease.empty?
 
-  osrelease
+  osrelease.downcase
 
 end
 
@@ -343,6 +387,8 @@ end
 
 ### Download settings ###
 class BaseDep
+  attr_reader :Name, :Folder
+  
   def initialize(name, foldername)
 
     @Name = name
@@ -423,6 +469,149 @@ class BaseDep
   end
 end
 
+
+# Installs a list of dependencies
+def installDepsList(deps)
+
+  os = getLinuxOS
+
+  if os == "fedora" || os == "centos" || os == "rhel"
+
+    if HasDNF
+      askRunSudo "sudo dnf install #{deps.join(' ')}"
+    else
+      askRunSudo "sudo yum install #{deps.join(' ')}"
+    end
+
+    return
+  end
+
+  if os == "ubuntu"
+
+    askRunSudo "sudo apt-get install #{deps.join(' ')}"
+
+    return
+  end
+
+  onError "unkown linux os '#{os}' for package manager installing " +
+          "dependencies: #{deps.join(' ')}"
+  
+end
+
+
+class FFMPEG < BaseDep
+  def initialize(args)
+
+    if args[:installPath]
+      @InstallPath = args[:installPath]
+    end
+
+    if args[:noInstallSudo]
+      @NoInstallSudo = args[:noInstallSudo]
+    end
+
+    
+    
+    super("FFmpeg", "ffmpeg")
+
+    @Options = args[:options]
+
+    if !@Options
+
+      @Options = ["--disable-doc", "--enable-avresample"]
+      # "--disable-programs"
+    end
+
+    if @InstallPath
+
+      @Options.push "--prefix='#{@InstallPath}'"
+      
+    end
+    
+  end
+
+  def depsList
+    os = getLinuxOS
+
+    if os == "fedora" || os == "centos" || os == "rhel"
+      
+      return [
+        "autoconf", "automake", "bzip2", "cmake", "freetype-devel", "gcc", "gcc-c++",
+        "git", "libtool", "make", "mercurial", "nasm", "pkgconfig", "zlib-devel", "yasm"
+      ]
+      
+    end
+
+    if os == "ubuntu"
+      
+      return [
+        "autoconf", "automake", "build-essential",
+        "libass-dev", "libfreetype6-dev", "libsdl2-dev", "libtheora-dev",
+        "libtool", "libva-dev", "libvdpau-dev", "libvorbis-dev", "libxcb1-dev",
+        "libxcb-shm0-dev", "libxcb-xfixes0-dev", "pkg-config", "texinfo",
+        "zlib1g-dev"
+      ]
+    end
+    
+    onError "ffmpeg unknown packages for os: #{os}"
+
+  end
+
+  def installPrerequisites
+
+    installDepsList depsList
+    
+  end
+
+  def DoClone
+    system "git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg"
+    $?.exitstatus == 0
+  end
+
+  def DoUpdate
+    system "git fetch"
+    system "git checkout #{@Version}"
+    system "git pull origin #{@Version}"
+    $?.exitstatus == 0
+  end
+
+  def DoSetup
+
+    if BuildPlatform == "windows"
+      
+    #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
+      abort("win setup")
+    else
+
+      system "./configure #{@Options.join(' ')}"
+      return $?.exitstatus == 0
+    end
+  end
+  
+  def DoCompile
+    if BuildPlatform == "windows"
+      
+      return $?.exitstatus == 0
+    else
+
+      runCompiler CompileThreads
+      return $?.exitstatus == 0
+    end
+  end
+
+  def DoInstall
+
+    if BuildPlatform == "windows"
+      
+      abort("ffmpeg libs")
+      
+    else
+
+      system "#{if @NoInstallSudo then "" else "sudo " end}make install"
+      return $?.exitstatus == 0
+    end
+  end
+end
 
 # Copies files to a directory following all symlinks but also copying the symlinks if their
 # names are different
