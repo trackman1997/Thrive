@@ -118,14 +118,8 @@ class Installer
 
           if !DoSudoInstalls
 
-            os = getLinuxOS
-
             deps = x.depsList
             
-            deps.map!{|dep|
-              translatePackageName dep, os
-            }
-
             warning "Automatic dependency installation is disabled!: please install: " +
                     "'#{deps.join(' ')}' manually for #{x.Name}"
           else
@@ -287,6 +281,10 @@ end
 
 ### Linux only stuff
 def getLinuxOS()
+
+  if OS.mac?
+    return "mac"
+  end
 
   osrelease = `lsb_release -is`.strip
 
