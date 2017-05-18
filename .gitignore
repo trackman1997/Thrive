@@ -47,6 +47,8 @@ $tf*/
 /Intermediate
 /Saved
 /Staging
+/ThirdParty
+/ThirdPartyBuild
 
 # Extra file created for linux compile database
 compile_commands.json
