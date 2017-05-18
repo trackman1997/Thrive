@@ -3,7 +3,19 @@
 require 'json'
 require 'fileutils'
 
+require_relative 'linux_setup/RubyCommon.rb'
+
 FILE_CHECK = Regexp.new(/thrive/i).freeze
+
+# Run cmake to make this work
+FileUtils.mkdir_p "cmake_build"
+
+Dir.chdir("cmake_build") do
+
+  info "Updating cmake compile database"
+  systemChecked("cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+  
+end
 
 abort "cmake not ran" if
   !File.exists? "cmake_build"
