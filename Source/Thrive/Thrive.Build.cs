@@ -58,6 +58,22 @@ public class Thrive : ModuleRules
         {
             
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win64");
+            
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavcodec.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavformat.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavutil.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswresample.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswscale.lib"));
+            
             isLibrarySupported = true;
             
         }
@@ -72,40 +88,38 @@ public class Thrive : ModuleRules
             isLibrarySupported = true;
 
             // Add Dependencies
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavcodec/libavcodec.a"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libavcodec.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavdevice/libavdevice.a"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libavformat.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavfilter/libavfilter.a"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libavutil.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavformat/libavformat.a"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libswresample.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavresample/libavresample.a"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libswscale.a"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libavutil/libavutil.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavcodec.so"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libswresample/libswresample.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavformat.so"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, 
-                    "libswscale/libswscale.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavutil.so"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswresample.so"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswscale.so"));
 
 
             // System.Console.WriteLine("Path: " + Path.Combine(ffmpegPath, "libavcodec"));
-            
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavcodec"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavdevice"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavfilter"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavformat"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavresample"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libavutil"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libswresample"));
             // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libswscale"));
                  
             
@@ -120,7 +134,8 @@ public class Thrive : ModuleRules
         if (isLibrarySupported)
         {
             //Add Include path 
-            PublicIncludePaths.AddRange(new string[] { ffmpegPath });
+            PublicIncludePaths.AddRange(new string[] { Path.Combine(
+                        ffmpegPath, "include") });
         }
  
         Definitions.Add(string.Format("WITH_FFMPEG={0}", isLibrarySupported ? 1 : 0));

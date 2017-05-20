@@ -7,6 +7,7 @@
 require_relative 'RubyCommon.rb'
 require_relative 'DepGlobber.rb'
 
+require 'optparse'
 require 'fileutils'
 require 'etc'
 require 'os'
@@ -17,6 +18,37 @@ require 'nokogiri' if OS.windows?
 # Required for installs on windows
 require 'win32ole' if OS.windows?
 
+#
+# Parse options
+#
+
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: CreatePackages.rb --default"
+
+  opts.on("--[no-]sudo", "Run commands that need sudo. " +
+                         "This maybe needed to run successfuly") do |b|
+    options[:sudo] = b
+  end 
+  opts.on("--only-project", "Skip all dependencies setup") do |b|
+    options[:onlyProject] = true
+  end  
+  
+end.parse!
+
+if !ARGV.empty?
+  # Let application specific args to be parsed
+  if defined? parseExtraArgs
+    parseExtraArgs
+  end
+
+  if !ARGV.empty?
+
+    onError("Unkown arguments. See --help. This was left unparsed: " + ARGV.join(' '))
+
+  end
+end
 
 ### Setup variables
 CMakeBuildType = "RelWithDebInfo"
@@ -27,13 +59,13 @@ CompileThreads = Etc.nprocessors
 InstallCEED = false
 
 # If set to false won't install libs that need sudo
-DoSudoInstalls = true
+DoSudoInstalls = if options.include?(:sudo) then options[:sudo] else true end
 
 # If true dependencies won't be updated from remote repositories
 SkipPullUpdates = false
 
 # If true skips all dependencies
-OnlyMainProject = false
+OnlyMainProject = if options[:onlyProject] then true else false end
 
 # If true skips the main project
 OnlyDependencies = false
@@ -127,7 +159,11 @@ class Installer
             x.depsList
 
             # Actually install
+            info "Installing prerequisites for #{x.Name}..."
+            
             x.installPrerequisites
+            
+            success "Prerequisites installed."
             
           end
         end
@@ -288,12 +324,22 @@ def getLinuxOS()
 
   osrelease = `lsb_release -is`.strip
 
-  onError "Failed to run lsb_release" if osrelease.empty?
+  onError "Failed to run 'lsb_release'. Make sure you have it installed" if osrelease.empty?
 
   osrelease.downcase
 
 end
 
+# Returns "sudo" or "" based on options
+def getSudoCommand(localOption)
+
+  if(!localOption || !DoSudoInstalls)
+    return ""
+  end
+  
+  return "sudo "
+  
+end
 
 ### Standard stuff
 
@@ -496,34 +542,69 @@ def installDepsList(deps)
   
 end
 
-
+# Supported extra options:
+# :version => standard git version select
+# :installPath => path where to install the ffmpeg built files
+# :noInstallSudo => don't use sudo when installing
+# :enablePIC => enable -fPIC when building
+# :options => override ffmpeg configure options (extraOptions should be used instead)
+# :extraOptions => extra things to add to :options
+# :buildShared => only shared versions of the libraries are built
+# :enableSmall => optimize for size
+# :noStrip => disable stripping
 class FFMPEG < BaseDep
   def initialize(args)
 
-    if args[:installPath]
-      @InstallPath = args[:installPath]
-    end
-
-    if args[:noInstallSudo]
-      @NoInstallSudo = args[:noInstallSudo]
-    end
-
-    
-    
     super("FFmpeg", "ffmpeg")
 
     @Options = args[:options]
 
     if !@Options
 
-      @Options = ["--disable-doc", "--enable-avresample"]
-      # "--disable-programs"
+      @Options = ["--disable-doc",
+                  # This is useful to comment when testing which components need to
+                  # be compiled
+                  "--disable-programs"
+                 ]
+    end
+
+    if args[:installPath]
+      @InstallPath = args[:installPath]
+      puts "FFMPEG using install prefix: #{@InstallPath}"
+    end
+
+    if args[:noInstallSudo]
+      @NoInstallSudo = args[:noInstallSudo]
+    end
+
+    if args[:enablePIC]
+      @Options.push "--enable-pic"
+      @Options.push "--extra-ldexeflags=-pie"
     end
 
     if @InstallPath
 
       @Options.push "--prefix='#{@InstallPath}'"
       
+    end
+
+    if args[:buildShared]
+
+      @Options.push "--disable-static"
+      @Options.push "--enable-shared"
+      
+    end
+
+    if args[:enableSmall]
+      @Options.push "--enable-small"
+    end
+
+    if args[:extraOptions]
+      @Options += args[:extraOptions]
+    end
+
+    if args[:noStrip]
+      @Options.push "--disable-stripping"
     end
     
   end
@@ -604,8 +685,8 @@ class FFMPEG < BaseDep
       abort("ffmpeg libs")
       
     else
-
-      system "#{if @NoInstallSudo then "" else "sudo " end}make install"
+      
+      system "#{getSudoCommand(@NoInstallSudo)}make install"
       return $?.exitstatus == 0
     end
   end

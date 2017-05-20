@@ -3,6 +3,7 @@
 # Setup script for Thrive.
 
 require 'fileutils'
+require 'os'
 
 require_relative 'linux_setup/RubyCommon.rb'
 
@@ -25,27 +26,89 @@ end
 
 def projectFolder(baseDir)
 
-  File.join "../", baseDir
+  File.expand_path File.join(baseDir, "../")
   
 end
 
-SVNUser = if ARGV.length == 0
-            "thrive"
-          else
-            ARGV[0]
-          end
+def parseExtraArgs
 
-WantedURL = "https://#{SVNUser}@boostslair.com/svn/Thrive_Content"
+  if ARGV.length > 1
 
+    onError("Unrecognized command line options.\n" +
+            "Expected only username in addition to other arguments. Got: #{ARGV.join(' ')}")
+    
+  end
+  
+  $svnUser = ARGV[0]
+  ARGV.shift
+  
+end
 
 require_relative 'linux_setup/RubySetupSystem.rb'
 
+if !$svnUser
+  $svnUser = "thrive"
+end
+
+WantedURL = "https://#{$svnUser}@boostslair.com/svn/Thrive_Content"
+
+clangPath = which("clang")
+
+if clangPath == nil
+
+  onError("Clang is not installed, or in path")
+  
+end
 
 # FFMPEG setup
-ffmpeg = FFMPEG.new(:version => "release/3.3",
-                    :installPath => File.join(ProjectDir, "ThirdParty/ffmpeg"),
-                    :noInstallSudo => true
-                   )
+# TODO: disable unused codecs to save space
+ffmpeg = FFMPEG.new(
+  :version => "release/3.3",
+  :installPath => File.join(ProjectDir, "ThirdParty/ffmpeg"),
+  :noInstallSudo => true,
+  # :enablePIC => true,
+  :buildShared => true,
+  :enableSmall => true,
+  # :noStrip => true,
+  :extraOptions => [
+    "--disable-postproc", "--disable-avdevice",
+    "--disable-avfilter",
+    "--enable-rpath",
+    
+    # Same compiler as ue4
+    "--cc=clang", "--cxx=clang",
+    "--disable-network",
+
+    # Can't be bothered to check which specific things we need so some of these disables
+    # are disabled
+    #"--disable-everything",
+    #"--disable-demuxers",
+    "--disable-encoders",
+    "--disable-decoders",
+    "--disable-hwaccels",
+    "--disable-muxers",
+    #"--disable-parsers",
+    #"--disable-protocols",
+    "--disable-indevs",
+    "--disable-outdevs",
+    "--disable-filters",
+
+    # Wanted things
+    # These aren't enough so all the demuxers protocols and parsers are enabled
+    "--enable-decoder=aac", "--enable-decoder=mpeg4", "--enable-decoder=h264",
+    "--enable-parser=h264", "--enable-parser=aac", "--enable-parser=mpeg4video",
+    "--enable-demuxer=h264", "--enable-demuxer=aac", "--enable-demuxer=m4v",
+
+    
+    # Disable all the external libraries
+    "--disable-bzlib", "--disable-iconv",
+    "--disable-libxcb",
+    "--disable-lzma", "--disable-sdl2", "--disable-xlib", "--disable-zlib",
+    "--disable-audiotoolbox", "--disable-cuda", "--disable-cuvid",
+    "--disable-nvenc", "--disable-vaapi", "--disable-vdpau",
+    "--disable-videotoolbox"
+  ]
+)
 
 installer = Installer.new(
   Array[
@@ -56,14 +119,57 @@ installer.run
 
 puts ""
 
+info "Copying dynamic libraries to project bin directories"
 
-success "Dependencies built"
+copyCount = 0
 
+if OS.linux?
+
+  bindir = File.join ProjectDir, "Binaries", "Linux"
+
+  FileUtils.mkdir_p bindir
+  
+  libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+  Dir.foreach(libdir) do |libname|
+
+    if libname =~ /lib.*\.so.*/i
+
+      FileUtils.cp File.join(libdir, libname), bindir
+      copyCount += 1
+    end
+  end 
+  
+elsif OS.mac?
+  
+  abort("todo")
+  
+elsif OS.windows?
+
+  bindir = File.join ProjectDir, "Binaries", "Linux"
+
+  FileUtils.mkdir_p bindir
+  
+  libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+  Dir.foreach(libdir) do |libname|
+
+    if libname =~ /.*\.dll.*/i
+
+      FileUtils.cp File.join(libdir, libname), bindir
+      copyCount += 1
+    end
+  end
+  
+else
+  onError("unkown os")
+end
+
+
+success "Copied #{copyCount} libraries/links to the bin folder"
 puts ""
-
+exit
 info "Thrive folder setup"
 
-puts "Using svn user: #{SVNUser}"
+puts "Using svn user: #{$svnUser}"
 
 info "Running Thrive folder setup"
 
@@ -71,7 +177,7 @@ if not File.exist? "Content"
 
   info "Content folder doesn't exist, checking it out"
   
-  system "svn co --force #{WantedURL} --username #{SVNUser} ."
+  system "svn co --force #{WantedURL} --username #{$svnUser} ."
   onError "Failed to clone repository" if $?.exitstatus > 0
 
   success "Checkout succeeded"
@@ -147,7 +253,7 @@ end
 FileUtils.mkdir_p "Staging"
   
 
-success "Done"
+success "Done. Open 'Thrive.uproject' in Unreal Engine 4 editor to start working."
 
 exit 0
 
