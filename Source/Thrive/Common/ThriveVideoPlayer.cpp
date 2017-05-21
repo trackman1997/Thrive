@@ -557,8 +557,9 @@ void AThriveVideoPlayer::OnStreamEndReached(){
 void AThriveVideoPlayer::DumpInfo() const{
 
     if(FormatContext)
-        //av_dump_format(FormatContext, 0, TCHAR_TO_ANSI(*VideoFile), 0);
-        av_dump_format(FormatContext, 0, nullptr, 0);
+        // Passing VideoFile here passes the name onto output, it's not needed
+        // but it differentiates the output by file name
+        av_dump_format(FormatContext, 0, TCHAR_TO_ANSI(*VideoFile), 0);
 }
 
 // ------------------------------------ //
