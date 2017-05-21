@@ -1,4 +1,6 @@
 // Copyright (C) 2013-2017  Revolutionary Games
+// (@0@)
+
 using UnrealBuildTool;
 using System.IO;
 
@@ -6,7 +8,9 @@ public class Thrive : ModuleRules
 {
     private string ThirdPartyPath
     {
-        get { return Path.GetFullPath( Path.Combine( ModuleDirectory, "../../ThirdParty/" ) ); }
+        get { return Path.GetFullPath(
+                Path.Combine( ModuleDirectory, "../../ThirdParty/" ) );
+        }
     }
     
 	public Thrive(TargetInfo Target)
@@ -50,7 +54,9 @@ public class Thrive : ModuleRules
  
         // Create ffmpeg Path 
         string ffmpegPath = Path.Combine(ThirdPartyPath, "ffmpeg");
- 
+
+        string LibPath = "";
+        
         // Get Library Path 
         // bool isdebug = Target.Configuration == UnrealTargetConfiguration.Debug &&
         //     BuildConfiguration.bDebugBuildsActuallyUseDebugCRT;
@@ -73,6 +79,8 @@ public class Thrive : ModuleRules
 
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
                     "libswscale.lib"));
+
+            LibPath = Path.Combine(ffmpegPath, "lib");
             
             isLibrarySupported = true;
             
@@ -87,37 +95,24 @@ public class Thrive : ModuleRules
 
             isLibrarySupported = true;
 
-            // Add Dependencies
+            (@1@);
+            
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavcodec.a"));
-
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavformat.a"));
+            //         "libavcodec.so"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavutil.a"));
+            //         "libavformat.so"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libswresample.a"));
+            //         "libavutil.so"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libswscale.a"));
+            //         "libswresample.so"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavcodec.so"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            //         "libswscale.so"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavformat.so"));
-
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavutil.so"));
-
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswresample.so"));
-
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswscale.so"));
-
+            LibPath = Path.Combine(ffmpegPath, "lib");
 
             // System.Console.WriteLine("Path: " + Path.Combine(ffmpegPath, "libavcodec"));
             // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libswscale"));
@@ -136,6 +131,9 @@ public class Thrive : ModuleRules
             //Add Include path 
             PublicIncludePaths.AddRange(new string[] { Path.Combine(
                         ffmpegPath, "include") });
+
+            PublicLibraryPaths.Add(LibPath);
+            System.Console.WriteLine(LibPath);
         }
  
         Definitions.Add(string.Format("WITH_FFMPEG={0}", isLibrarySupported ? 1 : 0));

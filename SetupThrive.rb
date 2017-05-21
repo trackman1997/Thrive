@@ -45,6 +45,7 @@ def parseExtraArgs
 end
 
 require_relative 'linux_setup/RubySetupSystem.rb'
+require_relative 'linux_setup/ThriveCommon.rb'
 
 if !$svnUser
   $svnUser = "thrive"
@@ -121,23 +122,9 @@ puts ""
 
 info "Copying dynamic libraries to project bin directories"
 
-copyCount = 0
-
 if OS.linux?
 
   bindir = File.join ProjectDir, "Binaries", "Linux"
-
-  FileUtils.mkdir_p bindir
-  
-  libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
-  Dir.foreach(libdir) do |libname|
-
-    if libname =~ /lib.*\.so.*/i
-
-      FileUtils.cp File.join(libdir, libname), bindir
-      copyCount += 1
-    end
-  end 
   
 elsif OS.mac?
   
@@ -145,28 +132,67 @@ elsif OS.mac?
   
 elsif OS.windows?
 
-  bindir = File.join ProjectDir, "Binaries", "Linux"
-
-  FileUtils.mkdir_p bindir
-  
-  libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
-  Dir.foreach(libdir) do |libname|
-
-    if libname =~ /.*\.dll.*/i
-
-      FileUtils.cp File.join(libdir, libname), bindir
-      copyCount += 1
-    end
-  end
+  # TODO 32 bit
+  bindir = File.join ProjectDir, "Binaries", "Win64"
   
 else
   onError("unkown os")
 end
 
+copyCount = ffmpegCopyLibs bindir
 
 success "Copied #{copyCount} libraries/links to the bin folder"
 puts ""
-exit
+
+sourceBuildFile = File.read(File.join ProjectDir, "Source", "Thrive", "Thrive.Build.Source.cs")
+
+sourceBuildFile.gsub! /\(@0@\)/, "This file was configured by SetupThrive.rb, " +
+                             "Don't edit Thrive.Build.cs"
+
+if OS.linux?
+
+  ffmpegLibsList = [
+    "libavcodec.so", "libavformat.so", "libavutil.so",
+    "libswresample.so", "libswscale.so"
+  ]
+
+  ffmpegLibsList.map!{|i| File.join ProjectDir, "ThirdParty", "ffmpeg", "lib", i}
+
+  # Find final targets of the ffmpeg libs
+  if ffmpegLibsList.length < 1
+    onError "FFMPEG libraries (non-symlink) weren't found and setup cannot continue"
+  end
+
+  # Do clue why ue4 strips everythin after last '.' and thus we need
+  # to append .so to make stuff work
+  libSetupCode = ffmpegLibsList.map{|l|
+    "PublicAdditionalLibraries.Add(\"#{l}\");"
+  }.join("\n")
+  
+  sourceBuildFile.gsub! /\(@1@\)/, "#{libSetupCode}"
+  
+elsif OS.mac?
+
+  sourceBuildFile.gsub! /\(@1@\)/, "//Not used on this platform"
+  abort("todo")
+  
+elsif OS.windows?
+
+  sourceBuildFile.gsub! /\(@1@\)/, "//Not used on this platform"
+  
+else
+  onError("unkown os for build script setup")
+end
+
+
+target = File.join ProjectDir, "Source", "Thrive", "Thrive.Build.cs"
+info "Writing thrive module file: #{target}"
+File.open(target, 'w') { |file| file.write(sourceBuildFile) }
+
+success "Wrote build file '#{target}'"
+
+puts ""
+
 info "Thrive folder setup"
 
 puts "Using svn user: #{$svnUser}"

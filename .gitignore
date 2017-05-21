@@ -46,7 +46,7 @@ $tf*/
 /DerivedDataCache
 /Intermediate
 /Saved
-/Staging
+/Staging/*NoEditor/
 /ThirdParty
 /ThirdPartyBuild
 
@@ -110,6 +110,9 @@ Thrive.kdev4
 Thrive.pro
 CMakeLists.txt
 LaunchEditor.sh
+
+# This is automatically generated
+Source/Thrive/Thrive.Build.cs
 
 # Visual studio
 Thrive.VC.VC.opendb

@@ -1,6 +1,7 @@
 # Common ruby functions
 require 'os'
 require 'colorize'
+require 'fileutils'
 
 # To get all possible colour values print String.colors
 #puts String.colors
@@ -76,4 +77,20 @@ def askRunSudo(cmd)
   
   systemChecked(cmd)
   
+end
+
+# Copies file to target folder while preserving symlinks
+def copyPreserveSymlinks(sourceFile, targetFolder)
+
+  if File.symlink? sourceFile
+
+    linkData = File.readlink sourceFile
+
+    FileUtils.ln_sf linkData, File.join(targetFolder, File.basename(sourceFile))
+    
+  else
+
+    FileUtils.cp sourceFile, targetFolder
+    
+  end
 end
