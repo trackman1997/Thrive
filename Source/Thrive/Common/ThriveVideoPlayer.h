@@ -22,6 +22,7 @@ extern "C"{
 #include <chrono>
 #include <mutex>
 #include <memory>
+#include <list>
 
 
 #include "ThriveVideoPlayer.generated.h"
@@ -52,13 +53,50 @@ private:
 UCLASS()
 class THRIVE_API AThriveVideoPlayer : public AActor
 {
-    using ClockType = std::chrono::steady_clock;
-    
 	GENERATED_BODY()
 
     //! This has to be on a single line to work
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVideoPlaybackEndedDelegate, FString, VideoFile);
-        
+
+protected:
+
+    using ClockType = std::chrono::steady_clock;
+
+    enum class EPacketReadResult{
+
+        Ended,
+        Ok,
+        QueueFull
+    };
+
+    enum class EDecodePriority{
+
+        Video,
+        Audio
+    };
+
+    //! Holds converted audio data that could not be immediately returned by readAudioData
+    struct ReadAudioPacket{
+
+        TArray<uint8_t> DecodedData;
+    };
+
+    //! Holds raw packets before sending
+    struct ReadPacket{
+
+        ReadPacket(AVPacket* src){
+
+            av_packet_move_ref(&packet, src);
+        }
+
+        ~ReadPacket(){
+
+            av_packet_unref(&packet);
+        }
+
+        AVPacket packet;
+    };
+    
 public:	
 	// Sets default values for this actor's properties
 	AThriveVideoPlayer();
@@ -113,9 +151,7 @@ public:
 
     //! \returns true if all the ffmpeg stream objects are valid for playback
     bool IsStreamValid() const;
-    
-    UFUNCTION(BlueprintImplementableEvent, Category="Thrive|VideoPlayer")
-    void OnVideoEnded();
+
 
     //! \brief Tries to call ffmpeg initialization once
     static void LoadFFMPEG();
@@ -142,6 +178,21 @@ protected:
     //! \returns true on success
     bool OpenStream(unsigned int Index, bool Video);
 
+    //! \brief Decodes one video frame. Returns false if more data is required
+    //! by the decoder
+    bool DecodeVideoFrame();
+
+    //! \brief Reads a single packet from the stream that matches Priority
+    EPacketReadResult ReadOnePacket(EDecodePriority Priority);
+
+    //! \brief Updates the texture
+    void UpdateTexture();
+
+    //! \brief Reads already decoded audio data. The audio data TArray must be locked
+    //! before calling this
+    size_t ReadDataFromAudioQueue(std::lock_guard<std::mutex> &AudioLocked,
+        uint8_t* Output, size_t Amount);
+
     //! \brief Resets timers. Call when playback start or resumes
     void ResetClock();
 
@@ -149,6 +200,9 @@ protected:
     //!
     //! Closes the playback and invokes the delegates
     void OnStreamEndReached();
+
+    //! Video streem seaking. Don't use as the audio will get out of sync
+    void SeekVideo(float Time);
 	
 protected:
 
@@ -178,12 +232,13 @@ private:
     std::unique_ptr<FFileReadHelper> VideoFileReader;
 
     AVIOContext* ResourceReader = nullptr;
-    
-    AVCodecContext* Context = nullptr;
+
+    // This seems to be not be used anymore
+    //AVCodecContext* Context = nullptr;
     AVFormatContext* FormatContext = nullptr;
 
 
-    AVCodecParserContext* VideoParser = nullptr;
+    //AVCodecParserContext* VideoParser = nullptr;
     AVCodecContext* VideoCodec = nullptr;
     int VideoIndex = 0;
 
@@ -191,7 +246,7 @@ private:
     //! How many timestamp units are in a second in the video stream
     float VideoTimeBase = 1.f;
 
-    AVCodecParserContext* AudioParser = nullptr;
+    //AVCodecParserContext* AudioParser = nullptr;
     AVCodecContext* AudioCodec = nullptr;
     int AudioIndex = 0;
 
@@ -217,7 +272,10 @@ private:
 
     //! Audio sample rate
     int SampleRate = 0; 
-    int ChannelCount = 0; 
+    int ChannelCount = 0;
+
+    std::list<std::unique_ptr<ReadAudioPacket>> ReadAudioDataBuffer;
+    std::mutex AudioMutex;
 
     //! Used to start the audio playback once
     bool IsPlayingAudio = false;
@@ -229,9 +287,12 @@ private:
     bool NextFrameReady = false;
 
     //! Set to false if an error occurs and playback should stop
-    bool StreamValid = false;
-
+    bool bStreamValid = false;
 
     ClockType::time_point LastUpdateTime;
+
+    std::mutex ReadPacketMutex;
+    std::list<std::unique_ptr<ReadPacket>> WaitingVideoPackets;
+    std::list<std::unique_ptr<ReadPacket>> WaitingAudioPackets;
 
 };

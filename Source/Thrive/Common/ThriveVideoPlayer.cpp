@@ -3,6 +3,8 @@
 #include "Thrive.h"
 #include "ThriveVideoPlayer.h"
 
+#include "Generation/TextureHelper.h"
+
 #include <string>
 
 constexpr auto DEFAULT_READ_BUFFER = 32000;
@@ -13,9 +15,10 @@ constexpr auto UE4_SIDE_FORMAT = PF_B8G8R8A8;
 // This must match the above definition
 constexpr AVPixelFormat FFMPEG_DECODE_TARGET = AV_PIX_FMT_BGRA;
 
+// Bits per pixel in the decode target format and UE4_SIDE_FORMAT
 constexpr auto FORMAT_BPP = 32;
 
-
+// ffmpeg avio context helpers
 int ReadHelper_Read(void *user_data, uint8_t *buf, int buf_size);
 
 int ReadHelper_Write(void *user_data, uint8_t *buf, int buf_size);
@@ -27,8 +30,8 @@ int64_t ReadHelper_Seek(void *user_data, int64_t offset, int whence);
 // Sets default values
 AThriveVideoPlayer::AThriveVideoPlayer()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
 
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> BasePlayerMaterialFinder(
@@ -48,20 +51,60 @@ AThriveVideoPlayer::~AThriveVideoPlayer(){
 // Called when the game starts or when spawned
 void AThriveVideoPlayer::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+    
 }
 
 // Called every frame
 void AThriveVideoPlayer::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+    Super::Tick(DeltaTime);
 
     if(!bIsPlaying)
         return;
 
-    
+    if(!IsStreamValid()){
+
+        LOG_WARNING("Stream is invalid, closing playback");
+        OnStreamEndReached();
+        return;
+    }
+
+    const auto now = ClockType::now();
+
+    const auto elapsed = now - LastUpdateTime;
+    LastUpdateTime = now;
+
+    PassedTimeSeconds += std::chrono::duration_cast<
+        std::chrono::duration<float>>(elapsed).count();
+
+    // // Start playing audio. Hopefully at the same time as the first frame of the
+    // // video is decoded
+    // if(!IsPlayingAudio && PlayingSource && AudioCodec){
+
+    //     IsPlayingAudio = true;
+    //     PlayingSource->play2d(false);
+    // }
+
+    // Only decode if there isn't a frame ready
+    while(!NextFrameReady){
+
+        // Decode a packet if none are in queue
+        if(ReadOnePacket(EDecodePriority::Video) == EPacketReadResult::Ended){
+
+            // There are no more frames, end the playback
+            OnStreamEndReached();
+            return;
+        }
+
+        NextFrameReady = DecodeVideoFrame();
+    }
+
+    if(PassedTimeSeconds >= CurrentlyDecodedTimeStamp){
+
+        UpdateTexture();
+        NextFrameReady = false;
+    }
 }
 
 // ------------------------------------ //
@@ -105,7 +148,9 @@ bool AThriveVideoPlayer::PlayVideo(const FString &NewVideoFile){
         LOG_ERROR("VideoPlayer ue4 texture / material setup failed");
         return false;
     }
-    
+
+    // Make tick run
+    bIsPlaying = true;
     return true;
 }
 
@@ -113,11 +158,37 @@ void AThriveVideoPlayer::Close(){
 
     // Close all ffmpeg resources //
 
-    StreamValid = false;
+    bStreamValid = false;
+
+    // Dump remaining packet data frames //
+    {
+        std::lock_guard<std::mutex> Lock(ReadPacketMutex);
+
+        WaitingVideoPackets.clear();
+        WaitingAudioPackets.clear();
+    }
+
+    // Close down audio portion //
+    {
+        std::lock_guard<std::mutex> Lock(AudioMutex);
+
+        // if(PlayingSource){
+
+        //     SoundManager::getSingleton()->destroyAudioSource(PlayingSource);
+        //     PlayingSource = nullptr;
+        // }
+
+        if(PlayingSource){
+            
+            PlayingSource = nullptr;
+        }
+
+        ReadAudioDataBuffer.clear();
+    }
 
     // // Dump remaining video frames //
     // {
-    //     boost::lock_guard<boost::mutex> lock(ReadPacketMutex);
+    //     boost::lock_guard<boost::mutex> Lock(ReadPacketMutex);
 
     //     WaitingVideoPackets.clear();
     //     WaitingAudioPackets.clear();
@@ -173,21 +244,16 @@ void AThriveVideoPlayer::Close(){
         avformat_close_input(&FormatContext);
         FormatContext = nullptr;
     }
-
-    if(Context){
-        avcodec_free_context(&Context);
-        Context = nullptr;
-    }
     
-    if(VideoParser){
-        av_parser_close(VideoParser);
-        VideoParser = nullptr;
-    }
+    // if(VideoParser){
+    //     av_parser_close(VideoParser);
+    //     VideoParser = nullptr;
+    // }
 
-    if(AudioParser){
-        av_parser_close(AudioParser);
-        AudioParser = nullptr;
-    }
+    // if(AudioParser){
+    //     av_parser_close(AudioParser);
+    //     AudioParser = nullptr;
+    // }
 
 
     // Let go of our textures and things //
@@ -204,18 +270,17 @@ void AThriveVideoPlayer::Close(){
 // ------------------------------------ //
 bool AThriveVideoPlayer::HasAudio() const{
 
-    return false;
+    return AudioCodec;
 }
-
 
 float AThriveVideoPlayer::GetCurrentTime() const{
 
-    return 0.f;
+    return CurrentlyDecodedTimeStamp;
 }
 
 bool AThriveVideoPlayer::IsStreamValid() const{
 
-    return StreamValid && VideoCodec && ConvertedFrameBuffer;
+    return bStreamValid && VideoCodec && ConvertedFrameBuffer;
 }
 // ------------------------------------ //
 bool AThriveVideoPlayer::OnVideoDataLoaded(){
@@ -300,46 +365,46 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
     }
 
     // Find audio and video streams //
-    unsigned int videoStream = std::numeric_limits<unsigned int>::max();
-    unsigned int audioStream = std::numeric_limits<unsigned int>::max();
+    unsigned int FoundVideoStreamIndex = std::numeric_limits<unsigned int>::max();
+    unsigned int FoundAudioStreamIndex = std::numeric_limits<unsigned int>::max();
 
     for(unsigned int i = 0; i < FormatContext->nb_streams; ++i){
 
         if(FormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO){
 
-            videoStream = i;
+            FoundVideoStreamIndex = i;
             continue;
         }
 
         if(FormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO){
 
-            audioStream = i;
+            FoundAudioStreamIndex = i;
             continue;
         }
     }
 
     // Fail if didn't find a stream //
-    if(videoStream >= FormatContext->nb_streams){
+    if(FoundVideoStreamIndex >= FormatContext->nb_streams){
 
         LOG_WARNING("Video didn't have a video stream");
         return false;
     }
 
 
-    if(videoStream < FormatContext->nb_streams){
+    if(FoundVideoStreamIndex < FormatContext->nb_streams){
 
         // Found a video stream, play it
-        if(!OpenStream(videoStream, true)){
+        if(!OpenStream(FoundVideoStreamIndex, true)){
 
             LOG_ERROR("Failed to open video stream");
             return false;
         }
     }
 
-    if(audioStream < FormatContext->nb_streams){
+    if(FoundAudioStreamIndex < FormatContext->nb_streams){
 
         // Found an audio stream, play it
-        if(!OpenStream(audioStream, false)){
+        if(!OpenStream(FoundAudioStreamIndex, false)){
 
             LOG_WARNING("Failed to open audio stream, playing without audio");
         }
@@ -354,8 +419,8 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
         return false;
     }
 
-    FrameWidth = FormatContext->streams[videoStream]->codecpar->width;
-    FrameHeight = FormatContext->streams[videoStream]->codecpar->height;
+    FrameWidth = FormatContext->streams[FoundVideoStreamIndex]->codecpar->width;
+    FrameHeight = FormatContext->streams[FoundVideoStreamIndex]->codecpar->height;
 
     // Calculate required size for the converted frame
     ConvertedBufferSize = av_image_get_buffer_size(FFMPEG_DECODE_TARGET,
@@ -421,15 +486,15 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
             return false;
         }
 
-        const auto channelLayout = AudioCodec->channel_layout != 0 ?
+        const auto ChannelLayout = AudioCodec->channel_layout != 0 ?
             AudioCodec->channel_layout :
             // Guess
             av_get_default_channel_layout(AudioCodec->channels);
 
 
-        AudioConverter = swr_alloc_set_opts(AudioConverter, channelLayout,
+        AudioConverter = swr_alloc_set_opts(AudioConverter, ChannelLayout,
             AV_SAMPLE_FMT_S16, AudioCodec->sample_rate,
-            channelLayout, AudioCodec->sample_fmt, AudioCodec->sample_rate,
+            ChannelLayout, AudioCodec->sample_fmt, AudioCodec->sample_rate,
             0, nullptr);
 
         if(swr_init(AudioConverter) < 0){
@@ -440,14 +505,14 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
 
         // Create sound //
 
-		// Create streaming wave object
-		PlayingSource = NewObject<UVideoPlayerSoundWave>();
-		PlayingSource->SampleRate = SampleRate;
-		PlayingSource->NumChannels = ChannelCount;
-		PlayingSource->Duration = INDEFINITELY_LOOPING_DURATION;
-		PlayingSource->bLooping = false;
+        // Create streaming wave object
+        PlayingSource = NewObject<UVideoPlayerSoundWave>();
+        PlayingSource->SampleRate = SampleRate;
+        PlayingSource->NumChannels = ChannelCount;
+        PlayingSource->Duration = INDEFINITELY_LOOPING_DURATION;
+        PlayingSource->bLooping = false;
 
-		PlayingSource->SoundSource = this;
+        PlayingSource->SoundSource = this;
     }
 
     DumpInfo();
@@ -457,7 +522,7 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
     NextFrameReady = false;
     CurrentlyDecodedTimeStamp = 0.f;
 
-    StreamValid = true;
+    bStreamValid = true;
 
     LOG_LOG("VideoPlayer successfully opened all the ffmpeg streams for video file");
 
@@ -475,13 +540,13 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
         return false;
     }
 
-    auto* ThisCodecParser = av_parser_init(ThisStreamCodec->id);
+    // auto* ThisCodecParser = av_parser_init(ThisStreamCodec->id);
 
-    if(!ThisCodecParser){
+    // if(!ThisCodecParser){
         
-        LOG_ERROR("failed to allocate codec parser");
-        return false;
-    }
+    //     LOG_ERROR("failed to allocate codec parser");
+    //     return false;
+    // }
 
     auto* ThisCodecContext = avcodec_alloc_context3(ThisStreamCodec);
 
@@ -490,6 +555,11 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
         LOG_ERROR("failed to allocate codec context");
         return false;
     }
+
+    // // The decode ffmpeg samples do this
+    // if (ThisStreamCodec->capabilities & AV_CODEC_CAP_TRUNCATED)
+    //     // This flag means that we do not send complete frames
+        //     ThisCodecContext->flags |= AV_CODEC_FLAG_TRUNCATED; 
 
     // Try copying parameters //
     if(avcodec_parameters_to_context(ThisCodecContext,
@@ -522,7 +592,7 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
     // This should probably be done by the caller of this method...
     if(Video){
 
-        VideoParser = ThisCodecParser;
+        //VideoParser = ThisCodecParser;
         VideoCodec = ThisCodecContext;
         VideoIndex = static_cast<int>(Index);
         VideoTimeBase = static_cast<float>(FormatContext->streams[Index]->time_base.num) /
@@ -532,7 +602,7 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
 
     } else {
 
-        AudioParser = ThisCodecParser;
+        //AudioParser = ThisCodecParser;
         AudioCodec = ThisCodecContext;
         AudioIndex = static_cast<int>(Index);
     }
@@ -541,9 +611,371 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
 }
 
 // ------------------------------------ //
-void AThriveVideoPlayer::ResetClock(){
+bool AThriveVideoPlayer::DecodeVideoFrame(){
+
+    const auto Result = avcodec_receive_frame(VideoCodec, DecodedFrame);
+
+    if(Result >= 0){
+
+        // Worked //
+            
+        // Convert the image from its native format to RGB
+        if(sws_scale(ImageConverter, DecodedFrame->data, DecodedFrame->linesize,
+                0, FrameHeight,
+                ConvertedFrame->data, ConvertedFrame->linesize) < 0)
+        {
+            // Failed to convert frame //
+            LOG_ERROR("Converting video frame failed");
+            return false;
+        }
+
+        // Seems like DecodedFrame->pts contains garbage
+        // and packet.pts is the timestamp in VideoCodec->time_base
+        // so we access that through pkt_pts
+        //CurrentlyDecodedTimeStamp = DecodedFrame->pkt_pts * VideoTimeBase;
+        //VideoTimeBase = VideoCodec->time_base.num / VideoCodec->time_base.den;
+        //CurrentlyDecodedTimeStamp = DecodedFrame->pkt_pts * VideoTimeBase;
+
+        // Seems that the latest FFMPEG version has fixed this.
+        // I would put this in a #IF macro bLock if ffmpeg provided a way to check the
+        // version at compile time
+        CurrentlyDecodedTimeStamp = DecodedFrame->pts * VideoTimeBase;
+        return true;
+    }
+
+    if(Result == AVERROR(EAGAIN)){
+
+        // Waiting for data //
+        return false;
+    }
+
+    UE_LOG(ThriveLog, Error, TEXT("Video frame receive failed, error: %d"), Result);
+    return false;
+}
+
+AThriveVideoPlayer::EPacketReadResult AThriveVideoPlayer::ReadOnePacket(
+    EDecodePriority Priority)
+{
+    if(!FormatContext || !bStreamValid)
+        return EPacketReadResult::Ended;
+
+    std::lock_guard<std::mutex> Lock(ReadPacketMutex);
+
+    // Decode queued packets first
+    if(Priority == EDecodePriority::Video && !WaitingVideoPackets.empty()){
+
+        // Try to send it //
+        const auto Result = avcodec_send_packet(VideoCodec,
+            &WaitingVideoPackets.front()->packet);
+            
+        if(Result == AVERROR(EAGAIN)){
+
+            // Still wailing to send //
+            return EPacketReadResult::QueueFull;
+        }
+
+        if(Result < 0){
+
+            // An error occured //
+            LOG_ERROR("Video stream send error from queue, stopping playback");
+            bStreamValid = false;
+            return EPacketReadResult::Ended;
+        }
+
+        // Successfully sent the first in the queue //
+        WaitingVideoPackets.pop_front();
+        return EPacketReadResult::Ok;
+    }
+    
+    if(Priority == EDecodePriority::Audio && !WaitingAudioPackets.empty()){
+
+        // Try to send it //
+        const auto Result = avcodec_send_packet(AudioCodec,
+            &WaitingAudioPackets.front()->packet);
+            
+        if(Result == AVERROR(EAGAIN)){
+
+            // Still wailing to send //
+            return EPacketReadResult::QueueFull;
+        } 
+
+        if(Result < 0){
+
+            // An error occured //
+            LOG_ERROR("Audio stream send error from queue, stopping playback");
+            bStreamValid = false;
+            return EPacketReadResult::Ended;
+        }
+
+        // Successfully sent the first in the queue //
+        WaitingAudioPackets.pop_front();
+        return EPacketReadResult::Ok;
+    }
+
+    // If we had nothing in the right queue try to read more frames //
+
+    AVPacket Packet;
+    //av_init_packet(&packet);
+
+    if(av_read_frame(FormatContext, &Packet) < 0){
+
+        // Stream ended //
+        //av_packet_unref(&packet);
+        return EPacketReadResult::Ended;
+    }
+
+    if(!bStreamValid){
+
+        av_packet_unref(&Packet);
+        return EPacketReadResult::Ended;
+    }
+
+    // Is this a packet from the video stream?
+    if(Packet.stream_index == VideoIndex) {
+
+        // If not wanting this stream don't send it //
+        if(Priority != EDecodePriority::Video){
+
+            WaitingVideoPackets.push_back(std::unique_ptr<ReadPacket>(
+                    new ReadPacket(&Packet)));
+            
+            return EPacketReadResult::Ok;
+        }
+
+        // Send it to the decoder //
+        const auto Result = avcodec_send_packet(VideoCodec, &Packet);
+
+        if(Result == AVERROR(EAGAIN)){
+
+            // Add to queue //
+            WaitingVideoPackets.push_back(std::unique_ptr<ReadPacket>(
+                    new ReadPacket(&Packet)));
+            return EPacketReadResult::QueueFull;
+        }
+
+        av_packet_unref(&Packet);
+        
+        if(Result < 0){
+
+            LOG_ERROR("Video stream send error, stopping playback");
+            bStreamValid = false;
+            return EPacketReadResult::Ended;
+        }
+
+        return EPacketReadResult::Ok;
+
+    } else if(Packet.stream_index == AudioIndex && AudioCodec){
+            
+        // If audio codec is null audio playback is disabled //
+            
+        // If not wanting this stream don't send it //
+        if(Priority != EDecodePriority::Audio){
+
+            WaitingAudioPackets.push_back(std::unique_ptr<ReadPacket>(
+                    new ReadPacket(&Packet)));
+            return EPacketReadResult::Ok;
+        }
+            
+        const auto Result = avcodec_send_packet(AudioCodec, &Packet);
+
+        if(Result == AVERROR(EAGAIN)){
+
+            // Add to queue //
+            WaitingAudioPackets.push_back(std::unique_ptr<ReadPacket>(
+                    new ReadPacket(&Packet)));
+            return EPacketReadResult::QueueFull;
+        }
+
+        av_packet_unref(&Packet);
+
+        if(Result < 0){
+
+            LOG_ERROR("Audio stream send error, stopping audio playback");
+            bStreamValid = false;
+            return EPacketReadResult::Ended;
+        }
+
+        // This is probably not needed? and was an error before
+        //av_packet_unref(&Packet);
+        return EPacketReadResult::Ok;
+    }
+
+    // Unknown stream, ignore
+    av_packet_unref(&Packet);
+    return EPacketReadResult::Ok;
+}
+
+void AThriveVideoPlayer::UpdateTexture(){
+
+
+    // //constexpr uint8_t BytesPerPixel = 4;
+    // constexpr uint8_t BytesPerPixel = 4;
+
+    // static_assert 
+    
+    // const auto TotalBytes = FrameWidth * FrameHeight * BytesPerPixel;
+    // const auto Pitch = FrameWidth * BytesPerPixel;
+
+    // uint8_t* TextureData = reinterpret_cast<uint8_t*>(FMemory::Malloc(TotalBytes, 4));
+
+    // // FMemory::Memzero(TextureData, TotalBytes);
+    // //FMemory::Memset(TextureData, 255, TotalBytes);
+
+    // for(size_t i = 0; i < TotalBytes; ++i)
+    //     TextureData[i] = 255;
+    
+    // FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
+    //     new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
+    //     Pitch, BytesPerPixel, TextureData, true);
+
+    // This is bytes per pixel instead of bits
+    const auto BytesPerPixel = FORMAT_BPP / 4;
+    const auto Stride = FrameWidth * BytesPerPixel;
+    
+    FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
+        new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
+        Stride, BytesPerPixel, ConvertedFrameBuffer, false);
+}
+
+
+size_t AThriveVideoPlayer::ReadAudioData(uint8_t* Output, size_t Amount){
+
+    std::lock_guard<std::mutex> Lock(AudioMutex);
+        
+    if(Amount < 1 || !AudioCodec || !bStreamValid)
+        return 0;
+
+    // Receive audio packet //
+    while(true){
+
+        // First return from queue //
+        if(!ReadAudioDataBuffer.empty()){
+
+            // Try to read from the queue //
+            const auto ReadAmount = ReadDataFromAudioQueue(Lock, Output, Amount);
+
+            if(ReadAmount == 0){
+
+                // Queue is invalid... //
+                LOG_ERROR("Invalid audio queue, emptying the queue");
+                ReadAudioDataBuffer.clear();
+                continue;
+            }
+
+            return ReadAmount;
+        }
+
+        const auto ReadResult = avcodec_receive_frame(AudioCodec, DecodedAudio);
+            
+        if(ReadResult == AVERROR(EAGAIN)){
+
+            if(this->ReadOnePacket(EDecodePriority::Audio) == EPacketReadResult::Ended){
+
+                // Stream ended //
+                return 0;
+            }
+
+            continue;
+        }
+
+        if(ReadResult < 0){
+
+            // Some error //
+            LOG_ERROR("Failed receiving audio packet, stopping audio playback");
+            bStreamValid = false;
+            return 0;
+        }
+
+        // Received audio data //
+
+        // This is verified in open when setting up converting
+        // av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) could also be used here
+        const auto BytesPerSample = 2;
+
+        const auto TotalSize = BytesPerSample * (DecodedAudio->nb_samples
+            * ChannelCount);
+
+        if(Amount >= static_cast<size_t>(TotalSize)){
+                
+            // Lets try to directly feed the converted data to the requester //
+            if(swr_convert(AudioConverter, &Output, TotalSize,
+                    const_cast<const uint8_t**>(DecodedAudio->data),
+                    DecodedAudio->nb_samples) < 0)
+            {
+                LOG_ERROR("Invalid audio stream, converting to audio read buffer failed");
+                bStreamValid = false;
+                return 0;
+            }
+
+            return TotalSize;
+        }
+            
+        // We need a temporary buffer //
+        auto NewBuffer = std::unique_ptr<ReadAudioPacket>(new ReadAudioPacket());
+
+        NewBuffer->DecodedData.SetNum(TotalSize);
+
+        uint8_t* DecodeOutput = &NewBuffer->DecodedData[0];
+
+        // Convert into the output data
+        if(swr_convert(AudioConverter, &DecodeOutput, TotalSize,
+                const_cast<const uint8_t**>(DecodedAudio->data),
+                DecodedAudio->nb_samples) < 0)
+        {
+            LOG_ERROR("Invalid audio stream, converting failed");
+            bStreamValid = false;
+            return 0;
+        }
+                    
+        ReadAudioDataBuffer.push_back(std::move(NewBuffer));
+        continue;
+    }
+
+    // Execution never reaches here
+}
+
+size_t AThriveVideoPlayer::ReadDataFromAudioQueue(std::lock_guard<std::mutex> &AudioLocked,
+    uint8_t* Output, size_t Amount)
+{
+    if(ReadAudioDataBuffer.empty())
+        return 0;
+    
+    auto& DataVector = ReadAudioDataBuffer.front()->DecodedData;
+
+    if(Amount >= DataVector.Num()){
+
+        // Can move an entire packet //
+        const auto MovedDataCount = DataVector.Num();
+
+        memcpy(Output, &DataVector[0], MovedDataCount);
+
+        ReadAudioDataBuffer.pop_front();
+
+        return MovedDataCount;
+    }
+
+    // Need to return a partial packet //
+    const auto MovedDataCount = Amount;
+    const auto LeftSize = DataVector.Num() - MovedDataCount;
+
+    memcpy(Output, &DataVector[0], MovedDataCount);
+
+    TArray<uint8_t> NewData;
+    NewData.SetNum(DataVector.Num() - LeftSize);
+
+    check(NewData.Num() == LeftSize + MovedDataCount);
+
+    FMemory::Memcpy(DataVector.GetData() + DataVector.Num() - LeftSize, NewData.GetData(),
+        NewData.Num());
 
     
+    DataVector = NewData;
+    return MovedDataCount;
+}
+// ------------------------------------ //
+void AThriveVideoPlayer::ResetClock(){
+
+    LastUpdateTime = ClockType::now();
 }
 
 void AThriveVideoPlayer::OnStreamEndReached(){
@@ -551,6 +983,19 @@ void AThriveVideoPlayer::OnStreamEndReached(){
     const auto OldVideo = VideoFile;
     Close();
     OnPlayBackEnded.Broadcast(OldVideo);
+}
+
+void AThriveVideoPlayer::SeekVideo(float Time){
+
+    if(Time < 0)
+        Time = 0;
+
+    const auto SeekPos = static_cast<uint64_t>(Time * AV_TIME_BASE);
+
+    const auto TimeStamp = av_rescale_q(SeekPos, AV_TIME_BASE_Q,
+        FormatContext->streams[VideoIndex]->time_base);
+
+    av_seek_frame(FormatContext, VideoIndex, TimeStamp, AVSEEK_FLAG_BACKWARD);
 }
 
 // ------------------------------------ //
