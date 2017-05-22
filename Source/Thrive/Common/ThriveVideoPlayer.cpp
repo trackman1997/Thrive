@@ -11,9 +11,11 @@ constexpr auto DEFAULT_READ_BUFFER = 32000;
 
 constexpr auto INPUT_BUFFER_SIZE = 4096;
 
-constexpr auto UE4_SIDE_FORMAT = PF_B8G8R8A8;
+//constexpr auto UE4_SIDE_FORMAT = PF_B8G8R8A8;
+constexpr auto UE4_SIDE_FORMAT = PF_R8G8B8A8;
 // This must match the above definition
-constexpr AVPixelFormat FFMPEG_DECODE_TARGET = AV_PIX_FMT_BGRA;
+//constexpr AVPixelFormat FFMPEG_DECODE_TARGET = AV_PIX_FMT_BGRA;
+constexpr AVPixelFormat FFMPEG_DECODE_TARGET = AV_PIX_FMT_RGBA;
 
 // Bits per pixel in the decode target format and UE4_SIDE_FORMAT
 constexpr auto FORMAT_BPP = 32;
@@ -35,7 +37,7 @@ AThriveVideoPlayer::AThriveVideoPlayer()
 
 
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> BasePlayerMaterialFinder(
-        TEXT("/Game/Common/LitTextureBase"));
+        TEXT("/Game/Common/UITextureParamBase"));
 
     if(BasePlayerMaterialFinder.Object)
         BasePlayerMaterial = BasePlayerMaterialFinder.Object;
@@ -295,21 +297,21 @@ bool AThriveVideoPlayer::OnVideoDataLoaded(){
 
     VideoOutputTexture = UTexture2D::CreateTransient(FrameWidth, FrameHeight, UE4_SIDE_FORMAT);
 
+    UE_LOG(ThriveLog, Log, TEXT("Created video texture: %dx%d"), FrameWidth, FrameHeight);
+    
     if(!VideoOutputTexture){
 
         LOG_ERROR("Failed to create video output texture");
         return false;
     }
 
-    // TODO: in the old code there was a check here to make sure that VideoOutput memory size
-    // matches the size of ConvertedBufferSize
-
     //Make sure it won't be compressed
     VideoOutputTexture->CompressionSettings =
         TextureCompressionSettings::TC_VectorDisplacementmap;
-    
-    //Turn off Gamma-correction
-    VideoOutputTexture->SRGB = 0;
+
+    // Gamma correction MUST be on for the video to look right!
+    // //Turn off Gamma-correction
+    // //VideoOutputTexture->SRGB = 0;
 
     // Allocate the texture RHI resource things
     VideoOutputTexture->UpdateResource();
@@ -431,6 +433,12 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
 
     if(!ConvertedFrameBuffer){
         LOG_ERROR("av_malloc failed for ConvertedFrameBuffer");
+        return false;
+    }
+
+    if(ConvertedBufferSize != FrameWidth * FrameHeight * 4){
+
+        LOG_ERROR("FFMPEG and UE4 image data sizes don't match! Check selected formats");
         return false;
     }
 
@@ -829,9 +837,9 @@ void AThriveVideoPlayer::UpdateTexture(){
     //     Pitch, BytesPerPixel, TextureData, true);
 
     // This is bytes per pixel instead of bits
-    const auto BytesPerPixel = FORMAT_BPP / 4;
+    const auto BytesPerPixel = FORMAT_BPP / 8;
     const auto Stride = FrameWidth * BytesPerPixel;
-    
+
     FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
         new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
         Stride, BytesPerPixel, ConvertedFrameBuffer, false);

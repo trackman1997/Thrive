@@ -108,6 +108,8 @@ public:
     //! or its speed altered. Maybe if the streaming audio thing also follows DeltaTime
     //! (not sure if that is the case) then this could be also switched to use DeltaTime
     //! instead of an external timer
+    //! \todo Allow this to skip frames if FPS is lower than the video fps.
+    //! Right now it just plays in slow motion if the FPS tanks too hard
 	virtual void Tick(float DeltaTime) override;
 
     //! Starts playing a video the playback
