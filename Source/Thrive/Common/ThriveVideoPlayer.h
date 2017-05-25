@@ -4,7 +4,7 @@
 
 #include "GameFramework/Actor.h"
 
-#include "VideoPlayerSoundWave.h"
+#include "PlayerSoundWaveParent.h"
 
 #if WITH_FFMPEG != 1
 #error Trying to compile without ffmpeg enabled in the Thrive.Build.cs for this platform
@@ -154,6 +154,8 @@ public:
     //! \returns true if all the ffmpeg stream objects are valid for playback
     bool IsStreamValid() const;
 
+    UFUNCTION()
+    void QueueMoreSound();
 
     //! \brief Tries to call ffmpeg initialization once
     static void LoadFFMPEG();
@@ -218,9 +220,14 @@ protected:
     UPROPERTY(BlueprintReadOnly)
     UMaterialInstanceDynamic* VideoOutput = nullptr;
 
-    //! Play this stream to get the audio of the video
+    //UPROPERTY(BlueprintReadOnly)
+    //UPlayerSoundWaveParent* PlayingSource = nullptr;
+
     UPROPERTY(BlueprintReadOnly)
-    UVideoPlayerSoundWave* PlayingSource = nullptr;
+    USoundWave* Wave = nullptr;
+
+    UPROPERTY()
+    UAudioComponent* AudioComponent = nullptr;
     
 
     FString VideoFile;
@@ -280,7 +287,7 @@ private:
     std::mutex AudioMutex;
 
     //! Used to start the audio playback once
-    bool IsPlayingAudio = false;
+    bool bIsPlayingAudio = false;
 
     // Timing control
     float PassedTimeSeconds = 0.f;

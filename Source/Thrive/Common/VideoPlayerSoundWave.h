@@ -11,20 +11,13 @@
 UCLASS()
 class THRIVE_API UVideoPlayerSoundWave : public USoundWaveProcedural
 {
-	GENERATED_BODY()
+	//GENERATED_BODY()
+    GENERATED_UCLASS_BODY()
 	
-    friend class AThriveVideoPlayer;
-
-public:
-    
-    UVideoPlayerSoundWave();
-    
-protected:
-    UPROPERTY()
-    class AThriveVideoPlayer* SoundSource;
+	UPROPERTY()
+    class UPlayerSoundWaveParent* Parent = nullptr;
     
     //~ Begin USoundWave Interface.
     virtual int32 GeneratePCMData(uint8* PCMData, const int32 SamplesNeeded) override;
     //~ End USoundWave Interface.
-	
 };

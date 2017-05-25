@@ -41,11 +41,20 @@ AThriveVideoPlayer::AThriveVideoPlayer()
 
     if(BasePlayerMaterialFinder.Object)
         BasePlayerMaterial = BasePlayerMaterialFinder.Object;
-    
+
+
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>("Video's sound");
+    RootComponent = AudioComponent;
+
+    AudioComponent->OnAudioFinished.AddDynamic(this, &AThriveVideoPlayer::QueueMoreSound);
 }
 
 AThriveVideoPlayer::~AThriveVideoPlayer(){
 
+    // Prevent crashing when we are garbage collected
+    bIsPlayingAudio = false;
+    //PlayingSource = nullptr;
+    
     // Ensure all FFMPEG resources are closed
     Close();
 }
@@ -80,13 +89,19 @@ void AThriveVideoPlayer::Tick(float DeltaTime)
     PassedTimeSeconds += std::chrono::duration_cast<
         std::chrono::duration<float>>(elapsed).count();
 
-    // // Start playing audio. Hopefully at the same time as the first frame of the
-    // // video is decoded
-    // if(!IsPlayingAudio && PlayingSource && AudioCodec){
+    // Start playing audio. Hopefully at the same time as the first frame of the
+    // video is decoded
+    if(!bIsPlayingAudio && AudioCodec){
 
-    //     IsPlayingAudio = true;
-    //     PlayingSource->play2d(false);
-    // }
+        LOG_LOG("Starting audio playback from the video...");
+        
+        check(AudioComponent);
+        QueueMoreSound();
+        
+        bIsPlayingAudio = true;
+
+        LOG_LOG("Audio playback started");
+    }
 
     // Only decode if there isn't a frame ready
     while(!NextFrameReady){
@@ -159,9 +174,21 @@ bool AThriveVideoPlayer::PlayVideo(const FString &NewVideoFile){
 void AThriveVideoPlayer::Close(){
 
     // Close all ffmpeg resources //
-
     bStreamValid = false;
 
+    // Stop audio playing first //
+    if(bIsPlayingAudio){
+        bIsPlayingAudio = false;
+        AudioComponent->Stop();
+    }
+
+    // Unhook the sound wave from us
+    // if(PlayingSource){
+
+    //     // This needs investigating whether this can cause crashes or not
+    //     PlayingSource->ClearSource();
+    // }
+    
     // Dump remaining packet data frames //
     {
         std::lock_guard<std::mutex> Lock(ReadPacketMutex);
@@ -174,29 +201,9 @@ void AThriveVideoPlayer::Close(){
     {
         std::lock_guard<std::mutex> Lock(AudioMutex);
 
-        // if(PlayingSource){
-
-        //     SoundManager::getSingleton()->destroyAudioSource(PlayingSource);
-        //     PlayingSource = nullptr;
-        // }
-
-        if(PlayingSource){
-            
-            PlayingSource = nullptr;
-        }
-
+        //PlayingSource = nullptr;
         ReadAudioDataBuffer.clear();
     }
-
-    // // Dump remaining video frames //
-    // {
-    //     boost::lock_guard<boost::mutex> Lock(ReadPacketMutex);
-
-    //     WaitingVideoPackets.clear();
-    //     WaitingAudioPackets.clear();
-    // }
-
-    // unhookAudio();
 
     // Video and Audio codecs are released by Context, but we still free them here?
     if(VideoCodec)
@@ -283,6 +290,26 @@ float AThriveVideoPlayer::GetCurrentTime() const{
 bool AThriveVideoPlayer::IsStreamValid() const{
 
     return bStreamValid && VideoCodec && ConvertedFrameBuffer;
+}
+
+int AThriveVideoPlayer::GetAudioChannelCount() const{
+
+    return ChannelCount;
+}
+
+int AThriveVideoPlayer::GetAudioSampleRate() const{
+
+    return SampleRate;
+}
+
+int32_t AThriveVideoPlayer::GetVideoWidth() const{
+
+    return FrameWidth;
+}
+
+int32_t AThriveVideoPlayer::GetVideoHeight() const{
+
+    return FrameHeight;
 }
 // ------------------------------------ //
 bool AThriveVideoPlayer::OnVideoDataLoaded(){
@@ -499,7 +526,7 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
             // Guess
             av_get_default_channel_layout(AudioCodec->channels);
 
-
+        // ue4 always consumes signed 16 bit sound samples
         AudioConverter = swr_alloc_set_opts(AudioConverter, ChannelLayout,
             AV_SAMPLE_FMT_S16, AudioCodec->sample_rate,
             ChannelLayout, AudioCodec->sample_fmt, AudioCodec->sample_rate,
@@ -514,13 +541,42 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
         // Create sound //
 
         // Create streaming wave object
-        PlayingSource = NewObject<UVideoPlayerSoundWave>();
-        PlayingSource->SampleRate = SampleRate;
-        PlayingSource->NumChannels = ChannelCount;
-        PlayingSource->Duration = INDEFINITELY_LOOPING_DURATION;
-        PlayingSource->bLooping = false;
 
-        PlayingSource->SoundSource = this;
+        
+        //PlayingSource = NewObject<UPlayerSoundWaveParent>();
+
+        // /* Fill buffer with Sine-Wave */
+        // float freq = 440.f;
+        // int seconds = 4;
+        // unsigned sample_rate = 22050;
+        // size_t buf_size = seconds * sample_rate;
+
+        // short *samples;
+        // samples = reinterpret_cast<short*>(FMemory::Malloc(buf_size * sizeof(short), 2));
+        
+        
+        // for(int i=0; i<buf_size; ++i) {
+        //     samples[i] = 32760 * sin( (2.f*float(M_PI)*freq)/sample_rate * i );
+        // }
+
+        
+        // Wave = NewObject<USoundWave>();
+        // Wave->bDynamicResource = true;
+        // Wave->SampleRate = sample_rate;
+        // Wave->NumChannels = 1;
+        // Wave->Duration = seconds;
+
+        // Wave->RawPCMDataSize = buf_size * sizeof(short);
+        // Wave->RawPCMData = reinterpret_cast<uint8*>(samples);
+        
+        // Wave->DecompressionType = DTYPE_Native;
+
+        
+        //PlayingSource->SampleRate = SampleRate;
+        //PlayingSource->NumChannels = ChannelCount;
+        //PlayingSource->DecompressionType = DTYPE_Procedural;
+
+            //PlayingSource->SetSource(this);
     }
 
     DumpInfo();
@@ -849,7 +905,7 @@ void AThriveVideoPlayer::UpdateTexture(){
 size_t AThriveVideoPlayer::ReadAudioData(uint8_t* Output, size_t Amount){
 
     std::lock_guard<std::mutex> Lock(AudioMutex);
-        
+    
     if(Amount < 1 || !AudioCodec || !bStreamValid)
         return 0;
 
@@ -981,6 +1037,61 @@ size_t AThriveVideoPlayer::ReadDataFromAudioQueue(std::lock_guard<std::mutex> &A
     return MovedDataCount;
 }
 // ------------------------------------ //
+void AThriveVideoPlayer::QueueMoreSound(){
+
+    TArray<uint8_t> AudioDataHolder;
+
+    TArray<uint8_t> ReadBuf;
+    ReadBuf.SetNum(10000);
+
+    LOG_LOG("Reading audio data");
+
+    while(true){
+            
+        const auto Read = ReadAudioData(ReadBuf.GetData(), ReadBuf.Num());
+
+        if(Read == 0)
+            break;
+
+        //UE_LOG(ThriveLog, Log, TEXT("Read audio data bytes: %d"), Read);
+        ReadBuf.SetNum(Read);
+        AudioDataHolder.Append(ReadBuf);
+
+        if(AudioDataHolder.Num() >= 300000)
+            break;
+        //break;
+    }
+
+    //LOG_LOG("Finished reading all the audio data");
+
+    UE_LOG(ThriveLog, Log, TEXT("Finished reading all the audio data, bytes: %d"),
+        AudioDataHolder.Num());
+
+    void* Buffer = FMemory::Malloc(AudioDataHolder.Num(), 2);
+
+    FMemory::Memcpy(Buffer, AudioDataHolder.GetData(), AudioDataHolder.Num());
+
+    Wave = NewObject<USoundWave>();
+    Wave->SampleRate = SampleRate;
+    Wave->NumChannels = ChannelCount;
+    
+    Wave->bDynamicResource = true;
+    Wave->Duration = AudioDataHolder.Num() / static_cast<float>(
+        2 * ChannelCount * SampleRate);
+
+    UE_LOG(ThriveLog, Log, TEXT("Audio duration: %f"),
+        AudioDataHolder.Num() / static_cast<float>(
+            2 * ChannelCount * SampleRate));
+
+    Wave->RawPCMDataSize = AudioDataHolder.Num();
+    Wave->RawPCMData = reinterpret_cast<uint8*>(Buffer);
+        
+    Wave->DecompressionType = DTYPE_Native;
+
+    AudioComponent->SetSound(Wave);
+    AudioComponent->Play();
+}
+// ------------------------------------ //
 void AThriveVideoPlayer::ResetClock(){
 
     LastUpdateTime = ClockType::now();
@@ -1014,6 +1125,8 @@ void AThriveVideoPlayer::DumpInfo() const{
         // but it differentiates the output by file name
         av_dump_format(FormatContext, 0, TCHAR_TO_ANSI(*VideoFile), 0);
 }
+// ------------------------------------ //
+
 
 // ------------------------------------ //
 // FFileReadHelper
