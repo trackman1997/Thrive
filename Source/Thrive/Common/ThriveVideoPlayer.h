@@ -158,6 +158,7 @@ public:
     //! \todo The PortAudio documentation says that this should only use lightweight
     //! methods like PaUtilRingBuffer to communicate, but right now we will do everything
     //! audio decoding related if the video decoding part hasn't read audio
+    //! (paex_ocean_shore.c sample demonstrates this)
     int PortAudioDataCallback(const void *input, void *output, unsigned long frameCount,
         const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags);
 

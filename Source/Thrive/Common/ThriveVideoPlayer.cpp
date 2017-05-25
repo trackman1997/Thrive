@@ -119,21 +119,22 @@ void AThriveVideoPlayer::Tick(float DeltaTime)
         }
     }
 
-    // Only decode if there isn't a frame ready
-    while(!NextFrameReady){
+    // This loops until we are displaying a frame we should be showing at this time // 
+    while(PassedTimeSeconds >= CurrentlyDecodedTimeStamp){
+    
+        // Only decode if there isn't a frame ready
+        while(!NextFrameReady){
 
-        // Decode a packet if none are in queue
-        if(ReadOnePacket(EDecodePriority::Video) == EPacketReadResult::Ended){
+            // Decode a packet if none are in queue
+            if(ReadOnePacket(EDecodePriority::Video) == EPacketReadResult::Ended){
 
-            // There are no more frames, end the playback
-            OnStreamEndReached();
-            return;
+                // There are no more frames, end the playback
+                OnStreamEndReached();
+                return;
+            }
+
+            NextFrameReady = DecodeVideoFrame();
         }
-
-        NextFrameReady = DecodeVideoFrame();
-    }
-
-    if(PassedTimeSeconds >= CurrentlyDecodedTimeStamp){
 
         UpdateTexture();
         NextFrameReady = false;
