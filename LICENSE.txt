@@ -111,3 +111,8 @@ as follows, in file jfdctfst:
 
 
 
+PortAudio Copyright (c) 1999-2011 Ross Bencina and Phil Burk.
+MIT license
+
+
+

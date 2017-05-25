@@ -27,6 +27,9 @@ int ReadHelper_Write(void *user_data, uint8_t *buf, int buf_size);
 
 int64_t ReadHelper_Seek(void *user_data, int64_t offset, int whence);
 
+static int PaCallbackHelper(const void *input, void *output, unsigned long frameCount,
+    const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags,
+    void *userData);
 
 
 // Sets default values
@@ -41,22 +44,26 @@ AThriveVideoPlayer::AThriveVideoPlayer()
 
     if(BasePlayerMaterialFinder.Object)
         BasePlayerMaterial = BasePlayerMaterialFinder.Object;
-
-
-    AudioComponent = CreateDefaultSubobject<UAudioComponent>("Video's sound");
-    RootComponent = AudioComponent;
-
-    AudioComponent->OnAudioFinished.AddDynamic(this, &AThriveVideoPlayer::QueueMoreSound);
 }
 
 AThriveVideoPlayer::~AThriveVideoPlayer(){
 
-    // Prevent crashing when we are garbage collected
-    bIsPlayingAudio = false;
-    //PlayingSource = nullptr;
-    
     // Ensure all FFMPEG resources are closed
     Close();
+
+    // Close port audio
+    if(bIsPortAudioInitialized){
+
+        auto err = Pa_Terminate();
+        
+        if(err != paNoError){
+
+            UE_LOG(ThriveLog, Error, TEXT("Error shutting down PortAudio: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
+        }
+        
+        bIsPortAudioInitialized = false;
+    }
 }
 
 // Called when the game starts or when spawned
@@ -91,16 +98,25 @@ void AThriveVideoPlayer::Tick(float DeltaTime)
 
     // Start playing audio. Hopefully at the same time as the first frame of the
     // video is decoded
-    if(!bIsPlayingAudio && AudioCodec){
+    if(!bIsPlayingAudio && AudioStream && AudioCodec){
 
         LOG_LOG("Starting audio playback from the video...");
-        
-        check(AudioComponent);
-        QueueMoreSound();
-        
-        bIsPlayingAudio = true;
 
-        LOG_LOG("Audio playback started");
+        auto err = Pa_StartStream(AudioStream);
+
+        if(err != paNoError){
+
+            UE_LOG(ThriveLog, Error, TEXT("Error starting PortAudio audio stream: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
+
+            bIsPlayingAudio = true;
+            
+        } else {
+
+            bIsPlayingAudio = true;
+
+            LOG_LOG("Audio playback started");
+        }
     }
 
     // Only decode if there isn't a frame ready
@@ -129,6 +145,22 @@ bool AThriveVideoPlayer::PlayVideo(const FString &NewVideoFile){
 
     // Make sure ffmpeg is loaded //
     LoadFFMPEG();
+
+    // Make sure port audio is loaded //
+    if(!bIsPortAudioInitialized){
+
+        auto err = Pa_Initialize();
+        
+        if(err != paNoError){
+
+            UE_LOG(ThriveLog, Error, TEXT("Error starting PortAudio: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
+            
+            return false;
+        }
+
+        bIsPortAudioInitialized = true;
+    }
     
     if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*NewVideoFile))
         return false;
@@ -179,7 +211,28 @@ void AThriveVideoPlayer::Close(){
     // Stop audio playing first //
     if(bIsPlayingAudio){
         bIsPlayingAudio = false;
-        AudioComponent->Stop();
+    }
+
+    if(AudioStream){
+
+        // Immediately close the stream
+        auto err = Pa_AbortStream(AudioStream);
+
+        if(err != paNoError){
+
+            UE_LOG(ThriveLog, Error, TEXT("Error aborting PortAudio stream: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
+        }
+        
+        err = Pa_CloseStream(AudioStream);
+
+        if(err != paNoError){
+
+            UE_LOG(ThriveLog, Error, TEXT("Error closing PortAudio stream: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
+        }
+        
+        AudioStream = nullptr;
     }
 
     // Unhook the sound wave from us
@@ -539,44 +592,23 @@ bool AThriveVideoPlayer::FFMPEGLoadFile(){
         }
 
         // Create sound //
-
-        // Create streaming wave object
-
+        auto err = Pa_OpenDefaultStream(&AudioStream,
+            // No input
+            0,
+            // Output
+            ChannelCount, paInt16, SampleRate,
+            // paFramesPerBufferUnspecified can be used to automatically choose this
+            // 1024 (bytes: 4096) seems to be the amount ffmpeg dumps at once
+            1024, 
+            PaCallbackHelper, this);
         
-        //PlayingSource = NewObject<UPlayerSoundWaveParent>();
+        if(err != paNoError){
 
-        // /* Fill buffer with Sine-Wave */
-        // float freq = 440.f;
-        // int seconds = 4;
-        // unsigned sample_rate = 22050;
-        // size_t buf_size = seconds * sample_rate;
+            UE_LOG(ThriveLog, Error, TEXT("Error opening PortAudio playback stream: %s"),
+                ANSI_TO_TCHAR(Pa_GetErrorText(err)));
 
-        // short *samples;
-        // samples = reinterpret_cast<short*>(FMemory::Malloc(buf_size * sizeof(short), 2));
-        
-        
-        // for(int i=0; i<buf_size; ++i) {
-        //     samples[i] = 32760 * sin( (2.f*float(M_PI)*freq)/sample_rate * i );
-        // }
-
-        
-        // Wave = NewObject<USoundWave>();
-        // Wave->bDynamicResource = true;
-        // Wave->SampleRate = sample_rate;
-        // Wave->NumChannels = 1;
-        // Wave->Duration = seconds;
-
-        // Wave->RawPCMDataSize = buf_size * sizeof(short);
-        // Wave->RawPCMData = reinterpret_cast<uint8*>(samples);
-        
-        // Wave->DecompressionType = DTYPE_Native;
-
-        
-        //PlayingSource->SampleRate = SampleRate;
-        //PlayingSource->NumChannels = ChannelCount;
-        //PlayingSource->DecompressionType = DTYPE_Procedural;
-
-            //PlayingSource->SetSource(this);
+            AudioStream = nullptr;
+        }
     }
 
     DumpInfo();
@@ -604,14 +636,6 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
         return false;
     }
 
-    // auto* ThisCodecParser = av_parser_init(ThisStreamCodec->id);
-
-    // if(!ThisCodecParser){
-        
-    //     LOG_ERROR("failed to allocate codec parser");
-    //     return false;
-    // }
-
     auto* ThisCodecContext = avcodec_alloc_context3(ThisStreamCodec);
 
     if(!ThisCodecContext){
@@ -619,11 +643,6 @@ bool AThriveVideoPlayer::OpenStream(unsigned int Index, bool Video){
         LOG_ERROR("failed to allocate codec context");
         return false;
     }
-
-    // // The decode ffmpeg samples do this
-    // if (ThisStreamCodec->capabilities & AV_CODEC_CAP_TRUNCATED)
-    //     // This flag means that we do not send complete frames
-        //     ThisCodecContext->flags |= AV_CODEC_FLAG_TRUNCATED; 
 
     // Try copying parameters //
     if(avcodec_parameters_to_context(ThisCodecContext,
@@ -871,27 +890,6 @@ AThriveVideoPlayer::EPacketReadResult AThriveVideoPlayer::ReadOnePacket(
 
 void AThriveVideoPlayer::UpdateTexture(){
 
-
-    // //constexpr uint8_t BytesPerPixel = 4;
-    // constexpr uint8_t BytesPerPixel = 4;
-
-    // static_assert 
-    
-    // const auto TotalBytes = FrameWidth * FrameHeight * BytesPerPixel;
-    // const auto Pitch = FrameWidth * BytesPerPixel;
-
-    // uint8_t* TextureData = reinterpret_cast<uint8_t*>(FMemory::Malloc(TotalBytes, 4));
-
-    // // FMemory::Memzero(TextureData, TotalBytes);
-    // //FMemory::Memset(TextureData, 255, TotalBytes);
-
-    // for(size_t i = 0; i < TotalBytes; ++i)
-    //     TextureData[i] = 255;
-    
-    // FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
-    //     new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
-    //     Pitch, BytesPerPixel, TextureData, true);
-
     // This is bytes per pixel instead of bits
     const auto BytesPerPixel = FORMAT_BPP / 8;
     const auto Stride = FrameWidth * BytesPerPixel;
@@ -900,8 +898,7 @@ void AThriveVideoPlayer::UpdateTexture(){
         new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
         Stride, BytesPerPixel, ConvertedFrameBuffer, false);
 }
-
-
+// ------------------------------------ //
 size_t AThriveVideoPlayer::ReadAudioData(uint8_t* Output, size_t Amount){
 
     std::lock_guard<std::mutex> Lock(AudioMutex);
@@ -1036,60 +1033,34 @@ size_t AThriveVideoPlayer::ReadDataFromAudioQueue(std::lock_guard<std::mutex> &A
     DataVector = NewData;
     return MovedDataCount;
 }
-// ------------------------------------ //
-void AThriveVideoPlayer::QueueMoreSound(){
 
-    TArray<uint8_t> AudioDataHolder;
+int AThriveVideoPlayer::PortAudioDataCallback(const void *input, void *output,
+    unsigned long frameCount, const PaStreamCallbackTimeInfo* timeInfo,
+    PaStreamCallbackFlags statusFlags)
+{
 
-    TArray<uint8_t> ReadBuf;
-    ReadBuf.SetNum(10000);
+    uint8_t* OutputBuffer = reinterpret_cast<uint8_t*>(output);
 
-    LOG_LOG("Reading audio data");
+    bool bReadAny = false;
 
-    while(true){
-            
-        const auto Read = ReadAudioData(ReadBuf.GetData(), ReadBuf.Num());
+    uint64_t BytesNeeded = frameCount * ChannelCount * sizeof(int16_t);
 
-        if(Read == 0)
+    while(BytesNeeded > 0){
+
+        const auto ReadAmount = ReadAudioData(OutputBuffer, BytesNeeded);
+
+        if(!bReadAny && ReadAmount == 0)
+            return 1;
+
+        if(ReadAmount == 0)
             break;
 
-        //UE_LOG(ThriveLog, Log, TEXT("Read audio data bytes: %d"), Read);
-        ReadBuf.SetNum(Read);
-        AudioDataHolder.Append(ReadBuf);
-
-        if(AudioDataHolder.Num() >= 300000)
-            break;
-        //break;
+        bReadAny = true;
+        OutputBuffer += ReadAmount;
+        BytesNeeded -= ReadAmount;
     }
-
-    //LOG_LOG("Finished reading all the audio data");
-
-    UE_LOG(ThriveLog, Log, TEXT("Finished reading all the audio data, bytes: %d"),
-        AudioDataHolder.Num());
-
-    void* Buffer = FMemory::Malloc(AudioDataHolder.Num(), 2);
-
-    FMemory::Memcpy(Buffer, AudioDataHolder.GetData(), AudioDataHolder.Num());
-
-    Wave = NewObject<USoundWave>();
-    Wave->SampleRate = SampleRate;
-    Wave->NumChannels = ChannelCount;
     
-    Wave->bDynamicResource = true;
-    Wave->Duration = AudioDataHolder.Num() / static_cast<float>(
-        2 * ChannelCount * SampleRate);
-
-    UE_LOG(ThriveLog, Log, TEXT("Audio duration: %f"),
-        AudioDataHolder.Num() / static_cast<float>(
-            2 * ChannelCount * SampleRate));
-
-    Wave->RawPCMDataSize = AudioDataHolder.Num();
-    Wave->RawPCMData = reinterpret_cast<uint8*>(Buffer);
-        
-    Wave->DecompressionType = DTYPE_Native;
-
-    AudioComponent->SetSound(Wave);
-    AudioComponent->Play();
+    return 0;
 }
 // ------------------------------------ //
 void AThriveVideoPlayer::ResetClock(){
@@ -1210,6 +1181,16 @@ int64_t ReadHelper_Seek(void *user_data, int64_t offset, int whence){
     auto* Stream = static_cast<FFileReadHelper*>(user_data);
     return Stream->Seek(offset, whence);
 }
+
+
+static int PaCallbackHelper(const void *input, void *output, unsigned long frameCount,
+    const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags,
+    void *userData)
+{
+    return reinterpret_cast<AThriveVideoPlayer*>(userData)
+        ->PortAudioDataCallback(input, output, frameCount, timeInfo, statusFlags);
+}
+
 
 
 static bool FFMPEGLoadedAlready = false;

@@ -148,6 +148,7 @@ else
 end
 
 copyCount = ffmpegCopyLibs bindir
+copyCount += portaudioCopyLibs bindir
 
 success "Copied #{copyCount} libraries/links to the bin folder"
 puts ""

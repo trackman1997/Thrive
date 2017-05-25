@@ -10,6 +10,11 @@
 #error Trying to compile without ffmpeg enabled in the Thrive.Build.cs for this platform
 #endif
 
+#if WITH_PORTAUDIO != 1
+#error Trying to compile without portaudio enabled in the Thrive.Build.cs for this platform
+#endif
+
+
 extern "C"{
 // FFMPEG includes
 #include <libavcodec/avcodec.h>
@@ -18,6 +23,8 @@ extern "C"{
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 }
+
+#include "portaudio.h"
 
 #include <chrono>
 #include <mutex>
@@ -148,14 +155,17 @@ public:
     //! \param amount The maximum number of bytes to read
     size_t ReadAudioData(uint8_t* Output, size_t Amount);
 
+    //! \todo The PortAudio documentation says that this should only use lightweight
+    //! methods like PaUtilRingBuffer to communicate, but right now we will do everything
+    //! audio decoding related if the video decoding part hasn't read audio
+    int PortAudioDataCallback(const void *input, void *output, unsigned long frameCount,
+        const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags);
+
     //! \brief Dumps info about loaded ffmpeg streams
     void DumpInfo() const;
 
     //! \returns true if all the ffmpeg stream objects are valid for playback
     bool IsStreamValid() const;
-
-    UFUNCTION()
-    void QueueMoreSound();
 
     //! \brief Tries to call ffmpeg initialization once
     static void LoadFFMPEG();
@@ -218,17 +228,7 @@ protected:
 
     //! Use this to add the video output to some surface
     UPROPERTY(BlueprintReadOnly)
-    UMaterialInstanceDynamic* VideoOutput = nullptr;
-
-    //UPROPERTY(BlueprintReadOnly)
-    //UPlayerSoundWaveParent* PlayingSource = nullptr;
-
-    UPROPERTY(BlueprintReadOnly)
-    USoundWave* Wave = nullptr;
-
-    UPROPERTY()
-    UAudioComponent* AudioComponent = nullptr;
-    
+    UMaterialInstanceDynamic* VideoOutput = nullptr;    
 
     FString VideoFile;
 
@@ -288,6 +288,12 @@ private:
 
     //! Used to start the audio playback once
     bool bIsPlayingAudio = false;
+
+    //! True when PortAudio has been initialized
+    bool bIsPortAudioInitialized = false;
+
+    //! Audio output
+    PaStream* AudioStream = nullptr;
 
     // Timing control
     float PassedTimeSeconds = 0.f;

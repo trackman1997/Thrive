@@ -2,15 +2,13 @@
 # Requires the RubySetupsystem to have been loaded before
 require_relative 'RubyCommon.rb'
 
-def ffmpegCopyLibs(targetFolder)
+def thrivestandardCopyHelper(targetFolder, libdir)
 
   copyCount = 0
+  FileUtils.mkdir_p targetFolder
   
   if OS.linux?
 
-    FileUtils.mkdir_p targetFolder
-    
-    libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
     Dir.foreach(libdir) do |libname|
 
       if libname =~ /lib.*\.so.*/i
@@ -18,7 +16,6 @@ def ffmpegCopyLibs(targetFolder)
         libFile = File.join(libdir, libname)
 
         copyPreserveSymlinks libFile, targetFolder
-
 
         copyCount += 1
         
@@ -31,9 +28,6 @@ def ffmpegCopyLibs(targetFolder)
     
   elsif OS.windows?
 
-    FileUtils.mkdir_p targetFolder
-    
-    libdir = File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
     Dir.foreach(libdir) do |libname|
 
       if libname =~ /.*\.dll.*/i
@@ -48,4 +42,39 @@ def ffmpegCopyLibs(targetFolder)
   end
 
   copyCount
+  
 end
+
+
+
+def ffmpegCopyLibs(targetFolder)
+
+  thrivestandardCopyHelper(targetFolder,
+                           if OS.linux?
+                             File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+                           elsif OS.mac?
+                             File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+                           elsif OS.windows?
+                             File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+                           else
+                             onError("unkown os")
+                           end
+                          )
+end
+
+
+def portaudioCopyLibs(targetFolder)
+  
+  thrivestandardCopyHelper(targetFolder,
+                           if OS.linux?
+                             File.join ProjectDir, "ThirdParty", "portaudio", "lib"
+                           elsif OS.mac?
+                             File.join ProjectDir, "ThirdParty", "portaudio", "lib"
+                           elsif OS.windows?
+                             File.join ProjectDir, "ThirdParty", "portaudio", "lib"
+                           else
+                             onError("unkown os")
+                           end
+                          )
+end
+

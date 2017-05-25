@@ -96,6 +96,13 @@ copyCount = ffmpegCopyLibs bindir
 
 success "Copied #{copyCount} libraries"
 
+
+info "Copying PortAudio"
+
+copyCount = portaudioCopyLibs bindir
+
+success "Copied #{copyCount} libraries"
+
 puts ""
 info "Deleting log files"
 

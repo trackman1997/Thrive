@@ -182,7 +182,7 @@ public class Thrive : ModuleRules
             isLibrarySupported = true;
 
             PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
-                    "libportaudio.a"));
+                    "libportaudio.so"));
 
             LibPath = Path.Combine(portaudioPath, "lib");
             
