@@ -33,6 +33,10 @@ OptionParser.new do |opts|
   end 
   opts.on("--only-project", "Skip all dependencies setup") do |b|
     options[:onlyProject] = true
+  end
+
+  opts.on("--only-deps", "Skip the main project setup") do |b|
+    options[:onlyDeps] = true
   end  
   
 end.parse!
@@ -68,7 +72,7 @@ SkipPullUpdates = false
 OnlyMainProject = if options[:onlyProject] then true else false end
 
 # If true skips the main project
-OnlyDependencies = false
+OnlyDependencies = if options[:onlyDeps] then true else false end
 
 # If true new version of depot tools and breakpad won't be fetched on install
 NoBreakpadUpdateOnWindows = false

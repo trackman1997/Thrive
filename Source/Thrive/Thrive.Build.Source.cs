@@ -133,7 +133,7 @@ public class Thrive : ModuleRules
                         ffmpegPath, "include") });
 
             PublicLibraryPaths.Add(LibPath);
-            System.Console.WriteLine(LibPath);
+            //System.Console.WriteLine(LibPath);
         }
  
         Definitions.Add(string.Format("WITH_FFMPEG={0}", isLibrarySupported ? 1 : 0));
