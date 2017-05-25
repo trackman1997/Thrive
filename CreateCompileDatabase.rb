@@ -6,12 +6,14 @@ require 'fileutils'
 require_relative 'linux_setup/RubyCommon.rb'
 
 FILE_CHECK = Regexp.new(/thrive/i).freeze
+THRIVE_SOURCE = Regexp.new(/Thrive.cpp/).freeze
 
 # Run cmake to make this work
 FileUtils.mkdir_p "cmake_build"
 
 Dir.chdir("cmake_build") do
 
+  # TODO: use a timestamp here to detect when CMakeLists.txt has been changed
   info "Updating cmake compile database"
   systemChecked("cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
   
@@ -45,6 +47,20 @@ Dir.chdir("cmake_build"){
 
   puts "#{filtered.length} remaining after filtering"
 
+  if true
+    # Only keep one from the base folder
+    filtered = json.select{|o|
+
+      if THRIVE_SOURCE =~ o['file']
+        true
+      else
+        false
+      end
+    }
+
+    puts "#{filtered.length} remaining after keeping only one"
+  end
+  
   # Add c++11 flag: --std=c++11
   filtered.map!{|o|
 
