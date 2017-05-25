@@ -111,9 +111,17 @@ ffmpeg = FFMPEG.new(
   ]
 )
 
+portaudio = PortAudio.new(
+  :version => "396fe4b6699ae929d3a685b3ef8a7e97396139a4",
+  :installPath => File.join(ProjectDir, "ThirdParty/portaudio"),
+  :noInstallSudo => true,
+  :noOSS => true
+)
+
 installer = Installer.new(
   Array[
-    ffmpeg
+    ffmpeg,
+    portaudio
   ])
 
 installer.run

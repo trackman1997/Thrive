@@ -46,6 +46,8 @@ public class Thrive : ModuleRules
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
         LoadFFMPEG(Target);
+
+        LoadPortAudio(Target);
 	}
 
     public bool LoadFFMPEG(TargetInfo Target)
@@ -89,6 +91,23 @@ public class Thrive : ModuleRules
         {
             
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win32");
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavcodec.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavformat.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libavutil.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswresample.lib"));
+
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    "libswscale.lib"));
+
+            LibPath = Path.Combine(ffmpegPath, "lib");
+            
             isLibrarySupported = true;
             
         } else if(Target.Platform == UnrealTargetPlatform.Linux){
@@ -97,26 +116,8 @@ public class Thrive : ModuleRules
 
             (@1@);
             
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavcodec.so"));
-
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavformat.so"));
-
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libavutil.so"));
-
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libswresample.so"));
-
-            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-            //         "libswscale.so"));
-
             LibPath = Path.Combine(ffmpegPath, "lib");
 
-            // System.Console.WriteLine("Path: " + Path.Combine(ffmpegPath, "libavcodec"));
-            // PublicLibraryPaths.Add(Path.Combine(ffmpegPath, "libswscale"));
-                 
             
         } else
         {
@@ -137,6 +138,75 @@ public class Thrive : ModuleRules
         }
  
         Definitions.Add(string.Format("WITH_FFMPEG={0}", isLibrarySupported ? 1 : 0));
+ 
+        return isLibrarySupported;
+    }
+
+
+    public bool LoadPortAudio(TargetInfo Target)
+    {
+        bool isLibrarySupported = false;
+ 
+        // Create portaudio Path 
+        string portaudioPath = Path.Combine(ThirdPartyPath, "portaudio");
+
+        string LibPath = "";
+        
+        // Get Library Path 
+        // bool isdebug = Target.Configuration == UnrealTargetConfiguration.Debug &&
+        //     BuildConfiguration.bDebugBuildsActuallyUseDebugCRT;
+        if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+            
+            //LibPath = Path.Combine(portaudioPath, "Libraries", "Win64");
+            
+            PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
+                    "portaudio.lib"));
+
+            LibPath = Path.Combine(portaudioPath, "lib");
+            
+            isLibrarySupported = true;
+            
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Win32)
+        {
+            PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
+                    "portaudio.lib"));
+            
+            LibPath = Path.Combine(portaudioPath, "lib");
+            
+            isLibrarySupported = true;
+            
+        } else if(Target.Platform == UnrealTargetPlatform.Linux){
+
+            isLibrarySupported = true;
+
+            PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
+                    "libportaudio.a"));
+
+            LibPath = Path.Combine(portaudioPath, "lib");
+            
+            isLibrarySupported = true;
+            
+        } else
+        {
+            string Err = string.Format("{0} unsupported platform with portaudio, building {1}.",
+                Target.Platform.ToString(), this.ToString());
+            
+            System.Console.WriteLine(Err);
+        }
+ 
+        if (isLibrarySupported)
+        {
+            //Add Include path 
+            PublicIncludePaths.AddRange(new string[] { Path.Combine(
+                        portaudioPath, "include") });
+
+            PublicLibraryPaths.Add(LibPath);
+            //System.Console.WriteLine(LibPath);
+        }
+ 
+        Definitions.Add(string.Format("WITH_PORTAUDIO={0}", isLibrarySupported ? 1 : 0));
  
         return isLibrarySupported;
     }

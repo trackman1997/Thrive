@@ -198,16 +198,7 @@ class Installer
         
       end
 
-      info "Dependencies done, configuring main project"
-      
-    else
-
-      @Libraries.each do |x|
-        
-        if x.respond_to?(:DoFindBuiltObjects)
-          x.Install
-        end
-      end
+      success "Dependencies done, configuring main project"
     end
 
     if OnlyDependencies
@@ -215,7 +206,6 @@ class Installer
       success "All done. Skipping main project"
       exit 0
     end
-    
     
   end
   
@@ -334,15 +324,38 @@ def getLinuxOS()
 
 end
 
-# Returns "sudo" or "" based on options
-def getSudoCommand(localOption)
+# Returns true if sudo should be enabled
+def shouldUseSudo(localOption, warnIfMismatch = true)
 
-  if(!localOption || !DoSudoInstalls)
+  if localOption
+
+    if !DoSudoInstalls
+
+      if warnIfMismatch
+
+         warning "Sudo is globally disabled, but a command should be ran as sudo.\n" +
+                 "If something breaks please rerun with sudo allowed."
+      end
+
+      return false
+      
+    end
+
+    return true
+    
+  end
+
+  return false
+end
+
+# Returns "sudo" or "" based on options
+def getSudoCommand(localOption, warnIfMismatch = true)
+
+  if(!shouldUseSudo localOption, warnIfMismatch)
     return ""
   end
   
   return "sudo "
-  
 end
 
 ### Standard stuff
@@ -433,91 +446,6 @@ def createLinkIfDoesntExist(source, linkfile)
   
 end
 
-### Download settings ###
-class BaseDep
-  attr_reader :Name, :Folder
-  
-  def initialize(name, foldername)
-
-    @Name = name
-    
-    @Folder = File.join(CurrentDir, foldername)
-    @FolderName = foldername
-    
-  end
-
-  def RequiresClone
-    not File.exist?(@Folder)
-  end
-  
-  def Retrieve
-    info "Retrieving #{@Name}"
-
-    Dir.chdir(CurrentDir) do
-      
-      if self.RequiresClone
-        
-        info "Cloning #{@Name} into #{@Folder}"
-
-        if not self.DoClone
-          onError "Failed to clone repository"
-        end
-
-      end
-
-      if not File.exist?(@Folder)
-        onError "Retrieve Didn't create a folder for #{@Name} at #{@Folder}"
-      end
-
-      if not self.Update
-        # Not fatal
-        warning "Failed to update dependency #{@Name}"
-      end
-
-    end
-    
-    success "Successfully retrieved #{@Name}"
-  end
-
-  def Update
-    Dir.chdir(@Folder) do
-      self.DoUpdate
-    end
-  end
-
-  def Setup
-    info "Setting up build files for #{@Name}"
-    Dir.chdir(@Folder) do
-      if not self.DoSetup
-        onError "Setup failed for #{@Name}. Is a dependency missing? or some other cmake error?"
-      end
-    end
-    success "Successfully created project files for #{@Name}"
-  end
-  
-  def Compile
-    info "Compiling #{@Name}"
-    Dir.chdir(@Folder) do
-      if not self.DoCompile
-        onError "#{@Name} Failed to Compile. Are you using a broken version? or has the setup process"+
-                " changed between versions"
-      end
-    end
-    success "Successfully compiled #{@Name}"
-  end
-
-  def Install
-    info "Installing #{@Name}"
-    Dir.chdir(@Folder) do
-      if not self.DoInstall
-        onError "#{@Name} Failed to install. Did you type in your sudo password?"
-      end
-    end
-    success "Successfully installed #{@Name}"
-  end
-end
-
-
 # Installs a list of dependencies
 def installDepsList(deps)
 
@@ -546,153 +474,71 @@ def installDepsList(deps)
   
 end
 
-# Supported extra options:
-# :version => standard git version select
-# :installPath => path where to install the ffmpeg built files
-# :noInstallSudo => don't use sudo when installing
-# :enablePIC => enable -fPIC when building
-# :options => override ffmpeg configure options (extraOptions should be used instead)
-# :extraOptions => extra things to add to :options
-# :buildShared => only shared versions of the libraries are built
-# :enableSmall => optimize for size
-# :noStrip => disable stripping
-class FFMPEG < BaseDep
-  def initialize(args)
+class GitVersionType
 
-    super("FFmpeg", "ffmpeg")
+  UNSPECIFIED=1
+  BRANCH=2
+  HASH=3
+  # A specific commit
+  TAG=4
+  # A remote repo?
+  REMOTE=5
 
-    @Options = args[:options]
+  # Must be in the folder where git can find the current repo
+  def GitVersionType.detect(versionStr)
 
-    if !@Options
-
-      @Options = ["--disable-doc",
-                  # This is useful to comment when testing which components need to
-                  # be compiled
-                  "--disable-programs"
-                 ]
+    if !versionStr || versionStr.length == 0
+      # Default branch
+      return BRANCH
     end
 
-    if args[:installPath]
-      @InstallPath = args[:installPath]
-      puts "FFMPEG using install prefix: #{@InstallPath}"
+    output = %x{git show-ref --verify refs/heads/#{versionStr}}
+    
+    if $?.exitstatus == 0
+      return BRANCH
     end
 
-    if args[:noInstallSudo]
-      @NoInstallSudo = args[:noInstallSudo]
-    end
-
-    if args[:enablePIC]
-      @Options.push "--enable-pic"
-      @Options.push "--extra-ldexeflags=-pie"
-    end
-
-    if @InstallPath
-
-      @Options.push "--prefix='#{@InstallPath}'"
-      
-    end
-
-    if args[:buildShared]
-
-      @Options.push "--disable-static"
-      @Options.push "--enable-shared"
-      
-    end
-
-    if args[:enableSmall]
-      @Options.push "--enable-small"
-    end
-
-    if args[:extraOptions]
-      @Options += args[:extraOptions]
-    end
-
-    if args[:noStrip]
-      @Options.push "--disable-stripping"
+    output = %x{git rev-parse --verify "#{versionStr}^{commit}"}
+    
+    if $?.exitstatus == 0
+      return HASH
     end
     
-  end
-
-  def depsList
-    os = getLinuxOS
-
-    if os == "fedora" || os == "centos" || os == "rhel"
-      
-      return [
-        "autoconf", "automake", "bzip2", "cmake", "freetype-devel", "gcc", "gcc-c++",
-        "git", "libtool", "make", "mercurial", "nasm", "pkgconfig", "zlib-devel", "yasm"
-      ]
-      
-    end
-
-    if os == "ubuntu"
-      
-      return [
-        "autoconf", "automake", "build-essential",
-        "libass-dev", "libfreetype6-dev", "libsdl2-dev", "libtheora-dev",
-        "libtool", "libva-dev", "libvdpau-dev", "libvorbis-dev", "libxcb1-dev",
-        "libxcb-shm0-dev", "libxcb-xfixes0-dev", "pkg-config", "texinfo",
-        "zlib1g-dev"
-      ]
-    end
+    output = %x{git show-ref --verify refs/tags/#{versionStr}}
     
-    onError "ffmpeg unknown packages for os: #{os}"
-
-  end
-
-  def installPrerequisites
-
-    installDepsList depsList
-    
-  end
-
-  def DoClone
-    system "git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg"
-    $?.exitstatus == 0
-  end
-
-  def DoUpdate
-    system "git fetch"
-    system "git checkout #{@Version}"
-    system "git pull origin #{@Version}"
-    $?.exitstatus == 0
-  end
-
-  def DoSetup
-
-    if BuildPlatform == "windows"
-      
-    #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
-      abort("win setup")
-    else
-
-      system "./configure #{@Options.join(' ')}"
-      return $?.exitstatus == 0
+    if $?.exitstatus == 0
+      return TAG
     end
+
+    output = %x{git show-ref --verify refs/remote/#{versionStr}}
+    
+    if $?.exitstatus == 0
+      return REMOTE
+    end
+
+    UNSPECIFIED
   end
+
+  def GitVersionType.typeToStr(type)
+    k = GitVersionType.constants.find {|k| GitVersionType.const_get(k) == type}
+    return nil unless k
+    "GitVersionType::#{k}"
+  end
+
   
-  def DoCompile
-    if BuildPlatform == "windows"
-      
-      return $?.exitstatus == 0
-    else
+end
 
-      runCompiler CompileThreads
-      return $?.exitstatus == 0
-    end
-  end
+# Detect whether a given git is a branch or a hash and then do a pull
+# if on a branch
+def gitPullIfOnBranch(version)
 
-  def DoInstall
+  versionType = GitVersionType.detect(version)
 
-    if BuildPlatform == "windows"
-      
-      abort("ffmpeg libs")
-      
-    else
-      
-      system "#{getSudoCommand(@NoInstallSudo)}make install"
-      return $?.exitstatus == 0
-    end
+  puts "Doing git pull updates. '#{version}' is #{GitVersionType.typeToStr versionType}"
+
+  case versionType
+  when GitVersionType::UNSPECIFIED, GitVersionType::BRANCH
+    system "git pull origin #{version}"
   end
 end
 
@@ -906,9 +752,414 @@ end
 
 
 #
+# Dependency base class
+#
+### Download settings ###
+# Standard args that are handled:
+# :version => standard git version select
+# :installPath => path where to install the built files (if this dep uses install)
+# :noInstallSudo => don't use sudo when installing (on windows administrator might be
+#     used instead if this isn't specified)
+# :options => override project configure options (extraOptions should be used instead)
+# :extraOptions => extra things to add to :options, see the individual dependencies
+#     as to what specific options they support
+# :preCreateInstallFolder => If installPath is specified will create
+#     the folder if it doesn't exist
+class BaseDep
+  attr_reader :Name, :Folder
+  
+  def initialize(name, foldername, args)
+
+    @Name = name
+    
+    @Folder = File.join(CurrentDir, foldername)
+    @FolderName = foldername
+
+    # Standard args handling
+    if args[:options]
+
+      @Options = args[:options]
+      puts "#{@Name}: using options: #{@Options}"
+    else
+
+      @Options = self.getDefaultOptions
+      
+    end
+
+    raise AssertionError if !@Options.kind_of?(Array)
+
+    if args[:extraOptions]
+      @Options += args[:extraOptions]
+      puts "#{@Name}: using extra options: #{args[:extraOptions]}"
+    end
+
+    if args[:version]
+      @Version = args[:version]
+      puts "#{@Name}: using version: #{@Version}"
+    end
+
+    if args[:installPath]
+      @InstallPath = args[:installPath]
+      puts "#{@Name}: using install prefix: #{@InstallPath}"
+    end
+
+    if args[:noInstallSudo]
+      @InstallSudo = false
+      puts "#{@Name}: installing without sudo"
+    else
+      @InstallSudo = true
+    end
+
+    if args[:preCreateInstallFolder] && @InstallPath
+
+      puts "#{@Name}: precreating install folder: #{@InstallPath}"
+      FileUtils.mkdir_p @InstallPath
+    end
+  end
+
+  def RequiresClone
+    not File.exist?(@Folder)
+  end
+  
+  def Retrieve
+    info "Retrieving #{@Name}"
+
+    Dir.chdir(CurrentDir) do
+      
+      if self.RequiresClone
+        
+        info "Cloning #{@Name} into #{@Folder}"
+
+        if not self.DoClone
+          onError "Failed to clone repository"
+        end
+
+      end
+
+      if not File.exist?(@Folder)
+        onError "Retrieve Didn't create a folder for #{@Name} at #{@Folder}"
+      end
+
+      if not self.Update
+        # Not fatal
+        warning "Failed to update dependency #{@Name}"
+      end
+
+    end
+    
+    success "Successfully retrieved #{@Name}"
+  end
+
+  def Update
+    Dir.chdir(@Folder) do
+      self.DoUpdate
+    end
+  end
+
+  def Setup
+    info "Setting up build files for #{@Name}"
+    Dir.chdir(@Folder) do
+      if not self.DoSetup
+        onError "Setup failed for #{@Name}. Is a dependency missing? or some other cmake error?"
+      end
+    end
+    success "Successfully created project files for #{@Name}"
+  end
+  
+  def Compile
+    info "Compiling #{@Name}"
+    Dir.chdir(@Folder) do
+      if not self.DoCompile
+        onError "#{@Name} Failed to Compile. Are you using a broken version? or has the setup process"+
+                " changed between versions"
+      end
+    end
+    success "Successfully compiled #{@Name}"
+  end
+
+  def Install
+    info "Installing #{@Name}"
+    Dir.chdir(@Folder) do
+      if not self.DoInstall
+        onError "#{@Name} Failed to install. Did you type in your sudo password?"
+      end
+    end
+    success "Successfully installed #{@Name}"
+  end
+
+  #
+  # Helpers for subclasses
+  #
+  def linuxMakeInstallHelper
+    
+    if shouldUseSudo(@InstallSudo)
+
+      askRunSudo "sudo make install"
+      
+    else
+
+      if @InstallSudo
+        warning "Dependency '#{@name}' should have been installed with sudo"
+      end
+      
+      system "make install"
+    end
+
+    $?.exitstatus == 0
+  end
+
+  def standardGitUpdate
+
+    system "git fetch"
+    
+    system "git checkout #{@Version}"
+    
+    gitPullIfOnBranch @Version
+    
+    $?.exitstatus == 0    
+  end
+end
+
+
+
+
+
+
+#
 #### Library Install Definitions ###
 # These are all the libraries that this script can install
 #
+
+# Supported extra options:
+# :enablePIC => enable -fPIC when building
+# :buildShared => only shared versions of the libraries are built
+# :enableSmall => optimize for size
+# :noStrip => disable stripping
+class FFMPEG < BaseDep
+  def initialize(args)
+
+    super("FFmpeg", "ffmpeg", args)
+
+    if @InstallPath
+
+      @Options.push "--prefix='#{@InstallPath}'"
+      
+    end
+
+    if args[:enablePIC]
+      @Options.push "--enable-pic"
+      @Options.push "--extra-ldexeflags=-pie"
+    end
+
+    if args[:buildShared]
+
+      @Options.push "--disable-static"
+      @Options.push "--enable-shared"
+      
+    end
+
+    if args[:enableSmall]
+      @Options.push "--enable-small"
+    end
+
+    if args[:noStrip]
+      @Options.push "--disable-stripping"
+    end
+    
+  end
+
+  def getDefaultOptions
+    [
+      "--disable-doc",
+      # This is useful to comment when testing which components need to
+      # be compiled
+      "--disable-programs"
+    ]
+  end
+
+  def depsList
+    os = getLinuxOS
+
+    if os == "fedora" || os == "centos" || os == "rhel"
+      
+      return [
+        "autoconf", "automake", "bzip2", "cmake", "freetype-devel", "gcc", "gcc-c++",
+        "git", "libtool", "make", "mercurial", "nasm", "pkgconfig", "zlib-devel", "yasm"
+      ]
+      
+    end
+
+    if os == "ubuntu"
+      
+      return [
+        "autoconf", "automake", "build-essential",
+        "libass-dev", "libfreetype6-dev", "libsdl2-dev", "libtheora-dev",
+        "libtool", "libva-dev", "libvdpau-dev", "libvorbis-dev", "libxcb1-dev",
+        "libxcb-shm0-dev", "libxcb-xfixes0-dev", "pkg-config", "texinfo",
+        "zlib1g-dev"
+      ]
+    end
+    
+    onError "#{@name} unknown packages for os: #{os}"
+
+  end
+
+  def installPrerequisites
+
+    installDepsList depsList
+    
+  end
+
+  def DoClone
+    system "git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg"
+    $?.exitstatus == 0
+  end
+
+  def DoUpdate
+    self.standardGitUpdate
+  end
+
+  def DoSetup
+
+    if BuildPlatform == "windows"
+      
+      #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
+      abort("win setup")
+    else
+
+      system "./configure #{@Options.join(' ')}"
+      return $?.exitstatus == 0
+    end
+  end
+  
+  def DoCompile
+    if BuildPlatform == "windows"
+
+      abort("todo: windows")
+      return $?.exitstatus == 0
+    else
+
+      runCompiler CompileThreads
+      return $?.exitstatus == 0
+    end
+  end
+
+  def DoInstall
+
+    if BuildPlatform == "windows"
+      
+      abort("win ffmpeg libs")
+      
+    else
+
+      return self.linuxMakeInstallHelper
+    end
+  end
+end
+
+
+
+# Supported extra options:
+# :noOSS => Disable OSS support on linux (which is not supported well
+#     according to the documentation
+class PortAudio < BaseDep
+  def initialize(args)
+
+    super("PortAudio", "portaudio", args)
+
+    if @InstallPath
+
+      @Options.push "--prefix='#{@InstallPath}'"
+      
+    end
+
+    if args[:noOSS]
+      @Options.push "--without-oss"
+    end
+    
+  end
+
+  
+  def getDefaultOptions
+    []
+  end
+
+  def depsList
+    os = getLinuxOS
+
+    if os == "fedora" || os == "centos" || os == "rhel"
+      
+      return [
+        "alsa-lib-devel"
+      ]
+      
+    end
+
+    if os == "ubuntu"
+      
+      return [
+        "libasound-dev"
+      ]
+    end
+    
+    onError "#{@Name} unknown packages for os: #{os}"
+
+  end
+
+  def installPrerequisites
+
+    installDepsList depsList
+    
+  end
+
+  def DoClone
+    system "git clone https://git.assembla.com/portaudio.git portaudio"
+    $?.exitstatus == 0
+  end
+
+  def DoUpdate
+    self.standardGitUpdate
+  end
+
+  def DoSetup
+
+    if BuildPlatform == "windows"
+      
+      abort("win setup")
+    else
+
+      system "./configure #{@Options.join(' ')}"
+      return $?.exitstatus == 0
+    end
+  end
+  
+  def DoCompile
+    if BuildPlatform == "windows"
+
+      abort("win setup")
+      return $?.exitstatus == 0
+    else
+
+      runCompiler CompileThreads
+      return $?.exitstatus == 0
+    end
+  end
+
+  def DoInstall
+
+    if BuildPlatform == "windows"
+      
+      abort("win setup")
+      
+    else
+
+      return self.linuxMakeInstallHelper
+    end
+  end
+end
+  
+
+
 
 class Newton < BaseDep
   def initialize
