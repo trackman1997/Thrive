@@ -13,10 +13,10 @@ require 'etc'
 require 'os'
 require 'pathname'
 
-# Used by: verifyVSProjectRuntimeLibrary
-require 'nokogiri' if OS.windows?
-# Required for installs on windows
-require 'win32ole' if OS.windows?
+## Used by: verifyVSProjectRuntimeLibrary
+#require 'nokogiri' if OS.windows?
+## Required for installs on windows
+##require 'win32ole' if OS.windows?
 
 #
 # Parse options
@@ -89,8 +89,11 @@ VSToolsEnv = "VS140COMNTOOLS"
 ### Commandline handling
 # TODO: add this
 
-HasDNF = which("dnf") != nil
-
+if OS.linux?
+  HasDNF = which("dnf") != nil
+else
+  HasDNF = false
+end
 
 # This verifies that CurrentDir is good and assigns it to CurrentDir
 CurrentDir = checkRunFolder Dir.pwd
@@ -112,11 +115,6 @@ puts "Project dir is '#{ProjectDir}'"
 
 if HasDNF
   info "Using dnf package manager"
-end
-
-if BuildPlatform == "windows"
-  puts "This is not properly tested so be careful"
-  
 end
 
 puts "Using #{CompileThreads} threads to compile, configuration: #{CMakeBuildType}"
@@ -151,17 +149,29 @@ class Installer
       @Libraries.each do |x|
 
         if x.respond_to?(:installPrerequisites)
-
+          
+          # Verifying that it works
+          begin
+            # Require that this list method exists
+            deps = x.depsList
+          rescue RuntimeError
+            # Not used on platform. Should always be used on non-windows
+            if !OS.windows?
+              onError "Dependency #{x.Name} prerequisites fetch failed. This needs to " + 
+                "work on non-windows platforms"
+            end
+            
+            next
+          end
+          
+          onError "empty deps" if !deps
+          
           if !DoSudoInstalls
 
-            deps = x.depsList
-            
             warning "Automatic dependency installation is disabled!: please install: " +
                     "'#{deps.join(' ')}' manually for #{x.Name}"
           else
-            # Require that this list method exists
-            x.depsList
-
+          
             # Actually install
             info "Installing prerequisites for #{x.Name}..."
             
@@ -220,7 +230,7 @@ class PathModifier
 
     abort "Failed to get env path" if @OldPath == nil
 
-    if BuildPlatform == "linux"
+    if OS.linux?
       
       newpath = newpathentry + ":" + @OldPath
       
@@ -315,6 +325,10 @@ def getLinuxOS()
   if OS.mac?
     return "mac"
   end
+  
+  if OS.windows?
+    raise "getLinuxOS called on Windows!"
+  end
 
   osrelease = `lsb_release -is`.strip
 
@@ -363,13 +377,13 @@ end
 # CMake configure
 def runCMakeConfigure(additionalArgs)
     
-  if BuildPlatform == "linux"
-        
-    system "cmake .. -DCMAKE_BUILD_TYPE=#{CMakeBuildType} #{additionalArgs}"
+  if OS.windows?
+
+    system "cmake .. -G \"#{VSVersion}\" #{additionalArgs}"
         
   else
-        
-    system "cmake .. -G \"#{VSVersion}\" #{additionalArgs}"
+  
+    system "cmake .. -DCMAKE_BUILD_TYPE=#{CMakeBuildType} #{additionalArgs}"
         
   end
 end
@@ -377,15 +391,14 @@ end
 # Running make or msbuild
 def runCompiler(threads)
     
-  if BuildPlatform == "linux"
-        
-    system "make -j #{threads}"
-        
-  else
-    
+  if OS.windows?
     #system "start \"ms\" \"MSBuild.exe\" "
     # Would use this if used project.sln file: /target:ALL_BUILD 
     system "#{bringVSToPath} && MSBuild.exe ALL_BUILD.vcxproj /maxcpucount:#{threads} /p:Configuration=RelWithDebInfo"
+        
+  else
+    
+    system "make -j #{threads}"
         
   end
 end
@@ -393,16 +406,16 @@ end
 # Running platform standard cmake install
 def runInstall()
     
-  if BuildPlatform == "linux"
-        
-    system "sudo make install"
-        
-  else
-    
+  if OS.windows?
+  
     info "Running install script as Administrator"
 
     # Requires admin privileges
     runWindowsAdmin("#{bringVSToPath} && MSBuild.exe INSTALL.vcxproj /p:Configuration=RelWithDebInfo")
+        
+  else
+    
+    system "sudo make install"
 
   end
 end
@@ -1021,7 +1034,7 @@ class FFMPEG < BaseDep
 
   def DoSetup
 
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
       abort("win setup")
@@ -1033,7 +1046,7 @@ class FFMPEG < BaseDep
   end
   
   def DoCompile
-    if BuildPlatform == "windows"
+    if OS.windows?
 
       abort("todo: windows")
       return $?.exitstatus == 0
@@ -1046,7 +1059,7 @@ class FFMPEG < BaseDep
 
   def DoInstall
 
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       abort("win ffmpeg libs")
       
@@ -1123,7 +1136,7 @@ class PortAudio < BaseDep
 
   def DoSetup
 
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       abort("win setup")
     else
@@ -1134,7 +1147,7 @@ class PortAudio < BaseDep
   end
   
   def DoCompile
-    if BuildPlatform == "windows"
+    if OS.windows?
 
       abort("win setup")
       return $?.exitstatus == 0
@@ -1147,7 +1160,7 @@ class PortAudio < BaseDep
 
   def DoInstall
 
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       abort("win setup")
       
@@ -1158,8 +1171,11 @@ class PortAudio < BaseDep
   end
 end
   
-
-
+#
+##
+### TODO: all the following need to be fixed / verified that they still work
+##
+#
 
 class Newton < BaseDep
   def initialize
@@ -1179,7 +1195,7 @@ class Newton < BaseDep
 
   def DoSetup
     
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
     else
@@ -1194,7 +1210,7 @@ class Newton < BaseDep
   end
   
   def DoCompile
-    if BuildPlatform == "windows"
+    if OS.windows?
       cmdStr = "#{bringVSToPath} && MSBuild.exe \"packages/projects/visualStudio_2015_dll/build.sln\" " +
                "/maxcpucount:#{CompileThreads} /p:Configuration=release /p:Platform=\"x64\""
       system cmdStr
@@ -1217,12 +1233,12 @@ class Newton < BaseDep
     runGlobberAndCopy(Globber.new("Newton.h", File.join(@Folder, "coreLibrary_300/source")),
                           ProjectDebDirInclude)
     
-    if BuildPlatform == "linux"
+    if OS.linux?
 
       runGlobberAndCopy(Globber.new("libNewton.so", File.join(@Folder, "build/lib")),
                             ProjectDebDirLibs)
 
-    else
+    elsif OS.windows?
 
       runGlobberAndCopy(Globber.new("newton.dll",
                                     File.join(@Folder, "coreLibrary_300/projects/windows")),
@@ -1231,6 +1247,8 @@ class Newton < BaseDep
       runGlobberAndCopy(Globber.new("newton.lib",
                                     File.join(@Folder, "coreLibrary_300/projects/windows")),
                             ProjectDebDirLibs)
+    else
+      onError "Unkown os"
     end
     true
   end
@@ -1239,7 +1257,7 @@ end
 class OpenAL < BaseDep
   def initialize
     super("OpenAL Soft", "openal-soft")
-    onError "Use OpenAL from package manager on linux" if BuildPlatform != "windows"
+    onError "Use OpenAL from package manager on linux" if !OS.windows?
   end
 
   def DoClone
@@ -1278,7 +1296,7 @@ class OpenAL < BaseDep
     Dir.chdir("build") do
       runInstall
       
-      if BuildPlatform == "windows" and not File.exist? "C:/Program Files/OpenAL/include/OpenAL"
+      if OS.windows? and not File.exist? "C:/Program Files/OpenAL/include/OpenAL"
         # cAudio needs OpenAL folder in include folder, which doesn't exist. 
         # So we create it here
         askToRunAdmin("mklink /D \"C:/Program Files/OpenAL/include/OpenAL\" " + 
@@ -1312,7 +1330,7 @@ class CAudio < BaseDep
 
     Dir.chdir("build") do
       
-      if BuildPlatform == "windows"
+      if OS.windows?
         # The bundled ones aren't compatible with our compiler setup 
         # -DCAUDIO_DEPENDENCIES_DIR=../Dependencies64
         runCMakeConfigure "-DCAUDIO_BUILD_SAMPLES=OFF -DCAUDIO_DEPENDENCIES_DIR=\"C:/Program Files/OpenAL\" " +
@@ -1336,7 +1354,7 @@ class CAudio < BaseDep
   def DoInstall
     
     Dir.chdir("build") do
-      if BuildPlatform == "windows"
+      if OS.windows?
         
         system "#{bringVSToPath} && MSBuild.exe INSTALL.vcxproj /p:Configuration=RelWithDebInfo"
         
@@ -1401,7 +1419,7 @@ class AngelScript < BaseDep
   end
 
   def DoSetup
-    if BuildPlatform == "windows"
+    if OS.windows?
       
       return File.exist? "sdk/angelscript/projects/msvc2015/angelscript.sln"
     else
@@ -1411,15 +1429,7 @@ class AngelScript < BaseDep
   
   def DoCompile
 
-    if BuildPlatform == "linux"
-      Dir.chdir("sdk/angelscript/projects/gnuc") do
-        
-        system "make -j #{CompileThreads}"
-        
-      end
-      $?.exitstatus == 0
-    else
-      
+    if OS.windows?
       info "Verifying that angelscript solution has Runtime Library = MultiThreadedDLL"
       verifyVSProjectRuntimeLibrary "sdk/angelscript/projects/msvc2015/angelscript.vcxproj", 
                                     %r{Release\|x64}, "MultiThreadedDLL"  
@@ -1429,7 +1439,15 @@ class AngelScript < BaseDep
       cmdStr = "#{bringVSToPath} && MSBuild.exe \"sdk/angelscript/projects/msvc2015/angelscript.sln\" " +
                "/maxcpucount:#{CompileThreads} /p:Configuration=Release /p:Platform=\"x64\""
       system cmdStr
-      return $?.exitstatus == 0
+      $?.exitstatus == 0
+      
+    else
+    
+      Dir.chdir("sdk/angelscript/projects/gnuc") do
+        
+        system "make -j #{CompileThreads}"
+        return $?.exitstatus == 0
+      end
     end
   end
   
@@ -1461,14 +1479,16 @@ class AngelScript < BaseDep
     end
 
     # Then the library
-    if BuildPlatform == "linux"
+    if OS.linux?
 
       FileUtils.cp File.join(@Folder, "sdk/angelscript/lib", "libangelscript.a"),
                    ProjectDebDirLibs
       
-    else
+    elsif OS.windows?
       FileUtils.cp File.join(@Folder, "sdk/angelscript/lib", "angelscript64.lib"),
                    ProjectDebDirLibs
+    else
+      onError "Unkown OS"
     end
     true
   end
@@ -1507,7 +1527,7 @@ class Breakpad < BaseDep
 
   def DoUpdate
     
-    if BuildPlatform == "windows" and NoBreakpadUpdateOnWindows
+    if OS.windows? and NoBreakpadUpdateOnWindows
       info "Windows: skipping Breakpad update"
       if not File.exist?("src")
         @CreatedNewFolder = true
@@ -1567,7 +1587,7 @@ class Breakpad < BaseDep
       Dir.chdir("src") do
 
         # Configure script
-        if BuildPlatform == "windows"
+        if OS.windows?
           system "src/tools/gyp/gyp.bat src/client/windows/breakpad_client.gyp –no-circular-check"
         else
           system "./configure"
@@ -1592,21 +1612,20 @@ class Breakpad < BaseDep
     # Build breakpad
     Dir.chdir(File.join(@Folder, "src")) do
       
-      if BuildPlatform == "linux"
-        system "make -j #{CompileThreads}"
-        
-        if $?.exitstatus > 0
-          pathedit.Restore
-          onError "breakpad build failed" 
-        end
-      else
-        
+      if OS.windows?
         info "Please open the solution at and compile breakpad client in Release and x64. " +
              "Remember to disable treat warnings as errors first: "+
              "#{CurrentDir}/breakpad/src/src/client/windows/breakpad_client.sln"
         
         system "start #{CurrentDir}/breakpad/src/src/client/windows/breakpad_client.sln" if AutoOpenVS
         system "pause"
+      else
+        system "make -j #{CompileThreads}"
+        
+        if $?.exitstatus > 0
+          pathedit.Restore
+          onError "breakpad build failed" 
+        end
       end
     end
     
@@ -1622,7 +1641,7 @@ class Breakpad < BaseDep
 
     breakpadincludelink = File.join(CurrentDir, "Breakpad", "include")
     
-    if BuildPlatform == "windows"
+    if OS.windows?
 
       askToRunAdmin "mklink /D \"#{breakpadincludelink}\" \"#{File.join(@Folder, "src/src")}\""
       
@@ -1660,7 +1679,7 @@ class Ogre < BaseDep
   end
 
   def RequiresClone
-    if BuildPlatform == "windows"
+    if OS.windows?
       return (not File.exist?(@Folder) or not File.exist?(File.join(@Folder, "Dependencies")))
     else
       return (not File.exist? @Folder)
@@ -1668,7 +1687,7 @@ class Ogre < BaseDep
   end
   
   def DoClone
-    if BuildPlatform == "windows"
+    if OS.windows?
 
       system "hg clone https://bitbucket.org/sinbad/ogre"
       if $?.exitstatus > 0
@@ -1688,7 +1707,7 @@ class Ogre < BaseDep
 
   def DoUpdate
     
-    if BuildPlatform == "windows"
+    if OS.windows?
       Dir.chdir("Dependencies") do
         system "hg pull"
         system "hg update"
@@ -1709,7 +1728,7 @@ class Ogre < BaseDep
     # Dependencies compile
     additionalCMake = ""
     
-    if BuildPlatform == "windows"
+    if OS.windows?
       Dir.chdir("Dependencies") do
         
         system "cmake . -DOGREDEPS_BUILD_SDL2=OFF" 
@@ -1752,7 +1771,7 @@ class Ogre < BaseDep
   
   def DoCompile
     Dir.chdir("build") do
-      if BuildPlatform == "windows"
+      if OS.windows?
         system "#{bringVSToPath} && MSBuild.exe ALL_BUILD.vcxproj /maxcpucount:#{CompileThreads} /p:Configuration=Release"
         system "#{bringVSToPath} && MSBuild.exe ALL_BUILD.vcxproj /maxcpucount:#{CompileThreads} /p:Configuration=RelWithDebInfo"
       else
@@ -1767,7 +1786,7 @@ class Ogre < BaseDep
 
     Dir.chdir("build") do
       
-      if BuildPlatform == "windows"
+      if OS.windows?
 
         system "#{bringVSToPath} && MSBuild.exe INSTALL.vcxproj /p:Configuration=RelWithDebInfo"
         ENV["OGRE_HOME"] = "#{@Folder}/build/ogre/sdk"
@@ -1946,7 +1965,7 @@ class SFML < BaseDep
   end
 
   def LinuxPackages
-    if Linux == "Fedora"
+    if getLinuxOS == "Fedora"
       return Array["xcb-util-image-devel", "systemd-devel", "libjpeg-devel", "libvorbis-devel",
                    "flac-devel"]
     else

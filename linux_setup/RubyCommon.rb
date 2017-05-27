@@ -8,9 +8,11 @@ require 'fileutils'
 
 # Error handling
 def onError(errordescription)
-
+  
+  puts
   puts ("ERROR: " + errordescription).red
-  # Uncomment the next line to get a stack trace
+  puts "Stack trace for error: ", caller
+  # Uncomment the next line to allow rescuing this
   #raise "onError called!"
   exit 1
 end
@@ -27,24 +29,6 @@ def warning(message)
 end
 def error(message)
   puts message.to_s.colorize(:red)
-end
-
-
-
-# Platform detection, for library suffix
-if OS.linux?
-
-  BuildPlatform = "linux"
-  
-elsif OS.windows?
-  
-  BuildPlatform = "windows"
-  
-elsif OS.mac?
-  # Shouldn't be any file names that are different
-  BuildPlatform = "linux"
-else
-  abort "Unknown OS type"
 end
 
 # Runs a command and calls onError if it fails

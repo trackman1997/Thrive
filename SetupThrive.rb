@@ -53,12 +53,15 @@ end
 
 WantedURL = "https://#{$svnUser}@boostslair.com/svn/Thrive_Content"
 
-clangPath = which("clang")
+# Use clang when not on windows to compile ffmpeg (we could probably 
+# skip this and use the system default just fine, and portaudio doesn't use clang)
+if !OS.windows?
+  clangPath = which("clang")
 
-if clangPath == nil
+  if clangPath == nil
 
-  onError("Clang is not installed, or in path")
-  
+    onError("Clang is not installed, or in path")
+  end
 end
 
 # FFMPEG setup
@@ -76,8 +79,12 @@ ffmpeg = FFMPEG.new(
     "--disable-avfilter",
     "--enable-rpath",
     
-    # Same compiler as ue4
-    "--cc=clang", "--cxx=clang",
+     # Same compiler as ue4
+    if !OS.windows? then 
+      ["--cc=clang", "--cxx=clang"]
+    else
+      ""
+    end,
     "--disable-network",
 
     # Can't be bothered to check which specific things we need so some of these disables
@@ -108,7 +115,7 @@ ffmpeg = FFMPEG.new(
     "--disable-audiotoolbox", "--disable-cuda", "--disable-cuvid",
     "--disable-nvenc", "--disable-vaapi", "--disable-vdpau",
     "--disable-videotoolbox"
-  ]
+  ].flatten
 )
 
 portaudio = PortAudio.new(
