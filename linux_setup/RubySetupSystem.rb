@@ -228,7 +228,7 @@ class PathModifier
     
     @OldPath = ENV["PATH"]
 
-    abort "Failed to get env path" if @OldPath == nil
+    onError "Failed to get env path" if @OldPath == nil
 
     if OS.linux?
       
@@ -265,7 +265,7 @@ end
 # Makes sure that the wanted value is specified for all targets that match the regex
 def verifyVSProjectRuntimeLibrary(projFile, matchRegex, wantedRuntimeLib)
   # Very parameters
-  abort "Call verifyVSProjectRuntimeLibrary only on windows!" if not OS.windows?
+  onError "Call verifyVSProjectRuntimeLibrary only on windows!" if not OS.windows?
   onError "Project file: #{projFile} doesn't exist" if not File.exist? projFile
   
   # Load xml with nokogiri
@@ -1037,7 +1037,7 @@ class FFMPEG < BaseDep
     if OS.windows?
       
       #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
-      abort("win setup")
+      onError("win setup")
     else
 
       system "./configure #{@Options.join(' ')}"
@@ -1048,7 +1048,7 @@ class FFMPEG < BaseDep
   def DoCompile
     if OS.windows?
 
-      abort("todo: windows")
+      onError("todo: windows")
       return $?.exitstatus == 0
     else
 
@@ -1061,7 +1061,7 @@ class FFMPEG < BaseDep
 
     if OS.windows?
       
-      abort("win ffmpeg libs")
+      onError("win ffmpeg libs")
       
     else
 
@@ -1138,7 +1138,7 @@ class PortAudio < BaseDep
 
     if OS.windows?
       
-      abort("win setup")
+      onError("win setup")
     else
 
       system "./configure #{@Options.join(' ')}"
@@ -1149,7 +1149,7 @@ class PortAudio < BaseDep
   def DoCompile
     if OS.windows?
 
-      abort("win setup")
+      onError("win setup")
       return $?.exitstatus == 0
     else
 
@@ -1162,7 +1162,7 @@ class PortAudio < BaseDep
 
     if OS.windows?
       
-      abort("win setup")
+      onError("win setup")
       
     else
 
@@ -1388,7 +1388,7 @@ class AngelScript < BaseDep
     @WantedURL = "http://svn.code.sf.net/p/angelscript/code/tags/2.31.2"
 
     if @WantedURL[-1, 1] == '/'
-      abort "Invalid configuraion in Setup.rb AngelScript tag has an ending '/'. Remove it!"
+      onError "Invalid configuraion in Setup.rb AngelScript tag has an ending '/'. Remove it!"
     end
   end
 
@@ -1402,7 +1402,7 @@ class AngelScript < BaseDep
     # Check is tag correct
     match = `svn info`.strip.match(/.*URL:\s?(.*angelscript\S+).*/i)
 
-    abort("'svn info' unable to find URL with regex") if !match
+    onError("'svn info' unable to find URL with regex") if !match
     
     currenturl = match.captures[0]
 

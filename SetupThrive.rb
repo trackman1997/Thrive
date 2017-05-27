@@ -143,7 +143,7 @@ if OS.linux?
   
 elsif OS.mac?
   
-  abort("todo")
+  onError("todo")
   
 elsif OS.windows?
 
@@ -190,7 +190,7 @@ if OS.linux?
 elsif OS.mac?
 
   sourceBuildFile.gsub! /\(@1@\)/, "//Not used on this platform"
-  abort("todo")
+  onError("todo")
   
 elsif OS.windows?
 
@@ -231,7 +231,7 @@ success "Content folder exists"
 # Make sure svn username is correct
 match = `svn info`.strip.match(/.*URL:\s?(.*thrive\S+).*/i)
 
-abort("'svn info' unable to find URL with regex") if !match
+onError("'svn info' unable to find URL with regex") if !match
 
 currenturl = match.captures[0]
 
