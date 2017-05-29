@@ -51,7 +51,7 @@ As we currently have to one who uses a mac and can compile the game this is a wo
 But we would love to help to anyone trying to get a mac version of Thrive working.
 Contact us on discord or on the forums for help, or github if you prefer.
 
-#### Ruby Gems
+### Ruby Gems
 - os
 - colorize
 - rubyzip
