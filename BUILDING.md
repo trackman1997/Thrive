@@ -10,13 +10,15 @@ These programs are needed for all platforms:
 
 - Unreal Engine 4 (4.16). 
   Note: on Linux the engine must be compiled from source. Use the `release` branch version.
-- (Ruby)[http://ruby-lang.org] (It is recommended to use RubyInstaller on Windows)
+- [Ruby](http://ruby-lang.org) (It is recommended to use RubyInstaller on Windows)
 - git
 - svn
 - cmake
 
 Everything except unreal engine must be installed so that it is 
-included in the syustem PATH. You can check by opening a command 
+included in the syustem PATH. 
+
+You can check whether a program is in PATH by opening a command 
 prompt/terminal and running the program by typing its name. 
 For example `ruby -v` this shouldn't print an error instead you should get something like this:
 ```
@@ -28,22 +30,19 @@ That's not an error and ruby is correctly installed.
 
 ### Windows
 
-Visual Studio 2015 Community
-
-Visual c++ 2010 runtime
-
-MSYS (or full MinGW). Install with 
+- Visual Studio 2015 Community (make sure to enable c++ support when installing)
+- Visual c++ 2010 runtime
+- MSYS (or full MinGW). Install this with 
 [mingwg-get-setup.exe](https://sourceforge.net/projects/mingw/files/Installer/) 
-. Select `msys-base` package to install in the installation manager.
+. Select `msys-base` package to get only the required parts in the installation manager.
 After installation you need to add `msys.bat` folder to the system PATH variable.
 For example: `C:\MinGW\msys\1.0`
 
 
 ### Linux
 
-GCC and Clang.
-
-lsb_release
+- GCC and Clang.
+- lsb_release
 
 ### Mac
 
@@ -55,8 +54,6 @@ Contact us on discord or on the forums for help, or github if you prefer.
 #### Ruby Gems
 - os
 - colorize
-#Not supported for ruby 2.4 on Windows. 1.8.0 version should add that support. 
-#- (Windows only) nokogiri
 - rubyzip
 
 These can be installed by running `gem install os colorize rubyzip`. Running with sudo is probably not required.
@@ -65,7 +62,15 @@ If you get errors installing the gems you should try updating your ruby version.
 Cloning the Repository
 ----------------------
 
-Go to a new folder where you want to build Thrive. And run
+Now that we have the required programs we can start getting Thrive installed.
+
+
+Go to a new folder where you want to build Thrive 
+
+note: avoid paths with spaces in them on Linux. On Windows paths with spaces work,
+for example `C:\Users\USERNAME\Documents\Unreal Projects\` is a good choice.
+
+And run
 ```
 git clone https://github.com/Revolutionary-Games/Thrive.git Thrive
 ```
@@ -79,15 +84,16 @@ Running the Setup Script
 ### Windows
 
 Because the environment setup is very complex as both vs tools and mingw needs 
-to be loaded simultaneusly there will be a spot in the setup script where it asks you to 
+to be loaded simultaneously there will be a spot in the setup script where it asks you to 
 do some manual steps in order and then press a key to continue.
 
 
 This is very unfortunate but I didn't find a way to automate this, 
-windows is not the best platform for development...
+windows is not the best platform for development... at least for full automation
 
 
-Now run the normal setup script in the msys cmd:
+Now run the setup script in cmd
+(hint: shift right-click in the Thrive folder and select 'open command prompt here')
 ```
 ruby SetupThrive.rb thrive
 ```
@@ -97,17 +103,35 @@ ruby SetupThrive.rb thrive
 ./SetupThrive.rb thrive
 ```
 
+### Parameters
 The `thrive` parameter after the script name is the name for the assets svn. 
 The thrive account has READ ONLY access and the password for `thrive` is `thrive`.
+So remember to type that in when it is asked by svn.
 
 Once you are on the team you get access to a separate account you can use here that has
 write (push) access.
 
 
+Updating to new versions
+------------------------
+
+You can run the setup script as many times as you want. 
+
+Thus the recommended procedure to update your copy is running these commands:
+```
+git pull
+git submodule update
+svn up
+```
+
+And then run the setup script again and then open ue4 editor and recompile the code, 
+or recompile before opening the editor.
+
 ### Not Using the Setup Script 
 
 If you don't want to run the setup script you will need to manually 
-run all the commands it would have ran, which is way too long to put here.
+compile and copy to right folders all the dependencies and setup the assets svn
+AND configure the ue4 Thrive module build script from `Source/Thrive/Thrive.Build.Source.cs`.
 
 
 Troubleshooting
