@@ -434,6 +434,16 @@ def runCompiler(threads)
   end
 end
 
+# Run msbuild with specific target and configuration
+def runVSCompiler(threads, project = "ALL_BUILD.vcxproj", configuration = "RelWithDebInfo",
+  platform = "x64")
+  
+  onError "runVSCompiler called on non-windows os" if !OS.windows?
+  system "#{bringVSToPath} && MSBuild.exe #{project} /maxcpucount:#{threads} " + 
+    "/p:Configuration=#{configuration} /p:Platform=\"#{platform}\""
+
+end
+
 # Running platform standard cmake install
 def runInstall()
     
@@ -1232,20 +1242,41 @@ class PortAudio < BaseDep
     super("PortAudio", "portaudio", args)
 
     if @InstallPath
-
-      @Options.push "--prefix='#{@InstallPath}'"
-      
+      if usesCMake
+        @Options.push "-DCMAKE_INSTALL_PREFIX=\"#{@InstallPath}\""
+      else
+        @Options.push "--prefix='#{@InstallPath}'"
+      end  
     end
 
     if args[:noOSS]
-      @Options.push "--without-oss"
+      if usesCMake
+        # Doesn't make sense on windows, and the cmake doesn't seem
+        # to have 'OSS' in it so probably doesn't need to be disabled
+        # even if we switch linux to also use cmake
+      else
+        @Options.push "--without-oss"
+      end
     end
     
+  end
+  
+  # Returns true if platform uses cmake to configure, and cmake style args
+  # should be used
+  def usesCMake
+    OS.windows?
   end
 
   
   def getDefaultOptions
-    []
+    if !usesCMake
+      []
+    else
+      [
+        "-DPA_DLL_LINK_WITH_STATIC_RUNTIME=OFF",
+      ]
+    end
+
   end
 
   def depsList
@@ -1288,8 +1319,14 @@ class PortAudio < BaseDep
   def DoSetup
 
     if OS.windows?
+        
+      FileUtils.mkdir_p "build"
       
-      onError("win setup")
+      Dir.chdir("build") do
+      
+        runCMakeConfigure @Options.join(' ')
+        return $?.exitstatus == 0
+      end
     else
 
       system "./configure #{@Options.join(' ')}"
@@ -1299,9 +1336,15 @@ class PortAudio < BaseDep
   
   def DoCompile
     if OS.windows?
-
-      onError("win setup")
-      return $?.exitstatus == 0
+    
+      Dir.chdir("build") do
+        
+        # If we ran cmake again here with 32 bit windows (probably in a 'build-32' folder)
+        # we could probably also build the 32-bit version as it has a different file name        
+        runVSCompiler CompileThreads, "portaudio.vcxproj", "Release", "x64"
+        
+        return $?.exitstatus == 0
+      end
     else
 
       runCompiler CompileThreads
@@ -1313,10 +1356,32 @@ class PortAudio < BaseDep
 
     if OS.windows?
       
-      onError("win setup")
+      buildFolder = File.join(@Folder, "build/Release/")
+      
+      if Dir.glob(File.join(buildFolder, "*.dll")).empty? 
+        onError "portaudio files to be installed are missing"
+      end
+      
+      binFolder = File.join @InstallPath, "bin"
+      libFolder = File.join @InstallPath, "lib"
+
+      FileUtils.mkdir_p binFolder
+      FileUtils.mkdir_p libFolder
+      
+      Dir.glob(File.join(buildFolder, "*.dll")) {|file|
+        FileUtils.cp file, binFolder
+      }
+      
+      Dir.glob(File.join(buildFolder, "*.lib")) {|file|
+        FileUtils.cp file, libFolder
+      }
+      
+      FileUtils.cp_r File.join(@Folder, "include"), @InstallPath
+      
+      true
       
     else
-
+    
       return self.linuxMakeInstallHelper
     end
   end

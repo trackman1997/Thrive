@@ -68,19 +68,19 @@ public class Thrive : ModuleRules
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win64");
             
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavcodec.lib"));
+                    "avcodec.lib"));
 
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavformat.lib"));
+                    "avformat.lib"));
 
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavutil.lib"));
+                    "avutil.lib"));
 
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswresample.lib"));
+                    "swresample.lib"));
 
             PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswscale.lib"));
+                    "swscale.lib"));
 
             LibPath = Path.Combine(ffmpegPath, "lib");
             
@@ -92,19 +92,19 @@ public class Thrive : ModuleRules
             
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win32");
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    // "libavcodec.lib"));
+                    // "avcodec.lib"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    // "libavformat.lib"));
+                    // "avformat.lib"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    // "libavutil.lib"));
+                    // "avutil.lib"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    // "libswresample.lib"));
+                    // "swresample.lib"));
 
             // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    // "libswscale.lib"));
+                    // "swscale.lib"));
 
             // LibPath = Path.Combine(ffmpegPath, "lib");
             
@@ -161,7 +161,7 @@ public class Thrive : ModuleRules
             //LibPath = Path.Combine(portaudioPath, "Libraries", "Win64");
             
             PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
-                    "portaudio.lib"));
+                    "portaudio_x64.lib"));
 
             LibPath = Path.Combine(portaudioPath, "lib");
             
@@ -171,7 +171,7 @@ public class Thrive : ModuleRules
         else if (Target.Platform == UnrealTargetPlatform.Win32)
         {
             PublicAdditionalLibraries.Add(Path.Combine(portaudioPath, "lib", 
-                    "portaudio.lib"));
+                    "portaudio_x86.lib"));
             
             LibPath = Path.Combine(portaudioPath, "lib");
             

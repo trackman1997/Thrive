@@ -333,7 +333,7 @@ void AThriveVideoPlayer::Close(){
 // ------------------------------------ //
 bool AThriveVideoPlayer::HasAudio() const{
 
-    return AudioCodec;
+    return AudioCodec != nullptr;
 }
 
 float AThriveVideoPlayer::GetCurrentTime() const{
@@ -1083,7 +1083,14 @@ void AThriveVideoPlayer::SeekVideo(float Time){
 
     const auto SeekPos = static_cast<uint64_t>(Time * AV_TIME_BASE);
 
-    const auto TimeStamp = av_rescale_q(SeekPos, AV_TIME_BASE_Q,
+
+    const auto TimeStamp = av_rescale_q(SeekPos, 
+    #ifdef _MSC_VER
+        // Copy pasted from the definition of AV_TIME_BASE_Q
+        AVRational{ 1, AV_TIME_BASE },
+    #else
+        AV_TIME_BASE_Q,
+    #endif
         FormatContext->streams[VideoIndex]->time_base);
 
     av_seek_frame(FormatContext, VideoIndex, TimeStamp, AVSEEK_FLAG_BACKWARD);
@@ -1116,7 +1123,7 @@ FFileReadHelper::~FFileReadHelper(){
 
 bool FFileReadHelper::IsValid() const{
 
-    return File;
+    return File != nullptr;
 }
 
 int FFileReadHelper::Read(uint8_t* Buffer, int BufferSize){

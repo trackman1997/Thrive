@@ -29,10 +29,9 @@ def thrivestandardCopyHelper(targetFolder, libdir)
   elsif OS.windows?
 
     Dir.foreach(libdir) do |libname|
-
-      if libname =~ /.*\.dll.*/i
-
-        FileUtils.cp File.join(libdir, libname), targetFolder, :preserve => true
+      if libname =~ /.*\.dll/i
+        
+        FileUtils.cp File.join(libdir, libname), targetFolder
         copyCount += 1
       end
     end
@@ -55,7 +54,7 @@ def ffmpegCopyLibs(targetFolder)
                            elsif OS.mac?
                              File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
                            elsif OS.windows?
-                             File.join ProjectDir, "ThirdParty", "ffmpeg", "lib"
+                             File.join ProjectDir, "ThirdParty", "ffmpeg", "bin"
                            else
                              onError("unkown os")
                            end
@@ -71,7 +70,7 @@ def portaudioCopyLibs(targetFolder)
                            elsif OS.mac?
                              File.join ProjectDir, "ThirdParty", "portaudio", "lib"
                            elsif OS.windows?
-                             File.join ProjectDir, "ThirdParty", "portaudio", "lib"
+                             File.join ProjectDir, "ThirdParty", "portaudio", "bin"
                            else
                              onError("unkown os")
                            end

@@ -83,7 +83,7 @@ ffmpeg = FFMPEG.new(
       ""
     end,
     
-     # Same compiler as ue4
+    # Same compiler as ue4 (if not on windows)
     if !OS.windows? then 
       ["--cc=clang", "--cxx=clang"]
     else
@@ -298,7 +298,7 @@ end
 # Create staging folder
 FileUtils.mkdir_p "Staging"
   
-
+puts ""
 success "Done. Open 'Thrive.uproject' in Unreal Engine 4 editor to start working."
 
 exit 0
