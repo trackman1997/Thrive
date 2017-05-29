@@ -20,7 +20,7 @@ void AMicrobePlayerControllerBase::BeginPlay(){
 
 
     FString testSound = FPaths::GameContentDir() +
-        "/ExtraContent/Music/main-menu-theme-1.ogg";
+        "/ExtraContent/Music/microbe-theme-3.ogg";
 
     if(FPaths::FileExists(testSound) && IsLocalPlayerController()){
 
