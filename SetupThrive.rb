@@ -77,7 +77,11 @@ ffmpeg = FFMPEG.new(
   :extraOptions => [
     "--disable-postproc", "--disable-avdevice",
     "--disable-avfilter",
-    "--enable-rpath",
+    if !OS.windows? then 
+      "--enable-rpath"
+    else
+      ""
+    end,
     
      # Same compiler as ue4
     if !OS.windows? then 

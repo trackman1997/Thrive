@@ -12,6 +12,7 @@ require 'fileutils'
 require 'etc'
 require 'os'
 require 'pathname'
+require 'zip'
 
 ## Used by: verifyVSProjectRuntimeLibrary
 #require 'nokogiri' if OS.windows?
@@ -222,33 +223,39 @@ class Installer
 end
 
 # Path helper
-# For breakpad depot tools
-class PathModifier
-  def initialize(newpathentry)
+# For all tools that need to be in path but shouldn't be installed because of convenience
+# TODO: switch to using this everywhere (the old deps are broken because of this)
+def runWithModifiedPath(newPathEntries, prependWinPath=false)
     
-    @OldPath = ENV["PATH"]
+  if !newPathEntries.kind_of?(Array)
+      newPathEntries = [newPathEntries]
+  end
+    
+  oldPath = ENV["PATH"]
 
-    onError "Failed to get env path" if @OldPath == nil
+  onError "Failed to get env path" if oldPath == nil
 
-    if OS.linux?
-      
-      newpath = newpathentry + ":" + @OldPath
-      
+  if OS.windows?
+    
+    if prependWinPath
+      newpath = newPathEntries.join(";") + ";" + oldPath
     else
-
-      newpath = @OldPath + ";" + newpathentry
-      
+      newpath = oldPath + ";" + newPathEntries.join(";")
     end
+  else
 
-    info "Setting path to: #{newpath}"
-    ENV["PATH"] = newpath
-
+    newpath = newPathEntries.join(":") + ":" + oldPath
   end
 
-  def Restore()
+  info "Setting path to: #{newpath}"
+  ENV["PATH"] = newpath
+   
+  begin
+    yield
+  ensure
     info "Restored old path"
-    ENV["PATH"] = @OldPath
-  end
+    ENV["PATH"] = oldPath
+  end    
 end
 
 
@@ -260,6 +267,30 @@ def bringVSToPath()
     onError "VsMSBuildCMD.bat is missing check is VSToolsEnv variable correct in Setup.rb" 
   end
   "call \"#{ENV[VSToolsEnv]}VsMSBuildCmd.bat\""
+end
+
+# Gets paths to the visual studio link.exe and cl.exe for use in prepending to paths to
+# make sure mingw or cygwin link.exe isn't used
+# param amd64 if not empty selects 64 bit compiler
+def getVSLinkerFolder(amd64="amd64")
+
+  onError "visual studio environment variable '#{VSToolsEnv}' is missing" if !ENV[VSToolsEnv]
+  
+  folder = File.expand_path(File.join ENV[VSToolsEnv], "../../", "VC", if amd64 then "bin/#{amd64}" else "bin" end)
+  
+  onError "vs linker bin folder doesn't exist" if !File.exists? folder
+  
+  folder
+end
+
+def getVSBaseFolder()
+  onError "visual studio environment variable '#{VSToolsEnv}' is missing" if !ENV[VSToolsEnv]
+  
+  folder = File.expand_path(File.join ENV[VSToolsEnv], "../../")
+  
+  onError "vs folder doesn't exist" if !File.exists? folder
+  
+  folder
 end
 
 # Makes sure that the wanted value is specified for all targets that match the regex
@@ -955,7 +986,8 @@ class FFMPEG < BaseDep
 
     if @InstallPath
 
-      @Options.push "--prefix='#{@InstallPath}'"
+      @Options.push "--prefix='" + if OS.windows? then 
+        makeWindowsPathIntoMinGWPath @InstallPath else @InstallPath end + "'"
       
     end
 
@@ -977,6 +1009,16 @@ class FFMPEG < BaseDep
 
     if args[:noStrip]
       @Options.push "--disable-stripping"
+    end
+    
+    if OS.windows?
+      @Options.push "--toolchain=msvc"
+      @YasmFolder = File.expand_path(File.join @Folder, "../", "ffmpeg-win-tools")
+      puts "#{@Name} using msvc toolchain"
+      # This may or may not be required as the used compiler is chosen manually by
+      # the user by running 'vcvarsall.bat amd64'
+      @Options.push "--arch=x86_64"
+      puts "#{@Name} using 64-bit build"
     end
     
   end
@@ -1035,9 +1077,85 @@ class FFMPEG < BaseDep
   def DoSetup
 
     if OS.windows?
+    
+      # YASM assembler is required, so download that
+      yasmExecutable = File.join @YasmFolder, "yasm.exe"
       
-      #return File.exist? "packages/projects/visualStudio_2015_dll/build.sln"
-      onError("win setup")
+      if !File.exists? yasmExecutable
+        # We need to download it
+        FileUtils.mkdir_p @YasmFolder
+        
+        downloadURLIfTargetIsMissing(
+          "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe",
+          yasmExecutable)
+        
+        onError "yasm tool dl failed" if !File.exists? yasmExecutable
+        
+      end
+      
+      puts ""
+      puts ""
+      error "Windows ffmpeg manual setup section begin."
+      puts "Please open #{VSVersion} and then press any key to continue"
+      puts
+      puts "If for some reason these instructions don't work, see: " +
+        "https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC for help"
+      
+      system "pause"
+      
+      puts ""
+      error "Please do these manual steps and press a key in this window once done:"
+      puts ""
+      puts "1. In Visual Studio select from the menu bar 'Tools -> Visual Studio Command Prompt'"
+      # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
+      # (How to: Enable a 64-Bit Visual C++ Toolset on the Command Line)
+      # that link was very helpful here
+      puts "2. Now run these commands in the new cmd window to enable the 64 bit compiler, " +
+        "(hint: select text and right click to copy and paste between cmd windows):"
+      
+      puts ""
+      puts "cd \"#{File.join getVSBaseFolder, "VC"}\""
+      puts "vcvarsall.bat amd64"
+      puts ""
+      
+      puts "3. Open mingw environment by running 'msys.bat'"
+      
+      puts "at this point the command prompt should have a '$' character instead of the usual current folder"
+      puts "and the title bar should be MINGW32"
+      
+      puts ""
+      puts "4. Run these command in order"
+      
+      puts ""
+      
+      # YASM assembler needs to be in path for ffmpeg to be able to use it
+      # also visual studio needs to be in path before the mingw linker.exe
+      puts "export PATH=\"#{makeWindowsPathIntoMinGWPath @YasmFolder}\":$PATH"
+      puts ""
+      # Apparently this visual studio path thing doesn't need to be done
+      puts "  If you experience problems, THEN try this extra command:"
+      puts "  export PATH=\"#{makeWindowsPathIntoMinGWPath getVSLinkerFolder}\":$PATH"
+      
+      puts ""
+      puts "cd \"#{makeWindowsPathIntoMinGWPath @Folder}\""
+      puts ""
+      
+      puts "5. Now run these setup and compile commands"
+      
+      puts "./configure #{@Options.join(' ')}"
+      puts ""
+      puts "make"
+      puts "make install"
+      
+      puts ""
+      puts "Now ffmpeg should be built and copied to the correct folder"
+
+      puts ""
+      puts ""
+      error "FOLLOW THE INSTRUCTIONS ABOVE BEFORE CONTINUING"
+      system "pause"
+      return true
+
     else
 
       system "./configure #{@Options.join(' ')}"
@@ -1047,9 +1165,14 @@ class FFMPEG < BaseDep
   
   def DoCompile
     if OS.windows?
+    
+      if !File.exists? File.join(@Folder, "libavcodec/avcodec.lib")
+        
+        onError "manual ffmpeg not detected to have succeeded"
+        return false
+      end
 
-      onError("todo: windows")
-      return $?.exitstatus == 0
+      true
     else
 
       runCompiler CompileThreads
@@ -1060,9 +1183,37 @@ class FFMPEG < BaseDep
   def DoInstall
 
     if OS.windows?
+    
+      if Dir.glob(File.join(@InstallPath, "lib/avcodec*.def")).empty? 
+        
+        onError "manual ffmpeg install not detected to have succeeded"
+        return false
+      end
+    
+      # Copy the .lib files to allow linking properly
+      Dir.glob("#{File.join(@InstallPath, 'lib')}/**/*.def") {|file|
+        
+        puts "Copying .lib file matching: '#{file}'"
+        
+        found = Dir.glob("#{@Folder}/**/" + 
+          File.basename(file, File.extname(file)).split('-')[0] + ".lib")
+        
+        if found.empty?
+          onError "Didn't find lib file for: #{file}. " +
+            "Did you follow the build instructions?"
+        end
+        
+        FileUtils.cp found.first, File.dirname(file)
+        
+        puts "Copied  '#{found.first}' to '#{File.dirname file}'"
+      }
       
-      onError("win ffmpeg libs")
+      puts ""
       
+      onError("Copying libs failed") if !File.exists?(File.join(
+        @InstallPath, "lib", "avcodec.lib"))
+      
+      true 
     else
 
       return self.linuxMakeInstallHelper

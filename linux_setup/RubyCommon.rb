@@ -2,6 +2,7 @@
 require 'os'
 require 'colorize'
 require 'fileutils'
+require 'open-uri'
 
 # To get all possible colour values print String.colors
 #puts String.colors
@@ -78,3 +79,36 @@ def copyPreserveSymlinks(sourceFile, targetFolder)
     
   end
 end
+
+
+# Downloads an URL to a file if it doesn't exist
+def downloadURLIfTargetIsMissing(url, targetFile)
+    
+  return true if File.exists? targetFile
+  
+  info "Downloading url: '#{url}' to file: '#{targetFile}'"
+  
+  File.open(targetFile, "wb") do |output|
+    # open method from open-uri
+    open(url, "rb") do |webDataStream|
+      output.write(webDataStream.read)
+    end
+  end
+  
+  onError "failed to write download to file" if !File.exists? targetFile
+  
+  success "Done downloading"
+    
+end
+
+# Makes a windows path mingw friendly path
+def makeWindowsPathIntoMinGWPath(path)
+  modifiedPath = path.gsub(/\\/, '/')
+  modifiedPath.gsub(/^(\w+):[\\\/]/) { "/#{$1.downcase}/" }
+end
+
+# Returns current folder as something that can be used to switch directories in mingwg shell
+def getMINGWPWDPath()
+  makeWindowsPathIntoMinGWPath Dir.pwd
+end
+

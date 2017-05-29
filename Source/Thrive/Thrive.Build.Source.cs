@@ -91,24 +91,24 @@ public class Thrive : ModuleRules
         {
             
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win32");
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavcodec.lib"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    // "libavcodec.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavformat.lib"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    // "libavformat.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libavutil.lib"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    // "libavutil.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswresample.lib"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    // "libswresample.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
-                    "libswscale.lib"));
+            // PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+                    // "libswscale.lib"));
 
-            LibPath = Path.Combine(ffmpegPath, "lib");
+            // LibPath = Path.Combine(ffmpegPath, "lib");
             
-            isLibrarySupported = true;
+            // isLibrarySupported = true;
             
         } else if(Target.Platform == UnrealTargetPlatform.Linux){
 

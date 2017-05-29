@@ -30,6 +30,14 @@ That's not an error and ruby is correctly installed.
 
 Visual Studio 2015 Community
 
+Visual c++ 2010 runtime
+
+MSYS (or full MinGW). Install with 
+[mingwg-get-setup.exe](https://sourceforge.net/projects/mingw/files/Installer/) 
+. Select `msys-base` package to install in the installation manager.
+After installation you need to add `msys.bat` folder to the system PATH variable.
+For example: `C:\MinGW\msys\1.0`
+
 
 ### Linux
 
@@ -47,10 +55,11 @@ Contact us on discord or on the forums for help, or github if you prefer.
 #### Ruby Gems
 - os
 - colorize
-Not supported for ruby 2.4 on Windows. 1.8.0 version should add that support. 
-- (Windows only) nokogiri
+#Not supported for ruby 2.4 on Windows. 1.8.0 version should add that support. 
+#- (Windows only) nokogiri
+- rubyzip
 
-These can be installed by running `gem install os colorize nokogiri`. Running with sudo is probably not required.
+These can be installed by running `gem install os colorize rubyzip`. Running with sudo is probably not required.
 If you get errors installing the gems you should try updating your ruby version.
 
 Cloning the Repository
@@ -67,11 +76,23 @@ All following commands assume that they are ran in that folder unless specified 
 Running the Setup Script
 ------------------------
 
-Windows:
+### Windows
+
+Because the environment setup is very complex as both vs tools and mingw needs 
+to be loaded simultaneusly there will be a spot in the setup script where it asks you to 
+do some manual steps in order and then press a key to continue.
+
+
+This is very unfortunate but I didn't find a way to automate this, 
+windows is not the best platform for development...
+
+
+Now run the normal setup script in the msys cmd:
 ```
 ruby SetupThrive.rb thrive
 ```
-Linux
+
+### Linux
 ```
 ./SetupThrive.rb thrive
 ```
@@ -86,7 +107,18 @@ write (push) access.
 ### Not Using the Setup Script 
 
 If you don't want to run the setup script you will need to manually 
-run all the commands it would have ran
+run all the commands it would have ran, which is way too long to put here.
+
+
+Troubleshooting
+---------------
+
+For ffmpeg building issues see this [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
+[all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
+
+If you get an error "missing separator. Stop" in common.mak when trying to build ffmpeg on windows,
+try running `git config --global core.autocrlf false` and re-checking out the ffmpeg folder, this should
+fix the line endings. You may want to turn that setting back on afterwards.
 
 
 
