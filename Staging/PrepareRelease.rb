@@ -49,7 +49,7 @@ targetFolder = File.join(CurrentDir, if
                           OS.mac? then
                           abort("todo")
                         elsif OS.windows? then
-                          "Win64NoEditor"
+                          "WindowsNoEditor"
                         else
                           onError("unkown os")
                          end
@@ -59,13 +59,15 @@ onError "Target folder '#{targetFolder}' doesn't exists" if !File.exists? target
 
 info "Preparing folder '#{targetFolder}'"
 
+puts "Copying license"
 FileUtils.cp File.join(ProjectDir, "LICENSE.txt"), targetFolder
 FileUtils.cp File.join(ProjectDir, "UE4_EULA_DISCLAIMER.txt"), targetFolder
 
+puts "Creating file describing current commit"
 Dir.chdir(ProjectDir) do
 
   File.open(File.join(targetFolder, "revision.txt"), 'w') {
-    |file| file.write("Package time: " + `date --iso-8601=seconds` + "\n\n" + `git log -n 1`)
+    |file| file.write("Package time: " + Time.now.iso8601 + "\n\n" + `git log -n 1`)
   }
 end
 
