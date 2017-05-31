@@ -47,6 +47,8 @@ $tf*/
 /Intermediate
 /Saved
 /Staging/*NoEditor/
+/Staging/*.7z
+/Staging/*.zip
 /ThirdParty
 /ThirdPartyBuild
 
