@@ -16,7 +16,7 @@ These programs are needed for all platforms:
 - cmake
 
 Everything except unreal engine must be installed so that it is 
-included in the syustem PATH. 
+included in the system PATH. 
 
 You can check whether a program is in PATH by opening a command 
 prompt/terminal and running the program by typing its name. 
