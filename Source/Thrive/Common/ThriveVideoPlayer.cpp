@@ -895,9 +895,24 @@ void AThriveVideoPlayer::UpdateTexture(){
     const auto BytesPerPixel = FORMAT_BPP / 8;
     const auto Stride = FrameWidth * BytesPerPixel;
 
+    check(ConvertedBufferSize == Stride * FrameHeight);
+    check(ConvertedFrameBuffer != nullptr);
+
+    uint8_t* Buffer = reinterpret_cast<uint8_t*>(FMemory::Malloc(Stride * FrameHeight, 4));
+
+    FMemory::Memcpy(Buffer, ConvertedFrameBuffer, Stride * FrameHeight);
+
     FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
         new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
-        Stride, BytesPerPixel, ConvertedFrameBuffer, false);
+        Stride, BytesPerPixel, Buffer, true);
+
+    // Direct copy from the texture, this may fail on some systems that are too slow?
+    // Or maybe this object gets destroyed before the task is ran, so maybe add a callback
+    // that would only delete the buffer once the final queued task has completed
+    
+    // FTextureHelper::UpdateTextureRegions(VideoOutputTexture, 0, 1,
+    //     new FUpdateTextureRegion2D(0, 0, 0, 0, FrameWidth, FrameHeight), 
+    //     Stride, BytesPerPixel, ConvertedFrameBuffer, false);
 }
 // ------------------------------------ //
 size_t AThriveVideoPlayer::ReadAudioData(uint8_t* Output, size_t Amount){
