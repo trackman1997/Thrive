@@ -89,5 +89,5 @@ protected:
 
     //! If true uses a UFloatingPawnMovement instead of applying force to move
     //! \warning If this is changed the whole editor needs to be restarted
-    const bool bUsingFloatingMovement = false;
+    const bool bUsingFloatingMovement = true;
 };
