@@ -98,6 +98,9 @@ Now run the setup script in cmd
 ruby SetupThrive.rb thrive
 ```
 
+Not: if you get an error about missing command `pr` when configuring
+ffmpeg see the troubleshooting section for fixes.
+
 ### Linux
 ```
 ./SetupThrive.rb thrive
@@ -136,6 +139,21 @@ AND configure the ue4 Thrive module build script from `Source/Thrive/Thrive.Buil
 
 Troubleshooting
 ---------------
+
+### Missing command `pr`
+
+If you get an error about `pr` being an unkown command or missing try
+installing Cygwin64. Or if you prefer install the mingw coreutils
+package, but this may be weirdly named or otherwise unavailable. So if
+you have issues with mingw try cygwin.
+
+Make sure `pr.exe` is included in path. My cygwin
+installation has pr installed in `C:\cygwin64\bin\pr.exe`. It should
+be in `coreutils`so when installing cygwin make sure to check the
+coreutils package to be installed.
+
+
+### Other random issues
 
 For ffmpeg building issues see this [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
 [all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
