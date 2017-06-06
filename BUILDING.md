@@ -37,6 +37,13 @@ That's not an error and ruby is correctly installed.
 . Select `msys-base` package to get only the required parts in the installation manager.
 After installation you need to add `msys.bat` folder to the system PATH variable.
 For example: `C:\MinGW\msys\1.0`
+- [Cygwin64](https://cygwin.com/install.html). When Cygwin asks for
+  which packages to install make sure `coreutils` is selected (it
+  should be by default). Then add the `C:\cygwin64\bin` to path to
+  make `pr.exe` work.
+  
+  
+Note: Cygwin is not required IF your MinGW / MSYS installation includes `pr.exe`.
 
 
 ### Linux
@@ -158,9 +165,11 @@ coreutils package to be installed.
 For ffmpeg building issues see this [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
 [all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
 
-If you get an error "missing separator. Stop" in common.mak when trying to build ffmpeg on windows,
-try running `git config --global core.autocrlf false` and re-checking out the ffmpeg folder, this should
-fix the line endings. You may want to turn that setting back on afterwards.
+If you get an error "missing separator. Stop" in common.mak when
+trying to build ffmpeg on windows, try running `git config --global
+core.autocrlf false` and re-checking out the ffmpeg folder, this
+should fix the line endings. You may want to turn that setting back on
+afterwards.
 
 
 
