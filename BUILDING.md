@@ -160,18 +160,32 @@ be in `coreutils`so when installing cygwin make sure to check the
 coreutils package to be installed.
 
 
-### Other random issues
-
-For ffmpeg building issues see this [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
-[all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
+### Incorrect ffmpeg makefile line endings
 
 If you get an error "missing separator. Stop" in common.mak when
-trying to build ffmpeg on windows, try running `git config --global
-core.autocrlf false` and re-checking out the ffmpeg folder, this
-should fix the line endings. You may want to turn that setting back on
-afterwards.
+trying to build ffmpeg on windows, this is probably caused by line
+endings being incorrect.
+
+To fix these change to the FFMPEG FOLDER and run these commands to fix the line endings:
+```
+git config core.autocrlf false
+git checkout-index --force --all
+```
+
+Warning: this will discard all changes in the git repo this is ran in,
+so make sure you are in the right folder.
 
 
+It is also possible to globally change the autocrlf setting but that
+isn't recommended to avoid accidentally committing windows line
+endings.
 
+
+### Other random issues
+
+For ffmpeg building issues see
+this
+[windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
+[all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
 
 
