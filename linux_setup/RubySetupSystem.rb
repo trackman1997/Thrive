@@ -11,6 +11,7 @@ require 'optparse'
 require 'fileutils'
 require 'etc'
 require 'os'
+require 'open3'
 require 'pathname'
 require 'zip'
 
@@ -277,7 +278,7 @@ def runVSVarsAll(type = "amd64")
   if not File.exist? "#{folder}/vcvarsall.bat"
     onError "'#{folder}/vcvarsall.bat' is missing check is VSToolsEnv variable correct in Setup.rb" 
   end
-  "call \"#{folder}\\vcvarsall.bat #{type}\""
+  ["call", %{#{folder}/vcvarsall.bat}, type]
 end
 
 # Gets paths to the visual studio link.exe and cl.exe for use in prepending to paths to
@@ -605,6 +606,32 @@ def gitPullIfOnBranch(version)
   when GitVersionType::UNSPECIFIED, GitVersionType::BRANCH
     system "git pull origin #{version}"
   end
+end
+
+# If fileToCheckWith has windows line endings "\r\n" this will
+# configure git to replace them and then re-checkouts all the files
+# Warning: this must be ran in the folder that has the git repo that contains
+# the file
+def gitFixCRLFEndings(fileToCheckWith)
+
+  system "git config core.autocrlf off"
+
+  puts "Deleting files and re-checking them out"
+  `git ls-files`.strip.lines.each{|f|
+
+    f = f.chomp.strip
+  
+    if f
+      FileUtils.rm f
+    end
+  }
+  system "git checkout ."
+
+  onError("Line endings fix failed. See the troubleshooting in the build guide.") if
+    getFileLineEndings(fileToCheckWith) != "\n"
+      
+  success "Fixed. If you get 'missing separator' errors see the troubleshooting " +
+    "section in the help files"
 end
 
 # Copies files to a directory following all symlinks but also copying the symlinks if their
@@ -983,6 +1010,10 @@ class BaseDep
     
     $?.exitstatus == 0    
   end
+  
+  def clearEmptyOptions
+    @Options.reject!(&:empty?)
+  end
 end
 
 
@@ -1007,8 +1038,8 @@ class FFMPEG < BaseDep
 
     if @InstallPath
 
-      @Options.push "--prefix='" + if OS.windows? then 
-        makeWindowsPathIntoMinGWPath @InstallPath else @InstallPath end + "'"
+      @Options.push(if OS.windows? then "--prefix=#{@InstallPath}" else 
+        "--prefix='#{@InstallPath}'" end)
       
     end
 
@@ -1041,6 +1072,8 @@ class FFMPEG < BaseDep
       @Options.push "--arch=x86_64"
       puts "#{@Name} using 64-bit build"
     end
+    
+    self.clearEmptyOptions
     
   end
 
@@ -1087,6 +1120,7 @@ class FFMPEG < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     system "git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg"
     $?.exitstatus == 0
   end
@@ -1105,26 +1139,8 @@ class FFMPEG < BaseDep
       if getFileLineEndings(someFFMPEGMakeFile) != "\n"
         warning "ffmpeg makefiles have non-unix line endings. Fixing."
         
-        system "git config core.autocrlf off"
-        
-        puts "Deleting files and re-checking them out"
-        `git ls-files`.strip.lines.each{|f|
-        
-          f = f.chomp.strip
-          
-          if f
-            FileUtils.rm f
-          end
-        }
-        system "git checkout ."
-        
-        onError("Line endings fix failed. See the troubleshooting in the build guide.") if
-          getFileLineEndings(someFFMPEGMakeFile) != "\n"
-              
-        success "Fixed. If you get 'missing separator' errors see the troubleshooting " +
-          "section in the help files"        
+        gitFixCRLFEndings someFFMPEGMakeFile    
       end
-
     
       # YASM assembler is required, so download that
       yasmExecutable = File.join @YasmFolder, "yasm.exe"
@@ -1141,72 +1157,19 @@ class FFMPEG < BaseDep
         
       end
       
-      #{runVSVarsAll}
-      exit 3
-      
-      puts ""
-      puts ""
-      error "Windows ffmpeg manual setup section begin."
-      puts "Please open #{VSVersion} and then press any key to continue"
-      puts
-      puts "If for some reason these instructions don't work, see: " +
-        "https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC for help"
-      
-      system "pause"
-      
-      puts ""
-      error "Please do these manual steps and press a key in this window once done:"
-      puts ""
-      puts "1. In Visual Studio select from the menu bar 'Tools -> Visual Studio Command Prompt'"
-      # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
-      # (How to: Enable a 64-Bit Visual C++ Toolset on the Command Line)
-      # that link was very helpful here
-      puts "2. Now run these commands in the new cmd window to enable the 64 bit compiler, " +
-        "(hint: select text and right click to copy and paste between cmd windows):"
-      
-      puts ""
-      puts "cd \"#{File.join getVSBaseFolder, "VC"}\""
-      puts "vcvarsall.bat amd64"
-      puts ""
-      
-      puts "3. Open mingw environment by running 'msys.bat'"
-      
-      puts "at this point the command prompt should have a '$' character instead of the usual current folder"
-      puts "and the title bar should be MINGW32"
-      
-      puts ""
-      puts "4. Run these command in order"
-      
-      puts ""
-      
-      # YASM assembler needs to be in path for ffmpeg to be able to use it
-      # also visual studio needs to be in path before the mingw linker.exe
-      puts "export PATH=\"#{makeWindowsPathIntoMinGWPath @YasmFolder}\":$PATH"
-      puts ""
-      # Apparently this visual studio path thing doesn't need to be done
-      puts "  If you experience problems, THEN try this extra command:"
-      puts "  export PATH=\"#{makeWindowsPathIntoMinGWPath getVSLinkerFolder}\":$PATH"
-      
-      puts ""
-      puts "cd \"#{makeWindowsPathIntoMinGWPath @Folder}\""
-      puts ""
-      
-      puts "5. Now run these setup and compile commands"
-      
-      puts "./configure #{@Options.join(' ')}"
-      puts ""
-      puts "make"
-      puts "make install"
-      
-      puts ""
-      puts "Now ffmpeg should be built and copied to the correct folder"
-
-      puts ""
-      puts ""
-      error "FOLLOW THE INSTRUCTIONS ABOVE BEFORE CONTINUING"
-      system "pause"
-      return true
-
+      runWithModifiedPath([getVSLinkerFolder, @YasmFolder], true){
+        Open3.popen2e(*[runVSVarsAll, "&&", "sh", "./configure", @Options].flatten){
+          |stdin, out, wait_thr|
+        
+          out.each {|line|
+            puts " " + line
+          }
+          
+          exit_status = wait_thr.value
+          return exit_status == 0
+        }
+      }
+     
     else
 
       system "./configure #{@Options.join(' ')}"
@@ -1217,13 +1180,18 @@ class FFMPEG < BaseDep
   def DoCompile
     if OS.windows?
     
-      if !File.exists? File.join(@Folder, "libavcodec/avcodec.lib")
+      runWithModifiedPath([getVSLinkerFolder, @YasmFolder], true){
+        Open3.popen2e(*[runVSVarsAll, "&&", "make", "-j", 
+          CompileThreads.to_s].flatten) {|stdin, out, wait_thr|
         
-        onError "manual ffmpeg not detected to have succeeded"
-        return false
-      end
-
-      true
+          out.each {|line|
+            puts " " + line
+          }
+          
+          exit_status = wait_thr.value
+          return exit_status == 0
+        }
+      }
     else
 
       runCompiler CompileThreads
@@ -1234,37 +1202,23 @@ class FFMPEG < BaseDep
   def DoInstall
 
     if OS.windows?
-    
-      if Dir.glob(File.join(@InstallPath, "lib/avcodec*.def")).empty? 
-        
-        onError "manual ffmpeg install not detected to have succeeded"
-        return false
+       
+      if shouldUseSudo(@InstallSudo)
+        warning "#{Name} sudo install doesn nothing extra on windows"      
       end
-    
-      # Copy the .lib files to allow linking properly
-      Dir.glob("#{File.join(@InstallPath, 'lib')}/**/*.def") {|file|
+      
+      runWithModifiedPath([getVSLinkerFolder, @YasmFolder], true){
+        Open3.popen2e(*[runVSVarsAll, "&&", "make", "install"].flatten){
+          |stdin, out, wait_thr|
         
-        puts "Copying .lib file matching: '#{file}'"
-        
-        found = Dir.glob("#{@Folder}/**/" + 
-          File.basename(file, File.extname(file)).split('-')[0] + ".lib")
-        
-        if found.empty?
-          onError "Didn't find lib file for: #{file}. " +
-            "Did you follow the build instructions?"
-        end
-        
-        FileUtils.cp found.first, File.dirname(file)
-        
-        puts "Copied  '#{found.first}' to '#{File.dirname file}'"
+          out.each {|line|
+            puts " " + line
+          }
+          
+          exit_status = wait_thr.value
+          return exit_status == 0
+        }
       }
-      
-      puts ""
-      
-      onError("Copying libs failed") if !File.exists?(File.join(
-        @InstallPath, "lib", "avcodec.lib"))
-      
-      true 
     else
 
       return self.linuxMakeInstallHelper
@@ -1349,6 +1303,7 @@ class PortAudio < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     system "git clone https://git.assembla.com/portaudio.git portaudio"
     $?.exitstatus == 0
   end
@@ -1440,6 +1395,7 @@ class Newton < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     system "git clone https://github.com/MADEAPPS/newton-dynamics.git"
     $?.exitstatus == 0
   end
@@ -1518,6 +1474,7 @@ class OpenAL < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     system "git clone https://github.com/kcat/openal-soft.git"
     $?.exitstatus == 0
   end
@@ -1570,6 +1527,7 @@ class CAudio < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     #system "git clone https://github.com/R4stl1n/cAudio.git"
     # Official repo is broken
     system "git clone https://github.com/hhyyrylainen/cAudio.git"
@@ -1650,6 +1608,7 @@ class AngelScript < BaseDep
   end
 
   def DoClone
+    requireCMD "svn"
     system "svn co #{@WantedURL} angelscript"
     $?.exitstatus == 0
   end
@@ -1767,7 +1726,7 @@ class Breakpad < BaseDep
   end
   
   def DoClone
-
+    requireCMD "git"
     # Depot tools
     system "git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git"
     return false if $?.exitstatus > 0
@@ -1944,6 +1903,7 @@ class Ogre < BaseDep
   end
   
   def DoClone
+    requireCMD "hg"
     if OS.windows?
 
       system "hg clone https://bitbucket.org/sinbad/ogre"
@@ -2065,7 +2025,7 @@ class CEGUIDependencies < BaseDep
   end
 
   def DoClone
-
+    requireCMD "hg"
     system "hg clone https://bitbucket.org/cegui/cegui-dependencies"
     $?.exitstatus == 0
   end
@@ -2117,7 +2077,7 @@ class CEGUI < BaseDep
   end
 
   def DoClone
-
+    requireCMD "hg"
     system "hg clone https://bitbucket.org/cegui/cegui"
     $?.exitstatus == 0
   end
@@ -2178,6 +2138,7 @@ class SFML < BaseDep
   end
 
   def DoClone
+    requireCMD "git"
     system "git clone https://github.com/SFML/SFML.git"
     $?.exitstatus == 0
   end

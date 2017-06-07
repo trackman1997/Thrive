@@ -32,19 +32,11 @@ That's not an error and ruby is correctly installed.
 
 - Visual Studio 2015 Community (make sure to enable c++ support when installing)
 - Visual c++ 2010 runtime
-- MSYS (or full MinGW). Install this with 
-[mingwg-get-setup.exe](https://sourceforge.net/projects/mingw/files/Installer/) 
-. Select `msys-base` package to get only the required parts in the installation manager.
-After installation you need to add `msys.bat` folder to the system PATH variable.
-For example: `C:\MinGW\msys\1.0`
 - [Cygwin64](https://cygwin.com/install.html). When Cygwin asks for
   which packages to install make sure `coreutils` is selected (it
-  should be by default). Then add the `C:\cygwin64\bin` to path to
-  make `pr.exe` work.
+  should be by default). Then add the `C:\cygwin64\bin` to make everything found.
+  You can also optionally install git and svn with cygwin.
   
-  
-Note: Cygwin is not required IF your MinGW / MSYS installation includes `pr.exe`.
-
 
 ### Linux
 
@@ -90,23 +82,13 @@ Running the Setup Script
 
 ### Windows
 
-Because the environment setup is very complex as both vs tools and mingw needs 
-to be loaded simultaneously there will be a spot in the setup script where it asks you to 
-do some manual steps in order and then press a key to continue.
-
-
-This is very unfortunate but I didn't find a way to automate this, 
-windows is not the best platform for development... at least for full automation
-
-
-Now run the setup script in cmd
+Run the setup script in command prompt
 (hint: shift right-click in the Thrive folder and select 'open command prompt here')
 ```
 ruby SetupThrive.rb thrive
 ```
 
-Not: if you get an error about missing command `pr` when configuring
-ffmpeg see the troubleshooting section for fixes.
+If you get errors see the troubleshooting section.
 
 ### Linux
 ```
@@ -140,8 +122,11 @@ or recompile before opening the editor.
 ### Not Using the Setup Script 
 
 If you don't want to run the setup script you will need to manually 
-compile and copy to right folders all the dependencies and setup the assets svn
-AND configure the ue4 Thrive module build script from `Source/Thrive/Thrive.Build.Source.cs`.
+compile and copy all the extra dependencies AND configure the ue4 Thrive module 
+build script from `Source/Thrive/Thrive.Build.Source.cs`. And get the svn assets. And...
+
+Basically it's not a fun time so unless you have already worked on Thrive a bunch it's
+not recommended to try doing the setup manually.
 
 
 Troubleshooting
@@ -150,15 +135,8 @@ Troubleshooting
 ### Missing command `pr`
 
 If you get an error about `pr` being an unkown command or missing try
-installing Cygwin64. Or if you prefer install the mingw coreutils
-package, but this may be weirdly named or otherwise unavailable. So if
-you have issues with mingw try cygwin.
-
-Make sure `pr.exe` is included in path. My cygwin
-installation has pr installed in `C:\cygwin64\bin\pr.exe`. It should
-be in `coreutils`so when installing cygwin make sure to check the
-coreutils package to be installed.
-
+installing Cygwin64 'coreutils' package. If that doesn't work either 
+install the default set of cygwin packages.
 
 ### Incorrect ffmpeg makefile line endings
 
@@ -169,7 +147,10 @@ endings being incorrect.
 To fix these change to the FFMPEG FOLDER and run these commands to fix the line endings:
 ```
 git config core.autocrlf false
-git checkout-index --force --all
+```
+Delete all files except ".git" folder. And then:
+```
+git checkout .
 ```
 
 Warning: this will discard all changes in the git repo this is ran in,
@@ -183,8 +164,7 @@ endings.
 
 ### Other random issues
 
-For ffmpeg building issues see
-this
+For other ffmpeg building issues see this
 [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
 [all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
 

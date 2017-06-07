@@ -67,22 +67,22 @@ public class Thrive : ModuleRules
             
             //LibPath = Path.Combine(ffmpegPath, "Libraries", "Win64");
             
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "bin", 
                     "avcodec.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "bin", 
                     "avformat.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "bin", 
                     "avutil.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "bin", 
                     "swresample.lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "lib", 
+            PublicAdditionalLibraries.Add(Path.Combine(ffmpegPath, "bin", 
                     "swscale.lib"));
 
-            LibPath = Path.Combine(ffmpegPath, "lib");
+            LibPath = Path.Combine(ffmpegPath, "bin");
             
             isLibrarySupported = true;
             

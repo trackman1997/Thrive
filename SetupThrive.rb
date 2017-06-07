@@ -219,6 +219,8 @@ puts "Using svn user: #{$svnUser}"
 
 info "Running Thrive folder setup"
 
+requireCMD "svn"
+
 if not File.exist? "Content"
 
   info "Content folder doesn't exist, checking it out"

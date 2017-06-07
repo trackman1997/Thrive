@@ -33,10 +33,10 @@ def error(message)
 end
 
 # Runs a command and calls onError if it fails
-def systemChecked(command)
+def systemChecked(*command)
   
-  system command
-  onError "Command '#{command}' failed" if $?.exitstatus > 0
+  system *command
+  onError "Command '#{command.join(' ')}' failed" if $?.exitstatus > 0
   
 end
 
@@ -131,6 +131,21 @@ def printBytes(str)
 
   puts "end string"
   
+end
+
+
+# Requires that command is found in path. Otherwise shows an error
+def requireCMD(cmdName, extraHelp = nil)
+
+  if which(cmdName) != nil
+    # Command found
+    return
+  end
+  
+  onError "Required program / tool '#{cmdName}' is not installed or missing from path.\n" +
+    "Please install it and make sure it is in path, then try again." + (
+      if extraHelp then " " + extraHelp else "" end)  
+
 end
 
 
