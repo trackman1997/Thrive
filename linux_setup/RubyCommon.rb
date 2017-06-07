@@ -112,3 +112,25 @@ def getMINGWPWDPath()
   makeWindowsPathIntoMinGWPath Dir.pwd
 end
 
+# Returns the line endings a file uses
+# Will probably return either "\n" or "\r\n"
+def getFileLineEndings(file)
+  File.open(file, 'rb') do |f|
+    return f.readline[/\r?\n$/]
+  end
+end
+
+# Print data of str in hexadecimal
+def printBytes(str)
+
+  puts "String '#{str}' as bytes:"
+
+  str.each_byte { |c|
+    puts c.to_s(16) + " : " + c.chr
+  }
+
+  puts "end string"
+  
+end
+
+

@@ -269,10 +269,21 @@ def bringVSToPath()
   "call \"#{ENV[VSToolsEnv]}VsMSBuildCmd.bat\""
 end
 
+# Run vsvarsall.bat 
+def runVSVarsAll(type = "amd64")
+
+  folder = File.expand_path(File.join ENV[VSToolsEnv], "../../", "VC")
+
+  if not File.exist? "#{folder}/vcvarsall.bat"
+    onError "'#{folder}/vcvarsall.bat' is missing check is VSToolsEnv variable correct in Setup.rb" 
+  end
+  "call \"#{folder}\\vcvarsall.bat #{type}\""
+end
+
 # Gets paths to the visual studio link.exe and cl.exe for use in prepending to paths to
 # make sure mingw or cygwin link.exe isn't used
 # param amd64 if not empty selects 64 bit compiler
-def getVSLinkerFolder(amd64="amd64")
+def getVSLinkerFolder(amd64 = "amd64")
 
   onError "visual studio environment variable '#{VSToolsEnv}' is missing" if !ENV[VSToolsEnv]
   
@@ -1087,6 +1098,33 @@ class FFMPEG < BaseDep
   def DoSetup
 
     if OS.windows?
+      
+      someFFMPEGMakeFile = "common.mak"
+      
+      # Check line endings
+      if getFileLineEndings(someFFMPEGMakeFile) != "\n"
+        warning "ffmpeg makefiles have non-unix line endings. Fixing."
+        
+        system "git config core.autocrlf off"
+        
+        puts "Deleting files and re-checking them out"
+        `git ls-files`.strip.lines.each{|f|
+        
+          f = f.chomp.strip
+          
+          if f
+            FileUtils.rm f
+          end
+        }
+        system "git checkout ."
+        
+        onError("Line endings fix failed. See the troubleshooting in the build guide.") if
+          getFileLineEndings(someFFMPEGMakeFile) != "\n"
+              
+        success "Fixed. If you get 'missing separator' errors see the troubleshooting " +
+          "section in the help files"        
+      end
+
     
       # YASM assembler is required, so download that
       yasmExecutable = File.join @YasmFolder, "yasm.exe"
@@ -1102,6 +1140,9 @@ class FFMPEG < BaseDep
         onError "yasm tool dl failed" if !File.exists? yasmExecutable
         
       end
+      
+      #{runVSVarsAll}
+      exit 3
       
       puts ""
       puts ""
