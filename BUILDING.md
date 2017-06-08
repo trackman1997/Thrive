@@ -33,10 +33,17 @@ That's not an error and ruby is correctly installed.
 - Visual Studio 2015 Community (make sure to enable c++ support when installing)
 - Visual c++ 2010 runtime
 - [Cygwin64](https://cygwin.com/install.html). When Cygwin asks for
-  which packages to install make sure `coreutils` is selected (it
-  should be by default). Then add the `C:\cygwin64\bin` to the system path to
-  make everything visible to the script.
+  which packages to install make sure the at least the following are
+  selected:
+  
+  - coreutils
+  - make
+  - bash
+  
   You can also optionally install git and svn with cygwin.
+  
+  Then add the `C:\cygwin64\bin` to the system
+  path to make everything visible to the script
   
 
 ### Linux
@@ -46,7 +53,8 @@ That's not an error and ruby is correctly installed.
 
 ### Mac
 
-As we currently have to get a developer who uses a mac and can compile the game this is a work in progress.
+As we currently have to get a developer who uses a mac and can compile
+the game this is a work in progress.
 
 However we would love to help anyone trying to get a mac version of Thrive working.
 Contact us on discord or on the forums for help, or github if you prefer.
