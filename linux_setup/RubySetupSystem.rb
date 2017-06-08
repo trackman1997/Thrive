@@ -419,7 +419,9 @@ end
 
 # CMake configure
 def runCMakeConfigure(additionalArgs)
-    
+  
+  requireCMD "cmake"
+  
   if OS.windows?
 
     system "cmake .. -G \"#{VSVersion}\" #{additionalArgs}"
@@ -1136,7 +1138,6 @@ class FFMPEG < BaseDep
       # Check that cygwin is properly installed
       requireCMD "sh", "Please make sure you have installed 'bash' with cygwin"
       requireCMD "pr", "Please make sure you have installed 'coreutils' with cygwin"
-      requireCMD "make", "Please make sure you have installed 'make' with cygwin"
       
       someFFMPEGMakeFile = "common.mak"
       
@@ -1184,7 +1185,8 @@ class FFMPEG < BaseDep
   
   def DoCompile
     if OS.windows?
-    
+
+      requireCMD "make", "Please make sure you have installed 'make' with cygwin"
       runWithModifiedPath([getVSLinkerFolder, @YasmFolder], true){
         Open3.popen2e(*[runVSVarsAll, "&&", "make", "-j", 
           CompileThreads.to_s].flatten) {|stdin, out, wait_thr|
@@ -1324,7 +1326,7 @@ class PortAudio < BaseDep
       FileUtils.mkdir_p "build"
       
       Dir.chdir("build") do
-      
+        
         runCMakeConfigure @Options.join(' ')
         return $?.exitstatus == 0
       end
