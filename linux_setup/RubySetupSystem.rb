@@ -1132,6 +1132,11 @@ class FFMPEG < BaseDep
   def DoSetup
 
     if OS.windows?
+
+      # Check that cygwin is properly installed
+      requireCMD "sh", "Please make sure you have installed 'bash' with cygwin"
+      requireCMD "pr", "Please make sure you have installed 'coreutils' with cygwin"
+      requireCMD "make", "Please make sure you have installed 'make' with cygwin"
       
       someFFMPEGMakeFile = "common.mak"
       
