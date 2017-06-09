@@ -51,6 +51,10 @@ $tf*/
 /Staging/*.zip
 /ThirdParty
 /ThirdPartyBuild
+/assets
+/contrib
+/.vs
+/Config
 
 # Extra file created for linux compile database
 compile_commands.json
