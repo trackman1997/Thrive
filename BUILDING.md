@@ -113,6 +113,25 @@ Once you are on the team you get access to a separate account you can use here t
 write (push) access.
 
 
+Setting up version control within the editor
+--------------------------------------------
+
+By default the Unreal Editor doesn't care about files that have been
+modified by others and this is troublesome when it comes to blueprints
+and other ue assets. Because they aren't text files they cannot be
+merged by svn.
+
+This is why it's important to enable source control within the
+editor. To do this click the "Source Control" button once you have
+opened the thrive project. Select svn and fill in your svn username
+and password ("thrive" for read only, which doesn't work well, so you
+might actually NOT want to link to source control in that case).
+
+Now the editor should automatically "check out" (lock for your use)
+any files you modify, preventing multiple people from messing with the
+same files at the same time. Also the editor allows handling svn
+conflicts gracefully with a graphical editor.
+
 Updating to new versions
 ------------------------
 
