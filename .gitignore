@@ -54,7 +54,6 @@ $tf*/
 /assets
 /contrib
 /.vs
-/Config
 
 # Extra file created for linux compile database
 compile_commands.json
