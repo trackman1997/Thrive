@@ -34,5 +34,12 @@ protected:
 
     UPROPERTY()
     ACompoundCloud* TestCloud = nullptr;
+
+    //! These are the clouds that are in use (alive near the player)
+    //! these aren't individual clouds but regions where clouds exist
+    //! Also each of these can only support 4 types of compounds so there
+    //! maybe multiple overlapping clouds if more are needed
+    UPROPERTY()
+    TArray<ACompoundCloud*> AliveCloudRegions;
 	
 };

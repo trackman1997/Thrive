@@ -39,11 +39,10 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
     CompoundCloudManager = static_cast<ACompoundCloudManager*>(GetWorld()->SpawnActor(
             ACompoundCloudManager::StaticClass(), nullptr, SpawnParameters));
 
-    if(!CompoundCloudManager){
-
-        LOG_ERROR("Failed to spawn CompoundCloudManager");
-    }
-
-        
+    check(CompoundCloudManager);
+    
+    CompoundRegistry = NewObject<UCompoundRegistry>();
+    check(CompoundCloudManager);
+    
     
 }

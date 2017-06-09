@@ -5,6 +5,7 @@
 #include "GameFramework/GameModeBase.h"
 
 #include "CompoundCloudManager.h"
+#include "CompoundRegistry.h"
 
 #include "MicrobeGameModeBase.generated.h"
 
@@ -42,6 +43,10 @@ public:
         return CompoundCloudManager;
     }
 
+    UCompoundRegistry* GetCompoundRegistry(){
+        return CompoundRegistry;
+    }
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -59,5 +64,8 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
     ACompoundCloudManager* CompoundCloudManager = nullptr;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+    UCompoundRegistry* CompoundRegistry = nullptr;
     
 };
