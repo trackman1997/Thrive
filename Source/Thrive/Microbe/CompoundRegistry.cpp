@@ -10,16 +10,56 @@ UCompoundRegistry::UCompoundRegistry(){
     InvalidCompound.Colour = FColor(0, 0, 0, 1);
 }
 // ------------------------------------ //
-ECompoundID UCompoundRegistry::GetOrRegisterType(const FName &CompoundName){
+ECompoundID UCompoundRegistry::GetCompoundByName(const FName &CompoundName) const{
 
-    unimplemented();
+    for(const auto& Compound : RegisteredCompounds){
+
+        if(Compound.Name == CompoundName)
+            return Compound.ID;
+    }
+    
     return ECompoundID::Invalid;
 }
 
-FLinearColor UCompoundRegistry::GetColour(ECompoundID ID) const{
+bool UCompoundRegistry::RegisterCompoundType(FCompoundType &Properties){
 
-    // Not found
-    UE_LOG(ThriveLog, Warning, TEXT("Compound not defined: %d while getting colour"), ID);
-    return InvalidCompound.Colour;
+    // Verify the name is not used and find the highest compound id //
+    int32_t HighestUsed = 0;
+    
+    for(const auto& Compound : RegisteredCompounds){
+
+        const auto IDAsInt = static_cast<decltype(HighestUsed)>(Compound.ID);
+        if(HighestUsed < IDAsInt)
+            HighestUsed = IDAsInt;
+
+        if(Compound.Name == Properties.Name){
+
+            UE_LOG(ThriveLog, Error, TEXT("Compound name is already in use: %s"),
+                *Properties.Name.ToString());
+            return false;
+        }
+    }
+
+    Properties.ID = static_cast<ECompoundID>(++HighestUsed);
+    RegisteredCompounds.Add(Properties);
+    return true;
 }
+// ------------------------------------ //
+FCompoundType const& UCompoundRegistry::GetCompoundData(ECompoundID ID) const{
+
+    if(ID == ECompoundID::Invalid)
+        return InvalidCompound;
+
+    for(auto& Compound : RegisteredCompounds){
+
+        if(Compound.ID == ID)
+            return Compound;
+    }
+    
+    UE_LOG(ThriveLog, Warning, TEXT("Compound by id doesn't exist: %d"),
+        ID);
+    
+    return InvalidCompound;
+}
+
 
