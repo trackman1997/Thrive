@@ -5,8 +5,27 @@
 #include "GameFramework/Actor.h"
 
 #include "CompoundCloud.h"
+#include "Common/Noise.h"
+
+#include <memory>
 
 #include "CompoundCloudManager.generated.h"
+
+class FSharedCloudData{
+public:
+    
+    //! Fills XVelocity and YVelocity
+    FSharedCloudData(uint32_t Width, uint32_t Height);
+
+    // Perlin noise added to the movement //
+    /// The velocity of the fluid.
+    TArray<TArray<std::tuple<float, float>>> Velocity;
+
+protected:
+    
+    FPerlinNoise Noise;
+};
+
 
 /**
 * Handles spawning compound cloud actors and filling them with individual clouds.
@@ -21,13 +40,15 @@ public:
 	// Sets default values for this actor's properties
 	ACompoundCloudManager();
 
+    // Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+    //! Sets up perlin noise things. Needs to run before BeginPlay
+    void OnConstruction(const FTransform& Transform) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 
 protected:
@@ -41,5 +62,12 @@ protected:
     //! maybe multiple overlapping clouds if more are needed
     UPROPERTY()
     TArray<ACompoundCloud*> AliveCloudRegions;
+
+
+private:
+
+    // Data shared between all clouds
+    std::shared_ptr<FSharedCloudData> SharedCloudData;
+    
 	
 };

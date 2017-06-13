@@ -5,8 +5,13 @@
 #include "GameFramework/Actor.h"
 
 #include "MicrobeCommon.h"
+#include <tuple>
+#include <memory>
 
 #include "CompoundCloud.generated.h"
+
+class UCompoundRegistry;
+class FSharedCloudData;
 
 UCLASS()
 class THRIVE_API ACompoundCloud : public AActor
@@ -14,9 +19,19 @@ class THRIVE_API ACompoundCloud : public AActor
 	GENERATED_BODY()
 
     //! Contains data for single compound type's layer
-    struct FLayerData{
+    class FLayerData final{
+    public:
+        FLayerData(ECompoundID InID, int32_t Width, int32_t Height, float ResolutionFactor);
 
-        ECompoundID ID;
+        FLayerData(FLayerData&& MoveFrom);
+
+        FLayerData(const FLayerData &Other) = delete;
+        FLayerData& operator=(const FLayerData &Other) = delete;
+
+        //! Performs a single update step
+        void Update(float DeltaTime);
+
+        const ECompoundID ID;
 
         // Colour can be retrieved from UCompoundRegistry
         
@@ -25,12 +40,21 @@ class THRIVE_API ACompoundCloud : public AActor
         TArray<TArray<float>> Blob1;
         TArray<TArray<float>> Blob2;
 
+        //! Controls the "distance" between cells in the grid
+        const float GridSize;
+
         //! Access with these to allow swapping easily
         //! And define local references to these to avoid all chances of redirects eating up
         //! performance
         TArray<TArray<float>>* Density = &Blob1;
         TArray<TArray<float>>* LastDensity = &Blob2;
+
+    private:
         
+        void Diffuse(float DiffRate, TArray<TArray<float>>& OldDens,
+            const TArray<TArray<float>> &Density, int dt);
+        
+        void Advect(TArray<TArray<float>> &OldDens, TArray<TArray<float>>& Density, int dt);
     };
         
 public:	
@@ -43,20 +67,62 @@ public:
     void Initialize(ECompoundID Compound1, ECompoundID Compound2,
         ECompoundID Compound3, ECompoundID Compound4);
 
-    //! Updates the density texture
-    void UpdateTexture();
+    //! Sets up the materials to look nice in the editor
+    void OnConstruction(const FTransform& Transform) override;
+
+    //! Sets up the shared data for this cloud. Needs to be called after spawning
+    void SetShared(const std::shared_ptr<FSharedCloudData> &Data);
+
+    // Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+
+    //! Adds compound to position.
+    //! The coordinates are between 0 and 1
+    //! \returns True if the coordinates where valid and the compound was added
+    bool AddCloud(ECompoundID Compound, float Density, float X, float Y);
+
+    //! Takes specified compound at location.
+    //! \param Rate Controls how much is taken. 1 means all at position. Use less than 1
+    //! \returns The amount taken
+    int TakeCompound(ECompoundID Compound, float X, float Y, float Rate);
+
+    //! Returns in the Result array how much different compounds are available at position
+    //! \returns True if the coordinates where valid and result was filled. False if invalid
+    bool AmountAvailable(TArray<std::tuple<ECompoundID, int>> &Result, float X, float Y);
+    
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    //! Returns the layer matching id or null
+    FLayerData* GetLayerForCompound(ECompoundID Compound);
 
-    //! Sets up the materials to look nice in the editor
-    void OnConstruction(const FTransform& Transform) override;
+    //! Updates the density texture
+    void UpdateTexture();
 
+private:
+    //! Helper for Initialize
+    void _SetupCompound(ECompoundID Compound, UCompoundRegistry* Registry);
+
+    //! Calculate final grid position from 0-1.f range coordinates
+    //! \returns False if out of range
+    FORCEINLINE bool GetTargetCoordinates(float InX, float InY, uint32_t &X, uint32_t &Y)
+        const
+    {
+        // This isn't needed as the output cannot be negative so it's enough to check that it's
+        // less than TextureSize
+        // if(InX < 0.f || InY < 0.0f)
+        //     return false;
+        X = static_cast<uint32_t>(FMath::RoundToInt(InX * TextureSize));
+        Y = static_cast<uint32_t>(FMath::RoundToInt(InY * TextureSize));
+
+        if(Y >= TextureSize || X >= TextureSize)
+            return false;
+        
+        return true;
+    }
 
 protected:
 
@@ -73,5 +139,21 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, EditAnyWhere)
     UStaticMeshComponent* PlaneMesh;
-    
+
+    TArray<FLayerData> CompoundLayers;
+
+    //! Causes the texture to be updated on next tick. Set to true when compounds have moved
+    bool bIsDirty = true;
+
+    // Performance / Accuracy tweaking //
+    // The size of the texture
+    uint32_t TextureSize = COMPOUND_CLOUD_SIMULATE_SIZE;
+
+    //! The speed of the flow, needs to be adjusted based on the TextureSize and
+    //! the size of this cloud in the world
+    float CloudScale = 1.0f;
+
+
+    std::shared_ptr<FSharedCloudData> SharedCloudData;
+
 };

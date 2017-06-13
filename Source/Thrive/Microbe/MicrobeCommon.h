@@ -16,3 +16,6 @@ enum class ECompoundID : int32{
 };
 
 
+constexpr auto COMPOUND_CLOUD_SIMULATE_SIZE = 64;
+
+

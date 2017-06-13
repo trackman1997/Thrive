@@ -1,7 +1,10 @@
 // Copyright (C) 2013-2017  Revolutionary Games
 
 #include "Thrive.h"
+
 #include "CompoundCloud.h"
+#include "MicrobeGameModeBase.h"
+
 #include "Generation/TextureHelper.h"
 
 
@@ -37,12 +40,40 @@ ACompoundCloud::ACompoundCloud()
 void ACompoundCloud::Initialize(ECompoundID Compound1, ECompoundID Compound2,
     ECompoundID Compound3, ECompoundID Compound4)
 {
+    AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
 
-    // Set the compound colours //
+    if(!GameMode){
+
+        LOG_FATAL("Compound cloud initialize couldn't get the gamemode");
+        return;
+    }
+
+    auto* Registry = GameMode->GetCompoundRegistry();
+    
     check(DynMaterial);
+
+    // These set the compound colours and create the layers //
+    if(Compound1 != ECompoundID::Invalid)
+        _SetupCompound(Compound1, Registry);
+
+    if(Compound2 != ECompoundID::Invalid)
+        _SetupCompound(Compound2, Registry);
+
+    if(Compound3 != ECompoundID::Invalid)
+        _SetupCompound(Compound3, Registry);
+
+    if(Compound4 != ECompoundID::Invalid)
+        _SetupCompound(Compound4, Registry);
+}
+
+void ACompoundCloud::_SetupCompound(ECompoundID Compound, UCompoundRegistry* Registry){
+
+    CompoundLayers.Add(FLayerData(Compound, TextureSize, TextureSize, CloudScale));
     
-    // DynMaterial->SetVectorParameter("CompoundColour1", Registry->GetColour(Compound1));
-    
+    check(CompoundLayers.Num() <= 4);
+
+    DynMaterial->SetVectorParameterValue(FName(*FString::Printf(TEXT("CompoundColour%d"),
+                CompoundLayers.Num())), Registry->GetColour(Compound));
 }
 
 void ACompoundCloud::OnConstruction(const FTransform& Transform){
@@ -55,13 +86,12 @@ void ACompoundCloud::OnConstruction(const FTransform& Transform){
         return;
     }
     
-    UMaterialInstanceDynamic* DynMaterial =
-        UMaterialInstanceDynamic::Create(CloudMaterialBase, this);
+    DynMaterial = UMaterialInstanceDynamic::Create(CloudMaterialBase, this);
 
     // When using single channel
-    // DensityMaterial = UTexture2D::CreateTransient(1024, 1024, PF_G8);
+    // DensityMaterial = UTexture2D::CreateTransient(TextureSize, TextureSize, PF_G8);
     // We use all 4 channels to pack 4 compounds into one cloud
-    DensityMaterial = UTexture2D::CreateTransient(1024, 1024, PF_R8G8B8A8);
+    DensityMaterial = UTexture2D::CreateTransient(TextureSize, TextureSize, PF_R8G8B8A8);
     
     if(!DensityMaterial){
 
@@ -85,23 +115,96 @@ void ACompoundCloud::OnConstruction(const FTransform& Transform){
     PlaneMesh->SetMaterial(0, DynMaterial);
 }
 
+void ACompoundCloud::SetShared(const std::shared_ptr<FSharedCloudData> &Data){
+
+    SharedCloudData = Data;
+}
+
 // Called when the game starts or when spawned
 void ACompoundCloud::BeginPlay()
 {
 	Super::BeginPlay();
-
-    UpdateTexture();
 }
-
-// Called every frame
+// ------------------------------------ //
 void ACompoundCloud::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 
+    if(bIsDirty)
+        UpdateTexture();
+}
+// ------------------------------------ //
+bool ACompoundCloud::AddCloud(ECompoundID Compound, float Density, float X, float Y){
+
+    uint32_t ArrayX, ArrayY;
+    if(!GetTargetCoordinates(X, Y, ArrayX, ArrayY))
+        return false;
+
+    auto* Layer = GetLayerForCompound(Compound);
+
+    if(!Layer)
+        return false;
+
+    Layer->Density->GetData()[ArrayX][ArrayY] += Density;
+    return true;
 }
 
+int ACompoundCloud::TakeCompound(ECompoundID Compound, float X, float Y, float Rate){
+
+    uint32_t ArrayX, ArrayY;
+    if(!GetTargetCoordinates(X, Y, ArrayX, ArrayY))
+        return 0;
+
+    auto* Layer = GetLayerForCompound(Compound);
+
+    if(!Layer)
+        return 0;
+
+    const auto CanTake = static_cast<int>(Layer->Density->GetData()[ArrayX][ArrayY] * Rate);
+
+    if(CanTake < 1)
+        return 0;
+
+    Layer->Density->GetData()[ArrayX][ArrayY] -= CanTake;
+    checkSlow(Layer->Density->GetData()[ArrayX][ArrayY] >= 0.f);
+    return CanTake;
+}
+
+bool ACompoundCloud::AmountAvailable(TArray<std::tuple<ECompoundID, int>> &Result, float X,
+    float Y)
+{
+    uint32_t ArrayX, ArrayY;
+    if(!GetTargetCoordinates(X, Y, ArrayX, ArrayY))
+        return false;
+
+    Result.Empty(CompoundLayers.Num());
+    
+    for(const auto& Layer : CompoundLayers){
+
+        const auto Available = Layer.Density->GetData()[ArrayX][ArrayY];
+
+        if(Available > 0)
+            Result.Add(std::make_tuple(Layer.ID, Available));
+    }
+    
+    return true;
+}
+// ------------------------------------ //
+ACompoundCloud::FLayerData* ACompoundCloud::GetLayerForCompound(ECompoundID Compound){
+
+    for(auto& Layer : CompoundLayers){
+
+        if(Layer.ID == Compound)
+            return &Layer;
+    }
+    
+    return nullptr;
+}
+// ------------------------------------ //
 void ACompoundCloud::UpdateTexture(){
+
+    bIsDirty = false;
 
     // Note: the channels are in order 3rd compound, 2nd compound, 1st compound, 4th compound
     // so when filling take that into account
@@ -152,5 +255,28 @@ void ACompoundCloud::UpdateTexture(){
     FTextureHelper::UpdateTextureRegions(DensityMaterial, 0, 1,
         new FUpdateTextureRegion2D(0, 0, 0, 0, Width, Height), 
         Pitch, BytesPerPixel, TextureData, true);
+}
+// ------------------------------------ //
+
+
+// ------------------------------------ //
+// FLayerData
+ACompoundCloud::FLayerData::FLayerData(ECompoundID InID, int32_t Width, int32_t Height,
+    float ResolutionFactor) :
+    ID(InID), GridSize(ResolutionFactor)
+{
+    
+    
+}
+
+ACompoundCloud::FLayerData::FLayerData(FLayerData&& MoveFrom) :
+    ID(MoveFrom.ID), Blob1(std::move(MoveFrom.Blob1)),
+    Blob2(std::move(MoveFrom.Blob2)), GridSize(MoveFrom.GridSize)
+{
+    MoveFrom.Density = nullptr;
+    MoveFrom.LastDensity = nullptr;
+    
+    Density = &Blob1;
+    LastDensity = &Blob2;
 }
 
