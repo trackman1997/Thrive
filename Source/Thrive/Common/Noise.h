@@ -17,7 +17,7 @@ public:
     //! for each point in the grid move the vector a little
     void Update();
 
-    //! \returns Noise at point
+    //! \returns Noise at point in range [-1, 1]
     float Perlin(uint32_t X, uint32_t Y) const;
 
     //! ditto

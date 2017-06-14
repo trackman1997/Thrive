@@ -65,6 +65,9 @@ protected:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
     ACompoundCloudManager* CompoundCloudManager = nullptr;
 
+    //! \todo Expose a Subclass of this typed property to allow
+    //! blueprint derived gamemode set the actual class to a blueprint
+    //! one to easily allow setting the compounds
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
     UCompoundRegistry* CompoundRegistry = nullptr;
     
