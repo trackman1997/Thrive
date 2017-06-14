@@ -38,6 +38,11 @@ class THRIVE_API UCompoundRegistry : public UObject
 public:
         
     UCompoundRegistry();
+
+    //! Loads default compounds
+    //! \todo Add a blueprint overrideable method for adding extra things
+    void LoadDefaultCompounds();
+    
         
     //! Returns compound's id based on the name
     //! \note This should be called once and the result stored for performance reasons

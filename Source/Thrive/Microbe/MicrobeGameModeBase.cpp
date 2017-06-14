@@ -24,12 +24,18 @@ void AMicrobeGameModeBase::InitGame(const FString& MapName, const FString& Optio
     FString& ErrorMessage)
 {
     Super::InitGame(MapName, Options, ErrorMessage);
-    
+
 }
 
 void AMicrobeGameModeBase::PreInitializeComponents(){
 
     Super::PreInitializeComponents();
+
+    CompoundRegistry = NewObject<UCompoundRegistry>();
+    check(CompoundRegistry);
+
+    CompoundRegistry->LoadDefaultCompounds();
+    
 
     // Create compounds spawn manager //
     FActorSpawnParameters SpawnParameters;
@@ -40,9 +46,6 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
             ACompoundCloudManager::StaticClass(), nullptr, SpawnParameters));
 
     check(CompoundCloudManager);
-    
-    CompoundRegistry = NewObject<UCompoundRegistry>();
-    check(CompoundCloudManager);
-    
+   
     
 }

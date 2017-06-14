@@ -21,7 +21,8 @@ class THRIVE_API ACompoundCloud : public AActor
     //! Contains data for single compound type's layer
     class FLayerData final{
     public:
-        FLayerData(ECompoundID InID, int32_t Width, int32_t Height, float ResolutionFactor);
+        FLayerData(ECompoundID InID, int32_t InWidth, int32_t InHeight,
+            float ResolutionFactor);
 
         FLayerData(FLayerData&& MoveFrom);
 
@@ -29,7 +30,7 @@ class THRIVE_API ACompoundCloud : public AActor
         FLayerData& operator=(const FLayerData &Other) = delete;
 
         //! Performs a single update step
-        void Update(float DeltaTime);
+        void Update(float DeltaTime, const FSharedCloudData &Velocities);
 
         const ECompoundID ID;
 
@@ -37,24 +38,20 @@ class THRIVE_API ACompoundCloud : public AActor
         
         
         //! The 2D array that contains the current compound clouds and those from last frame.
-        TArray<TArray<float>> Blob1;
-        TArray<TArray<float>> Blob2;
+        TArray<TArray<float>> Density;
+        TArray<TArray<float>> LastDensity;
 
         //! Controls the "distance" between cells in the grid
         const float GridSize;
 
-        //! Access with these to allow swapping easily
-        //! And define local references to these to avoid all chances of redirects eating up
-        //! performance
-        TArray<TArray<float>>* Density = &Blob1;
-        TArray<TArray<float>>* LastDensity = &Blob2;
+        const int32_t Width;
+        const int32_t Height;
 
     private:
         
-        void Diffuse(float DiffRate, TArray<TArray<float>>& OldDens,
-            const TArray<TArray<float>> &Density, int dt);
+        void Diffuse(float DiffRate, float DeltaTime);
         
-        void Advect(TArray<TArray<float>> &OldDens, TArray<TArray<float>>& Density, int dt);
+        void Advect(float DeltaTime, const FSharedCloudData &Velocities);
     };
         
 public:	
@@ -123,6 +120,11 @@ private:
         
         return true;
     }
+
+    //! Copies layer data to memory. Helper for UpdateTexture
+    void CopyLayerDataToMemory(uint8_t* Target, size_t TargetSize,
+        const TArray<TArray<float>> &Source, int BPP) const;
+    
 
 protected:
 

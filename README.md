@@ -2,6 +2,8 @@ Thrive
 ======
 
 TODO: rewrite stuff. Add notes about running the SetupThrive.rb on windows, too. 
+TODO: write about the use of Resize and then SetNum with TArrays to get exact sizes and not waste memory
+
 And remind people to Press the "Source Control" button in the editor. 
 And committing with the ./SVNCommit.rb to avoid including Source folder files.
 

@@ -26,7 +26,7 @@ float lerp(float a, float b, float c){
 }
 // ------------------------------------ //
 FPerlinNoise::FPerlinNoise(uint32_t InWidth, uint32_t InHeight) :
-    Grid(InWidth, std::vector<std::array<float, 2>>(InHeight, {0, 0})),
+    Grid(InWidth, std::vector<std::array<float, 2>>(InHeight, {{0, 0}})),
     Width(InWidth), Height(InHeight)
 {
     //for each point in a 100x100 Grid make a 2d normalised vector
@@ -61,8 +61,8 @@ void FPerlinNoise::Update(){
 //Computes the dot product of the distance and gradient vectors.
 float FPerlinNoise::DotGridGradient(int ix, int iy, float x, float y) const{
     //Precomputed (or otherwise) gradient vectors at each Grid node
-	float grad_x = Grid[std::max<size_t>(Width - 1,iy)][std::max<size_t>(Width - 1, ix)][0];
-	float grad_y = Grid[std::max<size_t>(Width - 1,iy)][std::max<size_t>(Width - 1, ix)][1];
+	float grad_x = Grid[std::min<size_t>(Width - 1,iy)][std::min<size_t>(Width - 1, ix)][0];
+	float grad_y = Grid[std::min<size_t>(Width - 1,iy)][std::min<size_t>(Width - 1, ix)][1];
 	//Compute the distance vector
 	float dx = x - (float)ix;
 	float dy = y - (float)iy;

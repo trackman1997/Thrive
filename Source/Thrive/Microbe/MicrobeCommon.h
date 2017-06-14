@@ -17,5 +17,6 @@ enum class ECompoundID : int32{
 
 
 constexpr auto COMPOUND_CLOUD_SIMULATE_SIZE = 64;
+constexpr auto COMPOUND_CLOUD_NOISE_SCALE = 5;
 
 

@@ -10,6 +10,15 @@ UCompoundRegistry::UCompoundRegistry(){
     InvalidCompound.Colour = FColor(0, 0, 0, 1);
 }
 // ------------------------------------ //
+void UCompoundRegistry::LoadDefaultCompounds(){
+
+    FCompoundType Oxygen;
+    Oxygen.Name = TEXT("Oxygen");
+    Oxygen.Colour = FLinearColor(0.235f, 0.627f, 0.705f, 1.0f);
+
+    RegisterCompoundType(Oxygen);
+}
+// ------------------------------------ //
 ECompoundID UCompoundRegistry::GetCompoundByName(const FName &CompoundName) const{
 
     for(const auto& Compound : RegisteredCompounds){

@@ -2,6 +2,7 @@
 
 #include "Thrive.h"
 #include "CompoundCloudManager.h"
+#include "MicrobeGameModeBase.h"
 
 #include "MicrobeCommon.h"
 
@@ -39,6 +40,27 @@ void ACompoundCloudManager::BeginPlay()
     }
 
     TestCloud->SetShared(SharedCloudData);
+
+    AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
+
+    if(!GameMode){
+
+        LOG_FATAL("Compound cloud manager couldn't get the gamemode");
+        return;
+    }
+
+    auto* Registry = GameMode->GetCompoundRegistry();
+
+    const auto OxygenID = Registry->GetCompoundByName(TEXT("Oxygen"));
+
+    TestCloud->Initialize(OxygenID, ECompoundID::Invalid, ECompoundID::Invalid,
+        ECompoundID::Invalid);
+
+    TestCloud->AddCloud(OxygenID, 2500.f, 0.53f, 0.53f);
+    TestCloud->AddCloud(OxygenID, 2500.f, 0.54f, 0.54f);
+    TestCloud->AddCloud(OxygenID, 2500.f, 0.55f, 0.55f);
+    TestCloud->AddCloud(OxygenID, 2500.f, 0.56f, 0.56f);
+    
 }
 
 
@@ -55,14 +77,21 @@ void ACompoundCloudManager::Tick(float DeltaTime)
 FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
     Noise(Width, Height)
 {
+    Velocity.Reserve(Width);
     Velocity.SetNum(Width);
 
     for(uint32_t i = 0; i < Width; ++i){
 
         TArray<std::tuple<float, float>> SecondDimension;
+        SecondDimension.Reserve(Height);
         SecondDimension.SetNum(Height);
         Velocity[i] = std::move(SecondDimension);
     }
+
+    // This scale needs to be Width - 1 or less to not access outside the generated
+    // perlin noise map
+    float nxScale = COMPOUND_CLOUD_NOISE_SCALE;
+	float nyScale = nxScale * float(Width) / float(Height);
 
     // Taken from the old CreateVelocitYField with slight modifications
 	float X0, Y0, X1, Y1, N0, N1, NX, NY;
@@ -71,10 +100,18 @@ FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
 	{
 		for (int Y = 0; Y < Height; Y++)
 		{
-			X0 = X != 0 ? X - 1 : Width - 1;
-			Y0 = Y != 0 ? Y - 1 : Height - 1;
-			X1 = X + 1 < Width ? X + 1 : 0;
-			Y1 = Y + 1 < Height ? Y + 1 : 0;
+            // If we used the Width and Height as scale this probably
+            // outputs the same thing
+			X0 = (float(X - 1) / float(Width))  * nxScale;
+			Y0 = (float(Y - 1) / float(Height)) * nyScale;
+			X1 = (float(X + 1) / float(Width))  * nxScale;
+			Y1 = (float(Y + 1) / float(Height)) * nyScale;
+
+            // Integer only approach
+			// X0 = X != 0 ? X - 1 : Width - 1;
+			// Y0 = Y != 0 ? Y - 1 : Height - 1;
+			// X1 = X + 1 < Width ? X + 1 : 0;
+			// Y1 = Y + 1 < Height ? Y + 1 : 0;
 
 			N0 = Noise.Perlin(X0, Y0);
 			N1 = Noise.Perlin(X1, Y0);
