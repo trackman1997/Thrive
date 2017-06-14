@@ -134,7 +134,8 @@ void ACompoundCloud::Tick(float DeltaTime)
         return;
     
     for(auto& Layer : CompoundLayers){
-        Layer.Update(DeltaTime, *SharedCloudData);
+        // The speed needs to be increased to look better, or the algorithm fixed
+        Layer.Update(DeltaTime * 2, *SharedCloudData);
         bIsDirty = true;
     }
     
@@ -433,16 +434,16 @@ void ACompoundCloud::FLayerData::Advect(float DeltaTime, const FSharedCloudData 
                 const auto AbsX = std::abs(ToMoveX);
                 const auto AbsY = std::abs(ToMoveY);
 
-                if(AbsX > 0.1f){
+                if(AbsX > 0.01f){
 
                     Current -= AbsX;
                     Density[X - (ToMoveX > 0 ? 1 : -1)][Y] += AbsX;
                 }
 
-                if(AbsY > 0.1f){
+                if(AbsY > 0.01f){
 
                     Current -= AbsY;
-                    Density[Y - (ToMoveY > 0 ? 1 : -1)][Y] += AbsY;
+                    Density[X][Y - (ToMoveY > 0 ? 1 : -1)] += AbsY;
                 }
             }
         }
