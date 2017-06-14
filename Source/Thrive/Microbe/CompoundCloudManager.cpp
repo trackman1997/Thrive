@@ -75,7 +75,7 @@ void ACompoundCloudManager::Tick(float DeltaTime)
 // ------------------------------------ //
 // FSharedCloudData
 FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
-    Noise(Width, Height)
+    Noise(Width * COMPOUND_CLOUD_NOISE_SCALE, Height * COMPOUND_CLOUD_NOISE_SCALE)
 {
     Velocity.Reserve(Width);
     Velocity.SetNum(Width);
@@ -102,10 +102,10 @@ FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
 		{
             // If we used the Width and Height as scale this probably
             // outputs the same thing
-			X0 = (float(X - 1) / float(Width))  * nxScale;
-			Y0 = (float(Y - 1) / float(Height)) * nyScale;
-			X1 = (float(X + 1) / float(Width))  * nxScale;
-			Y1 = (float(Y + 1) / float(Height)) * nyScale;
+			X0 = (float(X - 1) / float(Width)) * Width * nxScale;
+			Y0 = (float(Y - 1) / float(Height)) * Height * nyScale;
+			X1 = (float(X + 1) / float(Width)) * Width * nxScale;
+			Y1 = (float(Y + 1) / float(Height)) * Height * nyScale;
 
             // Integer only approach
 			// X0 = X != 0 ? X - 1 : Width - 1;

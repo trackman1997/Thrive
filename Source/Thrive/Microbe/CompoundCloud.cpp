@@ -5,6 +5,8 @@
 #include "CompoundCloud.h"
 #include "MicrobeGameModeBase.h"
 
+#include <cmath>
+
 #include "Generation/TextureHelper.h"
 
 
@@ -323,70 +325,169 @@ void ACompoundCloud::FLayerData::Diffuse(float DiffRate, float DeltaTime){
     //DeltaTime = 1;
     float A = DeltaTime * DiffRate / GridSize;
 
-    for (int x = 1; x < Width-1; x++)
-    {
-        for (int y = 1; y < Height-1; y++)
-        {
-            LastDensity[x][y] = (Density[x][y] + A*(LastDensity[x - 1][y] +
-                    LastDensity[x + 1][y] + LastDensity[x][y-1] + LastDensity[x][y+1])) /
-                (1 + 4 * A);
+    check(A > 0);
+
+    for(int32_t X = 0; X < Width; ++X){
+        for(int32_t Y = 0; Y < Height; ++Y){
+
+            LastDensity[X][Y] = 0;
         }
     }
-    
+
+    for (int X = 1; X < Width-1; X++){
+        for (int Y = 1; Y < Height-1; Y++){
+
+            auto& Current = LastDensity[X][Y];
+            const auto OriginalAmount = Density[X][Y];
+            const auto ToMove = Density[X][Y] * A;
+
+            Current += Density[X][Y] - ToMove;
+            
+            constexpr auto DirectionCount = 8;
+
+            const auto SingleMove = ToMove / DirectionCount;
+            
+            // Move to lower density areas
+
+            // Left most column
+            if(Density[X - 1][Y - 1] < OriginalAmount)
+                LastDensity[X - 1][Y - 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+            if(Density[X - 1][Y] < OriginalAmount)
+                LastDensity[X - 1][Y] += SingleMove;
+            else
+                Current += SingleMove;
+
+            if(Density[X - 1][Y + 1] < OriginalAmount)
+                LastDensity[X - 1][Y + 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+            // Center column
+            if(Density[X][Y - 1] < OriginalAmount)
+                LastDensity[X][Y - 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+            // Skip putting back to itself
+
+            if(Density[X][Y + 1] < OriginalAmount)
+                LastDensity[X][Y + 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+            // Right column
+            if(Density[X + 1][Y - 1] < OriginalAmount)
+                LastDensity[X + 1][Y - 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+            if(Density[X + 1][Y] < OriginalAmount)
+                LastDensity[X + 1][Y] += SingleMove;
+            else
+                Current += SingleMove;
+
+            if(Density[X + 1][Y + 1] < OriginalAmount)
+                LastDensity[X + 1][Y + 1] += SingleMove;
+            else
+                Current += SingleMove;
+
+
+            // Old method
+            // LastDensity[x][y] = (Density[x][y] + A*(LastDensity[x - 1][y] +
+            // - LastDensity[x + 1][y] + LastDensity[x][y-1] + LastDensity[x][y+1])) /
+            // - (1 + 4 * A);
+        }
+    }
 }
         
 void ACompoundCloud::FLayerData::Advect(float DeltaTime, const FSharedCloudData &Velocities){
 
     //DeltaTime = 1;
     
-    for (int x = 0; x < Width; x++)
-	{
-		for (int y = 0; y < Height; y++)
-		{
-			Density[x][y] = 0;
-		}
-	}
+    // for (int x = 0; x < Width; x++)
+	// {
+	// 	for (int y = 0; y < Height; y++)
+	// 	{
+	// 		Density[x][y] = 0;
+	// 	}
+	// }
 
-    float dx, dy;
-    int x0, x1, y0, y1;
-    float s1, s0, t1, t0;
-	for (int x = 1; x < Width-1; x++)
-	{
-		for (int y = 1; y < Height-1; y++)
-		{
-		    if (LastDensity[x][y] > 1) {
-                dx = x + (DeltaTime * std::get<0>(Velocities.Velocity[x][y])) / GridSize;
-                dy = y + (DeltaTime * std::get<1>(Velocities.Velocity[x][y])) / GridSize;
+    for (int X = 0; X < Width; X++){
+        for (int Y = 0; Y < Height; Y++){
 
-                if (dx < 0.5)
-                    dx = 0.5;
+            Density[X][Y] = LastDensity[X][Y];
+
+            if(X > 0 && Y > 0 && X + 1 < Width && Y + 1 < Width){
+
+                auto& Current = Density[X][Y];
+
+                const auto ToMoveX = (Current / 2) *
+                    (DeltaTime * std::get<0>(Velocities.Velocity[X][Y])) / GridSize;
+
+                const auto ToMoveY = (Current / 2) *
+                    (DeltaTime * std::get<1>(Velocities.Velocity[X][Y])) / GridSize;
+
+                const auto AbsX = std::abs(ToMoveX);
+                const auto AbsY = std::abs(ToMoveY);
+
+                if(AbsX > 0.1f){
+
+                    Current -= AbsX;
+                    Density[X - (ToMoveX > 0 ? 1 : -1)][Y] += AbsX;
+                }
+
+                if(AbsY > 0.1f){
+
+                    Current -= AbsY;
+                    Density[Y - (ToMoveY > 0 ? 1 : -1)][Y] += AbsY;
+                }
+            }
+        }
+    }
+
+    // float dx, dy;
+    // int x0, x1, y0, y1;
+    // float s1, s0, t1, t0;
+	// for (int x = 1; x < Width-2; x++)
+	// {
+	// 	for (int y = 1; y < Height-2; y++)
+	// 	{
+	// 	    if (LastDensity[x][y] > 1) {
+    //             dx = x + (DeltaTime * std::get<0>(Velocities.Velocity[x][y]) * 2) / GridSize;
+    //             dy = y + (DeltaTime * std::get<1>(Velocities.Velocity[x][y]) * 2) / GridSize;
+
+    //             if (dx < 0.5)
+    //                 dx = 0.5;
                 
-                if (dx > Width - 1.5)
-                    dx = Width - 1.5f;
+    //             if (dx > Width - 1.5)
+    //                 dx = Width - 1.5f;
 
-                if (dy < 0.5)
-                    dy = 0.5;
+    //             if (dy < 0.5)
+    //                 dy = 0.5;
                 
-                if (dy > Height - 1.5)
-                    dy = Height - 1.5f;
+    //             if (dy > Height - 1.5)
+    //                 dy = Height - 1.5f;
 
-                x0 = static_cast<int>(dx);
-                x1 = x0 + 1;
-                y0 = static_cast<int>(dy);
-                y1 = y0 + 1;
+    //             x0 = static_cast<int>(dx);
+    //             x1 = x0 + 1;
+    //             y0 = static_cast<int>(dy);
+    //             y1 = y0 + 1;
 
-                s1 = dx - x0;
-                s0 = 1 - s1;
-                t1 = dy - y0;
-                t0 = 1 - t1;
+    //             s1 = dx - x0;
+    //             s0 = 1 - s1;
+    //             t1 = dy - y0;
+    //             t0 = 1 - t1;
 
-                Density[x0][y0] += LastDensity[x][y] * s0 * t0;
-                Density[x0][y1] += LastDensity[x][y] * s0 * t1;
-                Density[x1][y0] += LastDensity[x][y] * s1 * t0;
-                Density[x1][y1] += LastDensity[x][y] * s1 * t1;
-		    }
-		}
-	}
+    //             Density[x0][y0] += LastDensity[x][y] * s0 * t0;
+    //             Density[x0][y1] += LastDensity[x][y] * s0 * t1;
+    //             Density[x1][y0] += LastDensity[x][y] * s1 * t0;
+    //             Density[x1][y1] += LastDensity[x][y] * s1 * t1;
+	// 	    }
+	// 	}
+	// }
 }
 // ------------------------------------ //
 
