@@ -65,8 +65,8 @@ FCompoundType const& UCompoundRegistry::GetCompoundData(ECompoundID ID) const{
             return Compound;
     }
     
-    UE_LOG(ThriveLog, Warning, TEXT("Compound by id doesn't exist: %d"),
-        ID);
+    //UE_LOG(ThriveLog, Warning, TEXT("Compound by id doesn't exist: %d"),
+    //    ID);
     
     return InvalidCompound;
 }
