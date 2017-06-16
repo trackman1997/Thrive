@@ -135,7 +135,7 @@ void ACompoundCloud::Tick(float DeltaTime)
     
     for(auto& Layer : CompoundLayers){
         // The speed needs to be increased to look better, or the algorithm fixed
-        Layer.Update(DeltaTime * 2, *SharedCloudData);
+        Layer.Update(DeltaTime, *SharedCloudData);
         bIsDirty = true;
     }
     
@@ -324,7 +324,7 @@ void ACompoundCloud::FLayerData::Update(float DeltaTime, const FSharedCloudData 
 void ACompoundCloud::FLayerData::Diffuse(float DiffRate, float DeltaTime){
 
     //DeltaTime = 1;
-    float A = DeltaTime * DiffRate / GridSize;
+    float A = (1 + DeltaTime) * DiffRate / GridSize;
 
     check(A > 0);
 
@@ -397,8 +397,8 @@ void ACompoundCloud::FLayerData::Diffuse(float DiffRate, float DeltaTime){
 
 
             // Old method
-            // LastDensity[x][y] = (Density[x][y] + A*(LastDensity[x - 1][y] +
-            // - LastDensity[x + 1][y] + LastDensity[x][y-1] + LastDensity[x][y+1])) /
+            // LastDensity[X][Y] = (Density[X][Y] + A*(LastDensity[X - 1][Y] +
+            // - LastDensity[X + 1][Y] + LastDensity[X][Y-1] + LastDensity[X][Y+1])) /
             // - (1 + 4 * A);
         }
     }
@@ -407,14 +407,15 @@ void ACompoundCloud::FLayerData::Diffuse(float DiffRate, float DeltaTime){
 void ACompoundCloud::FLayerData::Advect(float DeltaTime, const FSharedCloudData &Velocities){
 
     //DeltaTime = 1;
+    DeltaTime += 1;
     
-    // for (int x = 0; x < Width; x++)
-	// {
-	// 	for (int y = 0; y < Height; y++)
-	// 	{
-	// 		Density[x][y] = 0;
-	// 	}
-	// }
+    for (int x = 0; x < Width; x++)
+	{
+		for (int y = 0; y < Height; y++)
+		{
+			Density[x][y] = 0;
+		}
+	}
 
     for (int X = 0; X < Width; X++){
         for (int Y = 0; Y < Height; Y++){
@@ -452,13 +453,13 @@ void ACompoundCloud::FLayerData::Advect(float DeltaTime, const FSharedCloudData 
     // float dx, dy;
     // int x0, x1, y0, y1;
     // float s1, s0, t1, t0;
-	// for (int x = 1; x < Width-2; x++)
+	// for (int x = 1; x < Width-1; x++)
 	// {
-	// 	for (int y = 1; y < Height-2; y++)
+	// 	for (int y = 1; y < Height-1; y++)
 	// 	{
 	// 	    if (LastDensity[x][y] > 1) {
-    //             dx = x + (DeltaTime * std::get<0>(Velocities.Velocity[x][y]) * 2) / GridSize;
-    //             dy = y + (DeltaTime * std::get<1>(Velocities.Velocity[x][y]) * 2) / GridSize;
+    //             dx = x + (DeltaTime * std::get<0>(Velocities.Velocity[x][y])) / GridSize;
+    //             dy = y + (DeltaTime * std::get<1>(Velocities.Velocity[x][y])) / GridSize;
 
     //             if (dx < 0.5)
     //                 dx = 0.5;

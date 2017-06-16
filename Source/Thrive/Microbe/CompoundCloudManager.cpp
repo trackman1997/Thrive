@@ -74,9 +74,13 @@ void ACompoundCloudManager::Tick(float DeltaTime)
 
 // ------------------------------------ //
 // FSharedCloudData
-FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
-    Noise(Width * COMPOUND_CLOUD_NOISE_SCALE, Height * COMPOUND_CLOUD_NOISE_SCALE)
-{
+FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height){
+    
+    FPerlinNoise Noise(Width * COMPOUND_CLOUD_NOISE_SCALE,
+        Height * COMPOUND_CLOUD_NOISE_SCALE);
+
+    //PerlinNoise fieldPotential;
+    
     Velocity.Reserve(Width);
     Velocity.SetNum(Width);
 
@@ -119,6 +123,14 @@ FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height) :
 			N0 = Noise.Perlin(X0, Y0);
 			N1 = Noise.Perlin(X0, Y1);
 			NX = N1 - N0;
+
+
+            // N0 = fieldPotential.noise(X0, Y0, 0);
+			// N1 = fieldPotential.noise(X1, Y0, 0);
+			// NY = N0 - N1;
+			// N0 = fieldPotential.noise(X0, Y0, 0);
+			// N1 = fieldPotential.noise(X0, Y1, 0);
+            // NX = N1 - N0;
 
             Velocity[X][Y] = std::make_tuple(NX/2, NY/2);
 		}
