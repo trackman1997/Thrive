@@ -158,8 +158,14 @@ else
   onError("unkown os")
 end
 
-copyCount = ffmpegCopyLibs bindir
-copyCount += portaudioCopyLibs bindir
+begin
+  copyCount = ffmpegCopyLibs bindir
+  copyCount += portaudioCopyLibs bindir
+rescue Errno::EACCES => e
+  
+  onError "Unreal Editor is open or another program is using dlls/sos that need updating. " +
+          "With this exception: #{e}"
+end
 
 success "Copied #{copyCount} libraries/links to the bin folder"
 puts ""
