@@ -31,8 +31,8 @@ FPerlinNoise::FPerlinNoise(uint32_t InWidth, uint32_t InHeight) :
 {
     //for each point in a 100x100 Grid make a 2d normalised vector
     //pointing in a random direction
-    for (int i = 0; i < Width; i++){
-        for (int j = 0; j < Height; j++){
+    for (unsigned i = 0; i < Width; i++){
+        for (unsigned j = 0; j < Height; j++){
             Grid[i][j][0]  = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             Grid[i][j][1]  = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float normalise = norm(Grid[i][j][0], Grid[i][j][1]);
@@ -46,8 +46,8 @@ FPerlinNoise::FPerlinNoise(uint32_t InWidth, uint32_t InHeight) :
 // ------------------------------------ //
 void FPerlinNoise::Update(){
 
-    for (int i = 0; i < Width; i++){
-        for (int j = 0; j < Height; j++){
+    for (unsigned i = 0; i < Width; i++){
+        for (unsigned j = 0; j < Height; j++){
             Grid[i][j][0]  += 0.1*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             Grid[i][j][1]  += 0.1*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             float normalise = norm(Grid[i][j][0], Grid[i][j][1]);

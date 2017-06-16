@@ -100,9 +100,9 @@ FSharedCloudData::FSharedCloudData(uint32_t Width, uint32_t Height){
     // Taken from the old CreateVelocitYField with slight modifications
 	float X0, Y0, X1, Y1, N0, N1, NX, NY;
 
-	for (int X = 0; X < Width; X++)
+	for (unsigned X = 0; X < Width; X++)
 	{
-		for (int Y = 0; Y < Height; Y++)
+		for (unsigned Y = 0; Y < Height; Y++)
 		{
             // If we used the Width and Height as scale this probably
             // outputs the same thing
