@@ -20,10 +20,6 @@ public:
     // Perlin noise added to the movement //
     /// The velocity of the fluid.
     TArray<TArray<std::tuple<float, float>>> Velocity;
-
-protected:
-    
-    FPerlinNoise Noise;
 };
 
 
