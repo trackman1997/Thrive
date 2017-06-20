@@ -6,7 +6,7 @@
 #include "Spawner.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class THRIVE_API USpawner : public UActorComponent
 {
 	GENERATED_BODY()
@@ -35,6 +35,9 @@ public:
 	float spawnRadiusSqr;
 
 	float getSpawnFrequency();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void onSpawn(FVector2D location);
 
 private:
 	/*

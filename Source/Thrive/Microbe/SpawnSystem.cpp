@@ -53,6 +53,7 @@ void ASpawnSystem::Tick(float DeltaTime)
 							FVector2D::DistSquared(lastPlayerPosition, newPosition) > spawner->spawnRadiusSqr) {
 							FString debugtext = "Spawning: " + spawner->name + " in: " + newPosition.ToString();
 							GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debugtext);
+							spawner->onSpawn(newPosition);
 						}
 					}
 				}
