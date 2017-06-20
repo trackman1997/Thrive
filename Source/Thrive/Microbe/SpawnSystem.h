@@ -30,6 +30,11 @@ public:
 
 private:
 	TLinkedList<AActor*> spawnedActors;
+
+	// Used to decide when to do the next spawn cycle.
 	float timeSinceLastUpdate;
+
+	// The player position on the last spawn cycle, used to calculate
+	// where to spawn new entities.
 	FVector2D lastPlayerPosition;
 };

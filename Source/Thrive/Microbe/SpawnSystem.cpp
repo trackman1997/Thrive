@@ -19,14 +19,18 @@ void ASpawnSystem::BeginPlay()
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Spawn system initialized!"));
 }
 
-// Called every frame
+/*
+For each entity type, spawns the appropriate number of entities within the spawn
+radius of the player at its current location but outside of the spawn radius of the player
+at its location during the previous spawn cycle.
+*/
 void ASpawnSystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	timeSinceLastUpdate += DeltaTime;
 	if (timeSinceLastUpdate > SPAWN_INTERVAL) {
-		timeSinceLastUpdate -= SPAWN_INTERVAL;
+		timeSinceLastUpdate -= SPAWN_INTERVAL; // = 0?
 
 		// Getting the spawners attached to the system.
 		TArray<USpawner*> spawners;
@@ -42,7 +46,27 @@ void ASpawnSystem::Tick(float DeltaTime)
 				float spawnFrequency = spawner->getSpawnFrequency();
 				unsigned numAttempts = FMath::Max(1, FMath::CeilToInt(spawnFrequency * 2));
 
+				/*
+				To actually spawn a given entity for a given attempt, two conditions should be met.
+				The first condition is a random chance that adjusts the spawn frequency to the approprate
+				amount.The second condition is whether the entity will spawn in a valid position.
+				It is checked when the first condition is met and a position
+				for the entity has been decided.
+
+				To allow more than one entity of each type to spawn per spawn cycle, the SpawnSystem
+				attempts to spawn each given entity multiple times depending on the spawnFrequency.
+				numAttempts stores how many times the SpawnSystem attempts to spawn the given entity.
+				*/
 				for (unsigned i = 0; i < numAttempts; i++) {
+					/*
+					First condition passed.Choose a location for the entity.
+
+					A random location in the square of sidelength 2 * spawnRadius
+					centered on the player is chosen.The corners
+					of the square are outside the spawning region, but they
+					will fail the second condition, so entities still only
+					spawn within the spawning region.
+					*/
 					if (FMath::RandRange((float)0.0, (float)1.0) < spawnFrequency / numAttempts) {
 						float xDist = FMath::RandRange(-spawner->spawnRadius, spawner->spawnRadius);
 						float yDist = FMath::RandRange(-spawner->spawnRadius, spawner->spawnRadius);
@@ -51,14 +75,17 @@ void ASpawnSystem::Tick(float DeltaTime)
 
 						if (FVector2D::DistSquared(playerCoords, newPosition) <= spawner->spawnRadiusSqr &&
 							FVector2D::DistSquared(lastPlayerPosition, newPosition) > spawner->spawnRadiusSqr) {
+							// Second condition passed. Spawn the entity.
 							FString debugtext = "Spawning: " + spawner->name + " in: " + newPosition.ToString();
 							GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debugtext);
 							spawner->onSpawn(newPosition);
+							// TODO: get a reference to the spawned entity in order to despawn
+							// it when it gets too far from the player.
 						}
 					}
 				}
 			}
-
+			// Updating the last player position.
 			lastPlayerPosition = playerCoords;
 		}
 	}

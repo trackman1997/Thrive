@@ -23,19 +23,25 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/** The name of the spawner type, used for debugging purposes */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString name;
 
+	/** The distance from the player that the spawned actor can spawn or despawn. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float spawnRadius;
 
+	/** On average, the number of entities of the given type per square unit. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float spawnDensity;
 
+	// spawnRadius ** 2, stored for performance reasons.
 	float spawnRadiusSqr;
 
 	float getSpawnFrequency();
 
+	/** The function called by the SpawnSystem to create the entity. It should have a two
+	dimensional vector as a parameter, and it should return the new entity (TO BE DONE YET). */
 	UFUNCTION(BlueprintImplementableEvent)
 	void onSpawn(FVector2D location);
 
