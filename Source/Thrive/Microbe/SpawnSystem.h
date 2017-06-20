@@ -29,7 +29,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	TLinkedList<AActor*> spawnedActors;
+	// An array of references to the spawned actors.
+	TArray<AActor*> spawnedActors;
 
 	// Used to decide when to do the next spawn cycle.
 	float timeSinceLastUpdate;

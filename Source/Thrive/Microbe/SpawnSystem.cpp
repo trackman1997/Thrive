@@ -76,11 +76,16 @@ void ASpawnSystem::Tick(float DeltaTime)
 						if (FVector2D::DistSquared(playerCoords, newPosition) <= spawner->spawnRadiusSqr &&
 							FVector2D::DistSquared(lastPlayerPosition, newPosition) > spawner->spawnRadiusSqr) {
 							// Second condition passed. Spawn the entity.
-							FString debugtext = "Spawning: " + spawner->name + " in: " + newPosition.ToString();
-							GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debugtext);
-							spawner->onSpawn(newPosition);
-							// TODO: get a reference to the spawned entity in order to despawn
+							AActor* spawnedActor = nullptr;
+							spawner->onSpawn(newPosition, spawnedActor);
+
+							// Saves a reference to the spawned entity in order to despawn
 							// it when it gets too far from the player.
+							if (spawnedActor != nullptr) {
+								spawnedActors.Add(spawnedActor);
+								FString debugtext = "Spawned actor saved! currently saved actors: " + FString::FromInt(spawnedActors.Num());
+								GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debugtext);
+							}
 						}
 					}
 				}

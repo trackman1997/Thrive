@@ -41,9 +41,9 @@ public:
 	float getSpawnFrequency();
 
 	/** The function called by the SpawnSystem to create the entity. It should have a two
-	dimensional vector as a parameter, and it should return the new entity (TO BE DONE YET). */
+	dimensional vector as a parameter, and it should return the new entity. */
 	UFUNCTION(BlueprintImplementableEvent)
-	void onSpawn(FVector2D location);
+	void onSpawn(FVector2D location, AActor*& spawnedActor);
 
 private:
 	/*
