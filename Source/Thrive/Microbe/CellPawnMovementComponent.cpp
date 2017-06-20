@@ -30,7 +30,7 @@ void UCellPawnMovementComponent::TickComponent(float DeltaTime, enum ELevelTick 
         // }
 
         // Force should always be applied
-        PushComponent->AddForce(20000.0f * DesiredMovementThisFrame); 
+        PushComponent->AddForce(2000.0f * DesiredMovementThisFrame); 
     }
 
 
