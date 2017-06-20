@@ -31,4 +31,5 @@ public:
 private:
 	TLinkedList<AActor*> spawnedActors;
 	float timeSinceLastUpdate;
+	FVector2D lastPlayerPosition;
 };

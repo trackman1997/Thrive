@@ -31,4 +31,16 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float spawnDensity;
+
+	float spawnRadiusSqr;
+
+	float getSpawnFrequency();
+
+private:
+	/*
+	spawnFrequency is on average how many entities should pass the first condition
+	in each spawn cycle(See _doSpawnCycle).spawnRadius ^ 2 * 4 is used because
+	that is the area of the square region where entities attempt to spawn.
+	*/
+	float spawnFrequency;
 };
