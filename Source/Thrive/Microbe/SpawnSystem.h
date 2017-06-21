@@ -10,6 +10,19 @@
 // Minimum time (in seconds) between spawn cycles.
 #define SPAWN_INTERVAL 0.1
 
+struct SpawnedActorReference {
+public:
+	AActor* actor;
+	USpawner* spawner;
+	bool markedForRemoval;
+
+	SpawnedActorReference(AActor* actor, USpawner* spawner) {
+		this->actor = actor;
+		this->spawner = spawner;
+		markedForRemoval = false;
+	}
+};
+
 UCLASS()
 class THRIVE_API ASpawnSystem : public AActor
 {
@@ -30,7 +43,7 @@ public:
 
 private:
 	// An array of references to the spawned actors.
-	TArray<AActor*> spawnedActors;
+	TArray<SpawnedActorReference> spawnedActors;
 
 	// Used to decide when to do the next spawn cycle.
 	float timeSinceLastUpdate;

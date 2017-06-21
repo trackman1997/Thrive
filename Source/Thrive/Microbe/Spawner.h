@@ -45,6 +45,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void onSpawn(FVector2D location, AActor*& spawnedActor);
 
+	/** The function called by the SpawnSystem to despawn the entity. */
+	UFUNCTION(BlueprintImplementableEvent)
+	void onDespawn(AActor* spawnedActor);
+
 private:
 	/*
 	spawnFrequency is on average how many entities should pass the first condition

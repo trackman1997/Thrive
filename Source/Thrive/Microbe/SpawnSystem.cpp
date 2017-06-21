@@ -40,12 +40,26 @@ void ASpawnSystem::Tick(float DeltaTime)
 		APawn* player = GetWorld()->GetFirstPlayerController()->GetPawnOrSpectator();
 		if (player) {
 			FVector2D playerCoords(player->GetActorLocation());
-			
 
+			// Despawning faraway actors.
+			for (auto& actorRef : spawnedActors) {
+				if (actorRef.actor == nullptr) actorRef.markedForRemoval = true;
+				else {
+					FVector2D actorPosition(actorRef.actor->GetActorLocation());
+					if (FVector2D::DistSquared(actorPosition, playerCoords) > actorRef.spawner->spawnRadiusSqr) {
+						actorRef.markedForRemoval = true;
+						actorRef.spawner->onDespawn(actorRef.actor);
+					}
+				}
+			}
+
+			// Removing the despawned actor references.
+			spawnedActors.RemoveAll([](const SpawnedActorReference actorRef) {
+				return actorRef.markedForRemoval;
+			});
+
+			// Spawning new actors.
 			for (auto const& spawner : spawners) {
-				float spawnFrequency = spawner->getSpawnFrequency();
-				unsigned numAttempts = FMath::Max(1, FMath::CeilToInt(spawnFrequency * 2));
-
 				/*
 				To actually spawn a given entity for a given attempt, two conditions should be met.
 				The first condition is a random chance that adjusts the spawn frequency to the approprate
@@ -57,6 +71,9 @@ void ASpawnSystem::Tick(float DeltaTime)
 				attempts to spawn each given entity multiple times depending on the spawnFrequency.
 				numAttempts stores how many times the SpawnSystem attempts to spawn the given entity.
 				*/
+				float spawnFrequency = spawner->getSpawnFrequency();
+				unsigned numAttempts = FMath::Max(1, FMath::CeilToInt(spawnFrequency * 2));
+
 				for (unsigned i = 0; i < numAttempts; i++) {
 					/*
 					First condition passed.Choose a location for the entity.
@@ -82,9 +99,7 @@ void ASpawnSystem::Tick(float DeltaTime)
 							// Saves a reference to the spawned entity in order to despawn
 							// it when it gets too far from the player.
 							if (spawnedActor != nullptr) {
-								spawnedActors.Add(spawnedActor);
-								FString debugtext = "Spawned actor saved! currently saved actors: " + FString::FromInt(spawnedActors.Num());
-								GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debugtext);
+								spawnedActors.Emplace(spawnedActor, spawner);
 							}
 						}
 					}
