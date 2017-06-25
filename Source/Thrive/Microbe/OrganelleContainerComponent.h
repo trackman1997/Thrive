@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 #include "OrganelleContainerComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class THRIVE_API UOrganelleContainerComponent : public UActorComponent
+class THRIVE_API UOrganelleContainerComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
