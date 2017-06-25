@@ -22,7 +22,7 @@ void UMembraneComponent::BeginPlay(){
 
 }
 
-void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver){
+void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver, TArray<FVector2D>& points){
 
     if(OrganelleContainerComponent){
 
@@ -31,6 +31,7 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
     }
 
     // Dummy data
+	/*
     for(int x = -4; x < 5; ++x){
 
         for(int y = -4; y < 5; ++y){
@@ -38,6 +39,11 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
             OrganellePositions.Emplace(FVector2D(x, y));
         }
     }
+	*/
+
+	for (FVector2D const& point : points) {
+		OrganellePositions.Emplace(point);
+	}
 
     // OrganellePositions.Emplace(FVector2D(0, 6));
     // OrganellePositions.Emplace(FVector2D(0, 7));

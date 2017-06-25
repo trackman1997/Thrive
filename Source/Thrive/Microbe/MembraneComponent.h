@@ -31,7 +31,7 @@ public:
     void BeginPlay() override;
 
     //! Creates the mesh, needs to be called in actor OnConstruction
-    void CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver);
+    void CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver, TArray<FVector2D>& points);
 
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
