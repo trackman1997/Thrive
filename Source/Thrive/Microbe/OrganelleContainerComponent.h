@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Components/SceneComponent.h"
+#include "OrganelleComponent.h"
 #include "OrganelleContainerComponent.generated.h"
 
 
@@ -23,6 +24,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
-	
+	TArray<FVector2D> getOrganellePoints();
 };
