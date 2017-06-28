@@ -59,7 +59,7 @@ protected:
     UMembraneComponent* MembraneComponent;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
-	int minMembraneSize = 3;
+	int minMembraneSize = 40;
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;

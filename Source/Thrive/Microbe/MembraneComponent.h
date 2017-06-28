@@ -13,6 +13,9 @@
 
 #include "MembraneComponent.generated.h"
 
+// The ratio between the distance units the membrane uses, and the ones ue4 uses.
+#define MEMBRANE_TO_UE_UNIT_RATIO 1/15
+
 /**
  * 
  */

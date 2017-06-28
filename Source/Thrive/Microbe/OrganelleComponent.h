@@ -26,7 +26,7 @@ public:
 	// The size of the membrane it generates.
 	// It should probaby be unsigned but it's not supported yet.
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	int size = 0;
+	int size = 15;
 
 	TArray<FVector2D> getPoints();
 };

@@ -30,20 +30,21 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
         
     }
 
+	TArray<FVector2D> points;
+
     // Dummy data
 	/*
     for(int x = -4; x < 5; ++x){
 
         for(int y = -4; y < 5; ++y){
 
-            OrganellePositions.Emplace(FVector2D(x, y));
+            points.Emplace(FVector2D(x, y));
         }
     }
 	*/
 
-	FVector2D minPoint = membraneBox.Min;
-	FVector2D maxPoint = membraneBox.Max;
-	TArray<FVector2D> points;
+	FVector2D minPoint(FMath::RoundToInt(membraneBox.Min.X * MEMBRANE_TO_UE_UNIT_RATIO), FMath::RoundToInt(membraneBox.Min.Y * MEMBRANE_TO_UE_UNIT_RATIO));
+	FVector2D maxPoint(FMath::RoundToInt(membraneBox.Max.X * MEMBRANE_TO_UE_UNIT_RATIO), FMath::RoundToInt(membraneBox.Max.Y * MEMBRANE_TO_UE_UNIT_RATIO));
 
 	// Getting the points out of the box.
 	for (FVector2D pointY = minPoint; pointY.Y <= maxPoint.Y; pointY += FVector2D(0, 1))
