@@ -23,8 +23,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// The size of the membrane it generates.
+	// It should probaby be unsigned but it's not supported yet.
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	float size;
+	int size = 0;
 
 	TArray<FVector2D> getPoints();
 };

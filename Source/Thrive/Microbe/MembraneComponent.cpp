@@ -22,7 +22,7 @@ void UMembraneComponent::BeginPlay(){
 
 }
 
-void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver, TArray<FVector2D>& points){
+void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver, FBox2D& membraneBox){
 
     if(OrganelleContainerComponent){
 
@@ -40,6 +40,18 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
         }
     }
 	*/
+
+	FVector2D minPoint = membraneBox.Min;
+	FVector2D maxPoint = membraneBox.Max;
+	TArray<FVector2D> points;
+
+	// Getting the points out of the box.
+	for (FVector2D pointY = minPoint; pointY.Y <= maxPoint.Y; pointY += FVector2D(0, 1))
+		for (FVector2D point = pointY; point.X <= maxPoint.X; point += FVector2D(1, 0)) {
+			FString debug = "Emplacing point: " + point.ToString();
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debug);
+			points.Emplace(point);
+		}
 
 	for (FVector2D const& point : points) {
 		OrganellePositions.Emplace(point);

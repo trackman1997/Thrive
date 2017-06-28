@@ -69,15 +69,23 @@ void ACellBase::BeginPlay()
 void ACellBase::OnConstruction(const FTransform& Transform)
 {
 	TArray<FVector2D> points;
+
 	TArray<UOrganelleContainerComponent*> aux;
 	GetComponents(aux);
 
 	if (aux.Num() > 0) {
 		UOrganelleContainerComponent* organelleContainer = aux[0];
+
+		// Getting the organelle points.
 		points = organelleContainer->getOrganellePoints();
 	}
 
-    MembraneComponent->CreateMembraneMesh(RuntimeMesh, points);
+	// Minimum membrane
+	points.Emplace(-minMembraneSize, -minMembraneSize);
+	points.Emplace(minMembraneSize, minMembraneSize);
+
+	FBox2D membraneBox(points);
+    MembraneComponent->CreateMembraneMesh(RuntimeMesh, membraneBox);
 }
 
 // Called every frame
