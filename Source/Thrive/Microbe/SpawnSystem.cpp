@@ -16,7 +16,6 @@ ASpawnSystem::ASpawnSystem()
 void ASpawnSystem::BeginPlay()
 {
 	Super::BeginPlay();
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Spawn system initialized!"));
 }
 
 /*
