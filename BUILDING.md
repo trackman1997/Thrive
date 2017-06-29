@@ -190,9 +190,32 @@ isn't recommended to avoid accidentally committing windows line
 endings.
 
 
-### Other random issues
+### Issues compiling ffmpeg
 
-For other ffmpeg building issues see this
+First, make sure that you are using the standard Windows command
+prompt. Using a MinGW shell or equivalent is known to cause
+issues. You may need to delete the ffmpeg folder after this to make
+sure that there are no cached values or other things messing things
+up.
+
+
+Then make sure that nothing is overriding the programs in cygwin. You
+should start by making sure cygwin is the first thing in PATH. And
+then that the specific programs are from cygwin. This can be done by
+renaming the executables in cygwin/bin, for example renaming `awk.exe`
+or `make.exe` to `testawk.exe` and then verifying that the setup
+script starts complaining about missing that specific program. If it
+doesn't start complaining then this confirms that something is messing
+with your PATH and overriding the cygwin tools.  Either delete the
+offending things (MSYS, MinGW) or remove them from PATH (and make sure
+once again that you are using plain `cmd.exe` to run the setup and not
+some other shell).
+
+
+
+### ffmpeg build is still failing
+
+For other ffmpeg building issues see these guides:
 [windows guide](https://trac.ffmpeg.org/wiki/CompilationGuide/MSVC),
 [all guides](https://trac.ffmpeg.org/wiki/CompilationGuide)
 
