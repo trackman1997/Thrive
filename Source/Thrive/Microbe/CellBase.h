@@ -58,6 +58,9 @@ protected:
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     UMembraneComponent* MembraneComponent;
 
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	int minMembraneSize = 40;
+
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
 
@@ -89,5 +92,5 @@ protected:
 
     //! If true uses a UFloatingPawnMovement instead of applying force to move
     //! \warning If this is changed the whole editor needs to be restarted
-    const bool bUsingFloatingMovement = true;
+    const bool bUsingFloatingMovement = false;
 };

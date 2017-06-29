@@ -33,3 +33,12 @@ void UOrganelleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
+TArray<FVector2D> UOrganelleComponent::getPoints() {
+	TArray<FVector2D> result;
+	FVector2D organellePosition(GetRelativeTransform().GetLocation());
+	int organelleX = FMath::CeilToInt(organellePosition.X);
+	int organelleY = FMath::CeilToInt(organellePosition.Y);
+	result.Emplace(organelleX - size, organelleY - size);
+	result.Emplace(organelleX + size, organelleY + size);
+	return result;
+}

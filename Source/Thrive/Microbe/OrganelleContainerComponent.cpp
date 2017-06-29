@@ -33,3 +33,16 @@ void UOrganelleContainerComponent::TickComponent(float DeltaTime, ELevelTick Tic
 	// ...
 }
 
+TArray<FVector2D> UOrganelleContainerComponent::getOrganellePoints() {
+	TArray<USceneComponent*> organelles;
+
+	GetChildrenComponents(false, organelles);
+
+	TArray<FVector2D> result;
+	for (USceneComponent* organelleScene : organelles) {
+		UOrganelleComponent* organelle = (UOrganelleComponent*)organelleScene;
+		result.Append(organelle->getPoints());
+	}
+
+	return result;
+}

@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
+#include "OrganelleComponent.h"
 #include "OrganelleContainerComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class THRIVE_API UOrganelleContainerComponent : public UActorComponent
+class THRIVE_API UOrganelleContainerComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
@@ -23,6 +24,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
-	
+	TArray<FVector2D> getOrganellePoints();
 };

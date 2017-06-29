@@ -25,6 +25,16 @@ struct FCompoundType{
     
     UPROPERTY(BlueprintReadOnly)
     FLinearColor Colour;
+
+	// How much space does this compound occupy per unit.
+	UPROPERTY(BlueprintReadOnly)
+	float volume;
+
+	// Whether this compound has any functionality other
+	// than a stepping stone to other compounds in the
+	// process chain.
+	UPROPERTY(BlueprintReadOnly)
+	bool isUseful;
 };
 
 /**

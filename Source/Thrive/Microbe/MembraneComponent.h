@@ -13,6 +13,9 @@
 
 #include "MembraneComponent.generated.h"
 
+// The ratio between the distance units the membrane uses, and the ones ue4 uses.
+#define MEMBRANE_TO_UE_UNIT_RATIO 1/10
+
 /**
  * 
  */
@@ -31,7 +34,7 @@ public:
     void BeginPlay() override;
 
     //! Creates the mesh, needs to be called in actor OnConstruction
-    void CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver);
+    void CreateMembraneMesh(URuntimeMeshComponent* GeometryReceiver, FBox2D& membraneBox);
 
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)

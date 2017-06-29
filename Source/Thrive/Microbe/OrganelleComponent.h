@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "OrganelleComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class THRIVE_API UOrganelleComponent : public USceneComponent
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class THRIVE_API UOrganelleComponent : public UStaticMeshComponent
 {
 	GENERATED_BODY()
 
@@ -23,6 +23,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
-	
+	// The size of the membrane it generates.
+	// It should probaby be unsigned but it's not supported yet.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int size = 15;
+
+	TArray<FVector2D> getPoints();
 };
