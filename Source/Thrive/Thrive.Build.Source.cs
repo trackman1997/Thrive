@@ -20,6 +20,10 @@ public class Thrive : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "InputCore",
+
+                // Data parsing
+                "Json",
+                "JsonUtilities",
                 
                 // RTC requires these
                 "RuntimeMeshComponent",
