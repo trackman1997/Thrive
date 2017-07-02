@@ -6,25 +6,49 @@
 
 UCompoundRegistry::UCompoundRegistry(){
 
-    InvalidCompound.Name = TEXT("Invalid Compound Type");
+    InvalidCompound.InternalName = TEXT("Invalid Compound Type");
     InvalidCompound.Colour = FColor(0, 0, 0, 1);
 }
 // ------------------------------------ //
-void UCompoundRegistry::LoadDefaultCompounds(){
+void UCompoundRegistry::LoadDefaultCompounds() {
+	// Getting the JSON file where the data is.
+	FString path = FPaths::GameDir() + "GameData/MicrobeStage/compounds.json";
+	FString rawJsonFile = "No chance!";
+	FFileHelper::LoadFileToString(rawJsonFile, *path, NULL);
+	
+	// Deserializing it.
+	TSharedPtr<FJsonObject> compounds;
+	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(rawJsonFile);
+	FJsonSerializer::Deserialize(Reader, compounds);
 
-    FCompoundType Oxygen;
-    Oxygen.Name = TEXT("Oxygen");
-    Oxygen.Colour = FLinearColor(0.235f, 0.627f, 0.705f, 1.0f);
-	Oxygen.volume = 1.0;
-	Oxygen.isUseful = false;
-    RegisterCompoundType(Oxygen);
+	//Getting the data.
+	for (auto compound : compounds->Values) {
+		FString internalName = compound.Key;
+		TSharedPtr<FJsonObject> compoundData = compound.Value->AsObject();
+		FCompoundType newCompound;
+
+		newCompound.InternalName = FName(*internalName);
+		newCompound.DisplayName = compoundData->GetStringField("name");
+		newCompound.volume = compoundData->GetNumberField("volume");
+		newCompound.isUseful = compoundData->GetBoolField("isUseful");
+		newCompound.isCloud = compoundData->GetBoolField("isCloud");
+
+		// Colour.
+		TSharedPtr<FJsonObject> colour = compoundData->GetObjectField("colour");
+		float r = colour->GetNumberField("r");
+		float g = colour->GetNumberField("g");
+		float b = colour->GetNumberField("b");
+		newCompound.Colour = FLinearColor(r, g, b, 1.0f);
+
+		RegisterCompoundType(newCompound);
+	}
 }
 // ------------------------------------ //
 ECompoundID UCompoundRegistry::GetCompoundByName(const FName &CompoundName) const{
 
     for(const auto& Compound : RegisteredCompounds){
 
-        if(Compound.Name == CompoundName)
+        if(Compound.InternalName == CompoundName)
             return Compound.ID;
     }
     
@@ -42,10 +66,10 @@ bool UCompoundRegistry::RegisterCompoundType(FCompoundType &Properties){
         if(HighestUsed < IDAsInt)
             HighestUsed = IDAsInt;
 
-        if(Compound.Name == Properties.Name){
+        if(Compound.InternalName == Properties.InternalName){
 
-            UE_LOG(ThriveLog, Error, TEXT("Compound name is already in use: %s"),
-                *Properties.Name.ToString());
+            UE_LOG(ThriveLog, Error, TEXT("Compound internal name is already in use: %s"),
+                *Properties.InternalName.ToString());
             return false;
         }
     }

@@ -49,8 +49,8 @@ void UMembraneComponent::CreateMembraneMesh(URuntimeMeshComponent* GeometryRecei
 	// Getting the points out of the box.
 	for (FVector2D pointY = minPoint; pointY.Y <= maxPoint.Y; pointY += FVector2D(0, 1))
 		for (FVector2D point = pointY; point.X <= maxPoint.X; point += FVector2D(1, 0)) {
-			FString debug = "Emplacing point: " + point.ToString();
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debug);
+			//FString debug = "Emplacing point: " + point.ToString();
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, debug);
 			points.Emplace(point);
 		}
 

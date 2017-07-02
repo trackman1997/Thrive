@@ -19,7 +19,7 @@ bool FCompoundRegistryRegister::RunTest(const FString &Parameters){
         AddError(TEXT("GetCompoundByName('Oxygen') should return invalid before creation"));
 
     FCompoundType OxygenType;
-    OxygenType.Name = TEXT("Oxygen");
+    OxygenType.InternalName = TEXT("Oxygen");
     
     TestTrue(TEXT("Register result"), Registry->RegisterCompoundType(OxygenType));
 

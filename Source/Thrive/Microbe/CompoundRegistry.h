@@ -20,21 +20,31 @@ struct FCompoundType{
     UPROPERTY(BlueprintReadOnly)
     ECompoundID ID = ECompoundID::Invalid;
     
+	//! Used by the GUI and stuff.
     UPROPERTY(BlueprintReadOnly)
-    FName Name;
+    FString DisplayName;
+
+	//! Used to search by name.
+	UPROPERTY(BlueprintReadOnly)
+	FName InternalName;
     
+	//! The colour of this compound, in clouds and in the GUI.
     UPROPERTY(BlueprintReadOnly)
     FLinearColor Colour;
 
-	// How much space does this compound occupy per unit.
+	//! How much space does this compound occupy per unit.
 	UPROPERTY(BlueprintReadOnly)
 	float volume;
 
-	// Whether this compound has any functionality other
-	// than a stepping stone to other compounds in the
-	// process chain.
+	//! Whether this compound has any functionality other
+	//! than a stepping stone to other compounds in the
+	//! process chain.
 	UPROPERTY(BlueprintReadOnly)
 	bool isUseful;
+
+	//! Whether this compound can form clouds.
+	UPROPERTY(BlueprintReadOnly)
+	bool isCloud;
 };
 
 /**
