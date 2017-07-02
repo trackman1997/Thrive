@@ -34,17 +34,17 @@ struct FCompoundType{
 
 	//! How much space does this compound occupy per unit.
 	UPROPERTY(BlueprintReadOnly)
-	float volume;
+	float Volume;
 
 	//! Whether this compound has any functionality other
 	//! than a stepping stone to other compounds in the
 	//! process chain.
 	UPROPERTY(BlueprintReadOnly)
-	bool isUseful;
+	bool bUseful;
 
 	//! Whether this compound can form clouds.
 	UPROPERTY(BlueprintReadOnly)
-	bool isCloud;
+	bool bCloud;
 };
 
 /**

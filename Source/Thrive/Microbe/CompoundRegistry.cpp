@@ -12,35 +12,43 @@ UCompoundRegistry::UCompoundRegistry(){
 // ------------------------------------ //
 void UCompoundRegistry::LoadDefaultCompounds() {
 	// Getting the JSON file where the data is.
-	FString path = FPaths::GameDir() + "GameData/MicrobeStage/compounds.json";
-	FString rawJsonFile = "No chance!";
-	FFileHelper::LoadFileToString(rawJsonFile, *path, NULL);
+	FString PathToCompounds = FPaths::GameContentDir() +
+        "GameData/MicrobeStage/Compounds.json";
+
+    if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*PathToCompounds)){
+
+        LOG_FATAL("GameData/MicrobeStage/Compounds.json file is missing");
+        return;
+    }
+    
+	FString RawJsonFile = "No chance!";
+	FFileHelper::LoadFileToString(RawJsonFile, *PathToCompounds, 0);
 	
 	// Deserializing it.
-	TSharedPtr<FJsonObject> compounds;
-	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(rawJsonFile);
-	FJsonSerializer::Deserialize(Reader, compounds);
+	TSharedPtr<FJsonObject> Compounds;
+	TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(RawJsonFile);
+	FJsonSerializer::Deserialize(Reader, Compounds);
 
 	//Getting the data.
-	for (auto compound : compounds->Values) {
-		FString internalName = compound.Key;
-		TSharedPtr<FJsonObject> compoundData = compound.Value->AsObject();
-		FCompoundType newCompound;
+	for (auto Compound : Compounds->Values) {
+		const FString& InternalName = Compound.Key;
+		const TSharedPtr<FJsonObject>& CompoundData = Compound.Value->AsObject();
+		FCompoundType NewCompound;
 
-		newCompound.InternalName = FName(*internalName);
-		newCompound.DisplayName = compoundData->GetStringField("name");
-		newCompound.volume = compoundData->GetNumberField("volume");
-		newCompound.isUseful = compoundData->GetBoolField("isUseful");
-		newCompound.isCloud = compoundData->GetBoolField("isCloud");
+		NewCompound.InternalName = FName(*InternalName);
+		NewCompound.DisplayName = CompoundData->GetStringField("name");
+		NewCompound.Volume = CompoundData->GetNumberField("volume");
+		NewCompound.bUseful = CompoundData->GetBoolField("isUseful");
+		NewCompound.bCloud = CompoundData->GetBoolField("isCloud");
 
 		// Colour.
-		TSharedPtr<FJsonObject> colour = compoundData->GetObjectField("colour");
-		float r = colour->GetNumberField("r");
-		float g = colour->GetNumberField("g");
-		float b = colour->GetNumberField("b");
-		newCompound.Colour = FLinearColor(r, g, b, 1.0f);
+		TSharedPtr<FJsonObject> Colour = CompoundData->GetObjectField("colour");
+		float R = Colour->GetNumberField("r");
+		float G = Colour->GetNumberField("g");
+		float B = Colour->GetNumberField("b");
+		NewCompound.Colour = FLinearColor(R, G, B, 1.0f);
 
-		RegisterCompoundType(newCompound);
+		RegisterCompoundType(NewCompound);
 	}
 }
 // ------------------------------------ //
