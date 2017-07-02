@@ -36,7 +36,7 @@ ACellBase::ACellBase()
     
         FloatingMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(
             TEXT("Floating Movement"));
-        FloatingMovementComponent->UpdatedComponent = RootComponent;
+        FloatingMovementComponent->UpdatedComponent = RootComponent;        
 
         // This prevents the collision mesh to fall on z axis, but only
         // when using floating pawn component, which would break the
@@ -119,6 +119,10 @@ UPawnMovementComponent* ACellBase::GetMovementComponent() const
     if(FloatingMovementComponent)
         return FloatingMovementComponent;
     return nullptr;
+}
+
+bool ACellBase::IsUsingFloatingMovement() const{
+    return bUsingFloatingMovement;
 }
 
 void ACellBase::MoveForward(float AxisValue){
