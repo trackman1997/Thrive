@@ -6,6 +6,7 @@
 
 #include "CompoundCloudManager.h"
 #include "CompoundRegistry.h"
+#include "BioProcessRegistry.h"
 
 #include "MicrobeGameModeBase.generated.h"
 
@@ -47,6 +48,10 @@ public:
         return CompoundRegistry;
     }
 
+	UBioProcessRegistry* GetBioProcessRegistry() {
+		return BioProcessRegistry;
+	}
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -71,4 +76,6 @@ protected:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
     UCompoundRegistry* CompoundRegistry = nullptr;
     
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UBioProcessRegistry* BioProcessRegistry = nullptr;
 };
