@@ -1,8 +1,11 @@
 # Content directory
-/Content
+# /Content
 /Content/*
 /RawContent
 .svn
+
+#Gamedata contains json files, which shouldn't be excluded
+!/Content/GameData
 
 # Merge tool left over files
 *.orig
