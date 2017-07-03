@@ -2,6 +2,7 @@
 
 #include "Thrive.h"
 #include "CompoundBagComponent.h"
+#include "MicrobeGameModeBase.h"
 
 
 // Sets default values for this component's properties
@@ -13,7 +14,18 @@ UCompoundBagComponent::UCompoundBagComponent()
 
 	storageSpaceTotal = 0.0;
 	storageSpaceOccupied = 0.0;
-	// TODO: initialize the compoud array here.
+
+	// DONT DO THIS!!!!!
+	/*
+	AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
+	if (!GameMode) {
+
+		LOG_FATAL("Compound cloud manager couldn't get the gamemode");
+		return;
+	}
+
+	auto* Registry = GameMode->GetCompoundRegistry();
+	*/
 }
 
 
@@ -44,4 +56,33 @@ float UCompoundBagComponent::getStorageSpaceTotal() {
 
 float UCompoundBagComponent::getStorageSpaceOccupied() {
 	return storageSpaceOccupied;
+}
+
+float UCompoundBagComponent::getCompoundAmount(ECompoundID CompoundId) {
+	return compounds[CompoundId].amount;
+}
+
+float UCompoundBagComponent::getPrice(ECompoundID CompoundId) {
+	return compounds[CompoundId].price;
+}
+
+float UCompoundBagComponent::getDemand(ECompoundID CompoundId) {
+	return compounds[CompoundId].demand;
+}
+
+float UCompoundBagComponent::takeCompound(ECompoundID CompoundId, float amount) {
+	if (compounds[CompoundId].amount > amount) {
+		compounds[CompoundId].amount -= amount;
+		return amount;
+	}
+
+	else {
+		float amountTaken = compounds[CompoundId].amount;
+		compounds[CompoundId].amount = 0;
+		return amountTaken;
+	}
+}
+
+void UCompoundBagComponent::giveCompound(ECompoundID CompoundId, float amount) {
+	compounds[CompoundId].amount += amount;
 }
