@@ -66,13 +66,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FBioProcessType const& GetBioProcessData(EBioProcessID ID) const;
 
+	//! Registered processes
+	UPROPERTY()
+	TArray<FBioProcessType> RegisteredBioProcesses;
+
 private:
 
 	//! For returning references to invalid bio processes
 	UPROPERTY()
 	FBioProcessType InvalidBioProcess;
-
-	//! Registered processes
-	UPROPERTY()
-	TArray<FBioProcessType> RegisteredBioProcesses;
 };

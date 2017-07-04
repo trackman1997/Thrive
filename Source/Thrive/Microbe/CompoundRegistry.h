@@ -87,15 +87,13 @@ public:
 
         return GetCompoundData(ID).Colour;
     }
-	
-private:
 
-    
+	//! Registered compounds
+	UPROPERTY()
+	TArray<FCompoundType> RegisteredCompounds;
+
+private:
     //! For returning references to invalid compounds
     UPROPERTY()
     FCompoundType InvalidCompound;
-
-    //! Registered compounds
-    UPROPERTY()
-    TArray<FCompoundType> RegisteredCompounds;
 };

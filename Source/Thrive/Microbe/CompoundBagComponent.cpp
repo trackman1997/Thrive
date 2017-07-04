@@ -14,18 +14,6 @@ UCompoundBagComponent::UCompoundBagComponent()
 
 	storageSpaceTotal = 0.0;
 	storageSpaceOccupied = 0.0;
-
-	// DONT DO THIS!!!!!
-	/*
-	AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
-	if (!GameMode) {
-
-		LOG_FATAL("Compound cloud manager couldn't get the gamemode");
-		return;
-	}
-
-	auto* Registry = GameMode->GetCompoundRegistry();
-	*/
 }
 
 
@@ -34,7 +22,26 @@ void UCompoundBagComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
+	if (!GameMode) {
+
+		LOG_FATAL("Compound cloud manager couldn't get the gamemode");
+		return;
+	}
+
+	UCompoundRegistry*  Registry = GameMode->GetCompoundRegistry();
+
+	for (auto Compound : Registry->RegisteredCompounds) {
+		CompoundStorageData Data;
+		Data.Amount = 0;
+		Data.UninflatedPrice = INITIAL_COMPOUND_PRICE;
+		Data.Price = INITIAL_COMPOUND_PRICE;
+		Data.Demand = INITIAL_COMPOUND_DEMAND;
+		Data.PriceReductionPerUnit = 0;
+		Data.BreakEvenPoint = 0;
+		Data.CompoundId = Compound.ID;
+		compounds.Add(Compound.ID, Data);
+	}
 }
 
 
@@ -59,30 +66,30 @@ float UCompoundBagComponent::getStorageSpaceOccupied() {
 }
 
 float UCompoundBagComponent::getCompoundAmount(ECompoundID CompoundId) {
-	return compounds[CompoundId].amount;
+	return compounds[CompoundId].Amount;
 }
 
 float UCompoundBagComponent::getPrice(ECompoundID CompoundId) {
-	return compounds[CompoundId].price;
+	return compounds[CompoundId].Price;
 }
 
 float UCompoundBagComponent::getDemand(ECompoundID CompoundId) {
-	return compounds[CompoundId].demand;
+	return compounds[CompoundId].Demand;
 }
 
 float UCompoundBagComponent::takeCompound(ECompoundID CompoundId, float amount) {
-	if (compounds[CompoundId].amount > amount) {
-		compounds[CompoundId].amount -= amount;
+	if (compounds[CompoundId].Amount > amount) {
+		compounds[CompoundId].Amount -= amount;
 		return amount;
 	}
 
 	else {
-		float amountTaken = compounds[CompoundId].amount;
-		compounds[CompoundId].amount = 0;
+		float amountTaken = compounds[CompoundId].Amount;
+		compounds[CompoundId].Amount = 0;
 		return amountTaken;
 	}
 }
 
 void UCompoundBagComponent::giveCompound(ECompoundID CompoundId, float amount) {
-	compounds[CompoundId].amount += amount;
+	compounds[CompoundId].Amount += amount;
 }

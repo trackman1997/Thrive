@@ -27,13 +27,13 @@
 #define INITIAL_COMPOUND_DEMAND 1.0
 
 struct CompoundStorageData {
-	float amount;
-	float uninflatedPrice;
-	float price;
-	float demand;
-	float priceReductionPerUnit;
-	float breakEvenPoint;
-	ECompoundID compoundId;
+	float Amount;
+	float UninflatedPrice;
+	float Price;
+	float Demand;
+	float PriceReductionPerUnit;
+	float BreakEvenPoint;
+	ECompoundID CompoundId;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
