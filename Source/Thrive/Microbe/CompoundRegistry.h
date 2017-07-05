@@ -88,6 +88,13 @@ public:
         return GetCompoundData(ID).Colour;
     }
 
+	//! Returns colour of a compound or black from the invalid compound
+	UFUNCTION(BlueprintCallable)
+	FString GetDisplayName(ECompoundID ID) const {
+
+		return GetCompoundData(ID).DisplayName;
+	}
+
 	//! Registered compounds
 	UPROPERTY()
 	TArray<FCompoundType> RegisteredCompounds;

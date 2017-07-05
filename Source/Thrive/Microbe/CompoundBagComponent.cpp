@@ -66,18 +66,22 @@ float UCompoundBagComponent::getStorageSpaceOccupied() {
 }
 
 float UCompoundBagComponent::getCompoundAmount(ECompoundID CompoundId) {
+	if (!compounds.Contains(CompoundId)) return 0.0;
 	return compounds[CompoundId].Amount;
 }
 
 float UCompoundBagComponent::getPrice(ECompoundID CompoundId) {
+	if (!compounds.Contains(CompoundId)) return 0.0;
 	return compounds[CompoundId].Price;
 }
 
 float UCompoundBagComponent::getDemand(ECompoundID CompoundId) {
+	if (!compounds.Contains(CompoundId)) return 0.0;
 	return compounds[CompoundId].Demand;
 }
 
 float UCompoundBagComponent::takeCompound(ECompoundID CompoundId, float amount) {
+	if (!compounds.Contains(CompoundId)) return 0.0;
 	if (compounds[CompoundId].Amount > amount) {
 		compounds[CompoundId].Amount -= amount;
 		return amount;

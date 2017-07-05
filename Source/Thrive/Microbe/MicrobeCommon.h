@@ -9,16 +9,16 @@
 //!
 //! This is an enum to prevent implicit convertions from and to integers
 //! These are dynamically assigned by the UCompoundRegistry object
-UENUM()
-enum class ECompoundID : int32{
+UENUM(BlueprintType)
+enum class ECompoundID : uint8{
 
-    Invalid = -1
+    Invalid = 0
 };
 
-UENUM()
-enum class EBioProcessID : int32 {
+UENUM(BlueprintType)
+enum class EBioProcessID : uint8 {
 
-	Invalid = -1
+	Invalid = 0
 };
 
 constexpr auto COMPOUND_CLOUD_SIMULATE_SIZE = 64;

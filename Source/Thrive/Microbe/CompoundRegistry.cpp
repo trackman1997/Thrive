@@ -7,6 +7,7 @@
 UCompoundRegistry::UCompoundRegistry(){
 
     InvalidCompound.InternalName = TEXT("Invalid Compound Type");
+	InvalidCompound.DisplayName = "Invalid compound";
     InvalidCompound.Colour = FColor(0, 0, 0, 1);
 }
 // ------------------------------------ //
