@@ -7,6 +7,7 @@
 #include "CompoundCloudManager.h"
 #include "CompoundRegistry.h"
 #include "BioProcessRegistry.h"
+#include "StartingCompoundsRegistry.h"
 
 #include "MicrobeGameModeBase.generated.h"
 
@@ -52,6 +53,10 @@ public:
 		return BioProcessRegistry;
 	}
 
+	UStartingCompoundsRegistry* GetStartingCompoundsRegistry() {
+		return StartingCompoundsRegistry;
+	}
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -78,4 +83,7 @@ protected:
     
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	UBioProcessRegistry* BioProcessRegistry = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UStartingCompoundsRegistry* StartingCompoundsRegistry = nullptr;
 };

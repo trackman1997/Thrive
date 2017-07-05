@@ -38,6 +38,10 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 	BioProcessRegistry = NewObject<UBioProcessRegistry>();
 	check(BioProcessRegistry);
 	BioProcessRegistry->LoadDefaultBioProcesses(CompoundRegistry);
+
+	StartingCompoundsRegistry = NewObject<UStartingCompoundsRegistry>();
+	check(StartingCompoundsRegistry);
+	StartingCompoundsRegistry->LoadStartingCompounds(CompoundRegistry);
     
 
     // Create compounds spawn manager //
