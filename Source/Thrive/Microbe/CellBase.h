@@ -13,6 +13,7 @@
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MembraneComponent.h"
 #include "OrganelleComponent.h"
+#include "CompoundBagComponent.h"
 
 #include "CellBase.generated.h"
 
@@ -68,6 +69,8 @@ protected:
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
 
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	UCompoundBagComponent* CompoundBag;
 
     //! As it seems like cells really don't like being constrained to an axis
     //! this should do something

@@ -1,6 +1,8 @@
 // Copyright (C) 2013-2017  Revolutionary Games
 
 #include "Thrive.h"
+#include "StartingCompoundsRegistry.h"
+#include "MicrobeGameModeBase.h"
 #include "CellBase.h"
 
 // Sets default values
@@ -22,6 +24,7 @@ ACellBase::ACellBase()
     
     RuntimeMesh->bUseComplexAsSimpleCollision = false;
 
+	CompoundBag = CreateDefaultSubobject<UCompoundBagComponent>(TEXT("CompoundBag"));
     MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("Membrane"));
     //MembraneComponent->SetupAttachment(RuntimeMesh);
     
@@ -64,6 +67,25 @@ ACellBase::ACellBase()
 void ACellBase::BeginPlay()
 {
     Super::BeginPlay();
+
+	// Loading the staring compounds.
+	Super::BeginPlay();
+
+	AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
+	if (!GameMode) {
+
+		LOG_FATAL("Compound cloud manager couldn't get the gamemode");
+		return;
+	}
+
+	// We should probably ask for the species to do this.
+	UStartingCompoundsRegistry*  Registry = GameMode->GetStartingCompoundsRegistry();
+
+	for (auto Compound : Registry->StartingCompounds) {
+		ECompoundID CompoundID = Compound.Key;
+		float Amount = Compound.Value;
+		CompoundBag->giveCompound(CompoundID, Amount);
+	}
 }
 
 void ACellBase::OnConstruction(const FTransform& Transform)
