@@ -227,7 +227,7 @@ info "Running Thrive folder setup"
 
 requireCMD "svn"
 
-if not File.exist? "Content"
+if not File.exist? "Content/dummy.txt"
 
   info "Content folder doesn't exist, checking it out"
   
