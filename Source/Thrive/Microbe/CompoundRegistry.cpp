@@ -67,7 +67,7 @@ ECompoundID UCompoundRegistry::GetCompoundByName(const FName &CompoundName) cons
 bool UCompoundRegistry::RegisterCompoundType(FCompoundType &Properties){
 
     // Verify the name is not used and find the highest compound id //
-    int32_t HighestUsed = 0;
+    int32_t HighestUsed = 1;
     
     for(const auto& Compound : RegisteredCompounds){
 

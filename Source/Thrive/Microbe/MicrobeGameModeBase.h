@@ -8,6 +8,7 @@
 #include "CompoundRegistry.h"
 #include "BioProcessRegistry.h"
 #include "StartingCompoundsRegistry.h"
+#include "BiomeRegistry.h"
 
 #include "MicrobeGameModeBase.generated.h"
 
@@ -57,6 +58,10 @@ public:
 		return StartingCompoundsRegistry;
 	}
 
+	UBiomeRegistry* GetBiomeRegistry() {
+		return BiomeRegistry;
+	}
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -86,4 +91,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	UStartingCompoundsRegistry* StartingCompoundsRegistry = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UBiomeRegistry* BiomeRegistry = nullptr;
 };

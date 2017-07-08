@@ -42,6 +42,10 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 	StartingCompoundsRegistry = NewObject<UStartingCompoundsRegistry>();
 	check(StartingCompoundsRegistry);
 	StartingCompoundsRegistry->LoadStartingCompounds(CompoundRegistry);
+
+	BiomeRegistry = NewObject<UBiomeRegistry>();
+	check(BiomeRegistry);
+	BiomeRegistry->LoadDefaultBiomes(CompoundRegistry);
     
 
     // Create compounds spawn manager //

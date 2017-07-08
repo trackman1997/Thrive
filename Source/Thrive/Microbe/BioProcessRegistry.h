@@ -6,7 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "BioProcessRegistry.generated.h"
 
-//! Data for a registered compound type
+//! Data for a registered bio process type.
 USTRUCT(BlueprintType)
 struct FBioProcessType {
 

@@ -12,7 +12,7 @@ UCompoundBagComponent::UCompoundBagComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	storageSpaceTotal = 0.0;
+	storageSpaceTotal = 100.0;
 	storageSpaceOccupied = 0.0;
 }
 

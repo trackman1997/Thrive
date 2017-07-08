@@ -11,13 +11,16 @@
 //! These are dynamically assigned by the UCompoundRegistry object
 UENUM(BlueprintType)
 enum class ECompoundID : uint8{
-
     Invalid = 0
 };
 
 UENUM(BlueprintType)
 enum class EBioProcessID : uint8 {
+	Invalid = 0
+};
 
+UENUM(BlueprintType)
+enum class EBiomeID : uint8 {
 	Invalid = 0
 };
 

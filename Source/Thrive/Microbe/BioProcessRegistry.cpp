@@ -72,7 +72,7 @@ EBioProcessID UBioProcessRegistry::GetBioProcessByName(const FName &BioProcessNa
 bool UBioProcessRegistry::RegisterBioProcessType(FBioProcessType &Properties) {
 
 	// Verify the name is not used and find the highest bio process id //
-	int32_t HighestUsed = 0;
+	int32_t HighestUsed = 1;
 
 	for (const auto& BioProcess : RegisteredBioProcesses) {
 
