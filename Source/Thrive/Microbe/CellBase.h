@@ -66,6 +66,12 @@ protected:
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
 	int minMembraneSize = 40;
 
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	float Health = 100;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	float MaxHealth = 100;
+
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
 
