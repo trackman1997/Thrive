@@ -24,7 +24,6 @@ void AMicrobeGameModeBase::InitGame(const FString& MapName, const FString& Optio
     FString& ErrorMessage)
 {
     Super::InitGame(MapName, Options, ErrorMessage);
-
 }
 
 void AMicrobeGameModeBase::PreInitializeComponents(){
@@ -37,7 +36,8 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 
 	BioProcessRegistry = NewObject<UBioProcessRegistry>();
 	check(BioProcessRegistry);
-	BioProcessRegistry->LoadDefaultBioProcesses(CompoundRegistry);
+	BioProcessRegistry->Init(CompoundRegistry);
+	BioProcessRegistry->LoadDefaultBioProcesses("GameData/MicrobeStage/Compounds.json");
 
 	StartingCompoundsRegistry = NewObject<UStartingCompoundsRegistry>();
 	check(StartingCompoundsRegistry);

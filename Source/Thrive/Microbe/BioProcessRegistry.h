@@ -4,26 +4,14 @@
 
 #include "MicrobeCommon.h"
 #include "UObject/NoExportTypes.h"
+#include "Common/JsonRegistry.h"
 #include "BioProcessRegistry.generated.h"
 
 //! Data for a registered bio process type.
 USTRUCT(BlueprintType)
-struct FBioProcessType {
+struct FBioProcessType : public FJsonRegistryType {
 
 	GENERATED_BODY()
-
-	//! ID of this bio process.
-	//! If invalid the wanted bio process type didn't exist
-	UPROPERTY(BlueprintReadOnly)
-	EBioProcessID ID = EBioProcessID::Invalid;
-
-	//! Used to search by name.
-	UPROPERTY(BlueprintReadOnly)
-	FName InternalName;
-
-	//! Used by the GUI and stuff.
-	UPROPERTY(BlueprintReadOnly)
-	FString DisplayName;
 
 	//! Map with the input compounds of this bio process, and its quantities.
 	UPROPERTY()
@@ -38,22 +26,22 @@ struct FBioProcessType {
  * 
  */
 UCLASS(BlueprintType)
-class THRIVE_API UBioProcessRegistry : public UObject
+class THRIVE_API UBioProcessRegistry : public UObject, public UJsonRegistry<FBioProcessType>
 {
 	GENERATED_BODY()
 	
 public:
-	UBioProcessRegistry();
+	UFUNCTION()
+	void Init(UCompoundRegistry* ACompoundRegistry);
+
+	//UBioProcessRegistry();
+
+	virtual FBioProcessType GetTypeFromJsonObject(const TSharedPtr<FJsonObject>& JsonData);
 
 	//! Loads default bio processes
 	//! \todo Add a blueprint overrideable method for adding extra things
 	UFUNCTION(BlueprintCallable)
-	void LoadDefaultBioProcesses(UCompoundRegistry* CompoundRegistry);
-
-	//! Returns bio process's id based on the name
-	//! \note This should be called once and the result stored for performance reasons
-	UFUNCTION(BlueprintCallable)
-	EBioProcessID GetBioProcessByName(const FName &BioProcessName) const;
+	void LoadDefaultBioProcesses(FString Path);
 	
 	//! Registers a new bio proces with the specified properties
 	//! \note The ID should be left empty as it will be overwritten
@@ -64,7 +52,7 @@ public:
 	//! Returns the properties of a bio process type. Or InvalidBioProcess if not found
 	//! \note The returned value should NOT be changed
 	UFUNCTION(BlueprintCallable)
-	FBioProcessType const& GetBioProcessData(EBioProcessID ID) const;
+	FBioProcessType const& GetBioProcessData(const FName &BioProcessName) const;
 
 	//! Registered processes
 	UPROPERTY()
@@ -75,4 +63,6 @@ private:
 	//! For returning references to invalid bio processes
 	UPROPERTY()
 	FBioProcessType InvalidBioProcess;
+
+	UCompoundRegistry* CompoundRegistry = nullptr;
 };
