@@ -47,6 +47,11 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 	check(BiomeRegistry);
 	BiomeRegistry->Init(CompoundRegistry);
 	BiomeRegistry->LoadDefaultBiomes("GameData/MicrobeStage/Biomes.json");
+
+	OrganelleRegistry = NewObject<UOrganelleRegistry>();
+	check(OrganelleRegistry);
+	OrganelleRegistry->Init(CompoundRegistry);
+	OrganelleRegistry->LoadDefaultOrganelles("GameData/MicrobeStage/Organelles.json");
     
 
     // Create compounds spawn manager //
@@ -58,6 +63,4 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
             ACompoundCloudManager::StaticClass(), nullptr, SpawnParameters));
 
     check(CompoundCloudManager);
-   
-    
 }

@@ -5,10 +5,13 @@
 #include "GameFramework/GameModeBase.h"
 
 #include "CompoundCloudManager.h"
+
+// Registries
 #include "CompoundRegistry.h"
 #include "BioProcessRegistry.h"
 #include "StartingCompoundsRegistry.h"
 #include "BiomeRegistry.h"
+#include "OrganelleRegistry.h"
 
 #include "MicrobeGameModeBase.generated.h"
 
@@ -62,6 +65,10 @@ public:
 		return BiomeRegistry;
 	}
 
+	UOrganelleRegistry* GetOrganelleRegistry() {
+		return OrganelleRegistry;
+	}
+
 protected:
     
     //! Called when spawning a player for the first time
@@ -94,4 +101,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	UBiomeRegistry* BiomeRegistry = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UOrganelleRegistry* OrganelleRegistry = nullptr;
 };
