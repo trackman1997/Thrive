@@ -20,9 +20,9 @@ struct FJsonRegistryType {
 	FString DisplayName;
 };
 
-template<class T> class UJsonRegistry {
+template<class T> class TJsonRegistry {
 protected:
-	UJsonRegistry();
+	TJsonRegistry();
 
 	//! Loads default types
 	//! \todo Add a blueprint overrideable method for adding extra things
@@ -47,12 +47,12 @@ protected:
 
 
 
-template<class T> UJsonRegistry<T>::UJsonRegistry() {
+template<class T> TJsonRegistry<T>::TJsonRegistry() {
 	InvalidType.InternalName = TEXT("invalid");
 	InvalidType.DisplayName = TEXT("Invalid type");
 }
 
-template<class T> void UJsonRegistry<T>::LoadDefaultTypes(FString Path) {
+template<class T> void TJsonRegistry<T>::LoadDefaultTypes(FString Path) {
 	// Getting the JSON file where the data is.
 	FString PathToFile = FPaths::GameContentDir() + Path;
 
@@ -83,7 +83,7 @@ template<class T> void UJsonRegistry<T>::LoadDefaultTypes(FString Path) {
 	}
 }
 
-template<class T> bool UJsonRegistry<T>::RegisterType(T &Properties) {
+template<class T> bool TJsonRegistry<T>::RegisterType(T &Properties) {
 	for (const auto& Type : RegisteredTypes) {
 
 		if (Type.InternalName == Properties.InternalName) {
@@ -98,7 +98,7 @@ template<class T> bool UJsonRegistry<T>::RegisterType(T &Properties) {
 	return true;
 }
 
-template<class T> T const& UJsonRegistry<T>::GetTypeData(const FName &TypeName) const {
+template<class T> T const& TJsonRegistry<T>::GetTypeData(const FName &TypeName) const {
 
 	if (TypeName == TEXT("invalid"))
 		return InvalidType;

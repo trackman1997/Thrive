@@ -26,7 +26,7 @@ struct FBioProcessType : public FJsonRegistryType {
  * 
  */
 UCLASS(BlueprintType)
-class THRIVE_API UBioProcessRegistry : public UObject, public UJsonRegistry<FBioProcessType>
+class THRIVE_API UBioProcessRegistry : public UObject, public TJsonRegistry<FBioProcessType>
 {
 	GENERATED_BODY()
 	
