@@ -14,10 +14,9 @@ FBiomeType UBiomeRegistry::GetTypeFromJsonObject(const TSharedPtr<FJsonObject>& 
 	// Getting the compounds in the biome.
 	TSharedPtr<FJsonObject> BiomeCompounds = JsonData->GetObjectField("compounds");
 	for (auto Compound : BiomeCompounds->Values) {
-		FName compoundName = *Compound.Key;
+		FName CompoundName = *Compound.Key;
 		int Amount = Compound.Value->AsNumber();
-		ECompoundID CompoundId = CompoundRegistry->GetCompoundByName(compoundName);
-		NewBiome.Compounds.Add(CompoundId, Amount);
+		NewBiome.Compounds.Add(CompoundName, Amount);
 	}
 
 	return NewBiome;

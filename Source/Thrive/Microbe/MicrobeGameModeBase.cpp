@@ -32,7 +32,7 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 
     CompoundRegistry = NewObject<UCompoundRegistry>();
     check(CompoundRegistry);
-    CompoundRegistry->LoadDefaultCompounds();
+    CompoundRegistry->LoadDefaultCompounds("GameData/MicrobeStage/Compounds.json");
 
 	BioProcessRegistry = NewObject<UBioProcessRegistry>();
 	check(BioProcessRegistry);

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "MicrobeCommon.h"
 #include "UObject/NoExportTypes.h"
 #include "Common/JsonRegistry.h"
 #include "BioProcessRegistry.generated.h"
@@ -15,11 +14,11 @@ struct FBioProcessType : public FJsonRegistryType {
 
 	//! Map with the input compounds of this bio process, and its quantities.
 	UPROPERTY()
-	TMap<ECompoundID, int> Inputs;
+	TMap<FName, int> Inputs;
 
 	//! Map with the output compounds of this bio process, and its quantities.
 	UPROPERTY()
-	TMap<ECompoundID, int> Outputs;
+	TMap<FName, int> Outputs;
 };
 
 /**

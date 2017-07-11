@@ -26,10 +26,8 @@ void UStartingCompoundsRegistry::LoadStartingCompounds(UCompoundRegistry* Compou
 	for (auto Compound : StartingCompoundsObject->Values) {
 		const FString& InternalNameString = Compound.Key;
 		FName InternalName = *InternalNameString;
-		ECompoundID CompoundID = CompoundRegistry->GetCompoundByName(InternalName);
-
 		float Amount = Compound.Value->AsNumber();
 
-		StartingCompounds.Add(CompoundID, Amount);
+		StartingCompounds.Add(InternalName, Amount);
 	}
 }

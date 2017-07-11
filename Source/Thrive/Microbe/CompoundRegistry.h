@@ -3,34 +3,20 @@
 #pragma once
 
 #include "UObject/NoExportTypes.h"
-
-#include "MicrobeCommon.h"
-
+#include "Common/JsonRegistry.h"
 #include "CompoundRegistry.generated.h"
 
 
 //! Data for a registered compound type
 USTRUCT(BlueprintType)
-struct FCompoundType{
+struct FCompoundType : public  FJsonRegistryType {
 
     GENERATED_BODY()
 
-    //! ID of this compound.
-    //! If invalid the wanted compound type didn't exist
-    UPROPERTY(BlueprintReadOnly)
-    ECompoundID ID = ECompoundID::Invalid;
-    
-	//! Used by the GUI and stuff.
-    UPROPERTY(BlueprintReadOnly)
-    FString DisplayName;
-
-	//! Used to search by name.
-	UPROPERTY(BlueprintReadOnly)
-	FName InternalName;
-    
+public:
 	//! The colour of this compound, in clouds and in the GUI.
     UPROPERTY(BlueprintReadOnly)
-    FLinearColor Colour;
+    FLinearColor Colour = FColor(0, 0, 0, 1);
 
 	//! How much space does this compound occupy per unit.
 	UPROPERTY(BlueprintReadOnly)
@@ -51,23 +37,16 @@ struct FCompoundType{
  * 
  */
 UCLASS(BlueprintType)
-class THRIVE_API UCompoundRegistry : public UObject
+class THRIVE_API UCompoundRegistry : public UObject, public TJsonRegistry<FCompoundType>
 {
 	GENERATED_BODY()
 
 public:
-        
-    UCompoundRegistry();
+	virtual FCompoundType GetTypeFromJsonObject(const TSharedPtr<FJsonObject>& JsonData);
 
     //! Loads default compounds
     //! \todo Add a blueprint overrideable method for adding extra things
-    void LoadDefaultCompounds();
-    
-        
-    //! Returns compound's id based on the name
-    //! \note This should be called once and the result stored for performance reasons
-    UFUNCTION(BlueprintCallable)
-    ECompoundID GetCompoundByName(const FName &CompoundName) const;
+    void LoadDefaultCompounds(FString Path);
 
     //! Registers a new compound with the specified properties
     //! \note The ID should be left empty as it will be overwritten
@@ -79,28 +58,13 @@ public:
     //! Returns the properties of a compound type. Or InvalidCompound if not found
     //! \note The returned value should NOT be changed
     UFUNCTION(BlueprintCallable)
-    FCompoundType const& GetCompoundData(ECompoundID ID) const;
-    
-    //! Returns colour of a compound or black from the invalid compound
-    UFUNCTION(BlueprintCallable)
-    FLinearColor GetColour(ECompoundID ID) const{
+    FCompoundType const& GetCompoundData(const FName &CompoundName) const;
 
-        return GetCompoundData(ID).Colour;
-    }
-
-	//! Returns colour of a compound or black from the invalid compound
 	UFUNCTION(BlueprintCallable)
-	FString GetDisplayName(ECompoundID ID) const {
+	TArray<FCompoundType> const& GetRegisteredCompounds() const;
 
-		return GetCompoundData(ID).DisplayName;
+	UFUNCTION(BlueprintCallable)
+	bool IsValidCompound(const FName &CompoundName) const {
+		return GetCompoundData(CompoundName).InternalName != InvalidType.InternalName;
 	}
-
-	//! Registered compounds
-	UPROPERTY()
-	TArray<FCompoundType> RegisteredCompounds;
-
-private:
-    //! For returning references to invalid compounds
-    UPROPERTY()
-    FCompoundType InvalidCompound;
 };

@@ -21,7 +21,7 @@ class THRIVE_API ACompoundCloud : public AActor
     //! Contains data for single compound type's layer
     class FLayerData final{
     public:
-        FLayerData(ECompoundID InID, int32_t InWidth, int32_t InHeight,
+        FLayerData(FName InName, int32_t InWidth, int32_t InHeight,
             float ResolutionFactor);
 
         FLayerData(FLayerData&& MoveFrom);
@@ -32,7 +32,7 @@ class THRIVE_API ACompoundCloud : public AActor
         //! Performs a single update step
         void Update(float DeltaTime, const FSharedCloudData &Velocities);
 
-        const ECompoundID ID;
+        const FName Name;
 
         // Colour can be retrieved from UCompoundRegistry
         
@@ -61,8 +61,8 @@ public:
     //! Initializes this cloud for compounds
     //! All compound types that will be used during the lifetime of this object need to be
     //! specified here
-    void Initialize(ECompoundID Compound1, ECompoundID Compound2,
-        ECompoundID Compound3, ECompoundID Compound4);
+    void Initialize(FName Compound1, FName Compound2,
+        FName Compound3, FName Compound4);
 
     //! Sets up the materials to look nice in the editor
     void OnConstruction(const FTransform& Transform) override;
@@ -77,16 +77,16 @@ public:
     //! Adds compound to position.
     //! The coordinates are between 0 and 1
     //! \returns True if the coordinates where valid and the compound was added
-    bool AddCloud(ECompoundID Compound, float Density, float X, float Y);
+    bool AddCloud(FName Compound, float Density, float X, float Y);
 
     //! Takes specified compound at location.
     //! \param Rate Controls how much is taken. 1 means all at position. Use less than 1
     //! \returns The amount taken
-    int TakeCompound(ECompoundID Compound, float X, float Y, float Rate);
+    int TakeCompound(FName Compound, float X, float Y, float Rate);
 
     //! Returns in the Result array how much different compounds are available at position
     //! \returns True if the coordinates where valid and result was filled. False if invalid
-    bool AmountAvailable(TArray<std::tuple<ECompoundID, int>> &Result, float X, float Y);
+    bool AmountAvailable(TArray<std::tuple<FName, int>> &Result, float X, float Y);
     
 
 protected:
@@ -94,14 +94,14 @@ protected:
 	virtual void BeginPlay() override;
 
     //! Returns the layer matching id or null
-    FLayerData* GetLayerForCompound(ECompoundID Compound);
+    FLayerData* GetLayerForCompound(FName Compound);
 
     //! Updates the density texture
     void UpdateTexture();
 
 private:
     //! Helper for Initialize
-    void _SetupCompound(ECompoundID Compound, UCompoundRegistry* Registry);
+    void _SetupCompound(FName Compound, UCompoundRegistry* Registry);
 
     //! Calculate final grid position from 0-1.f range coordinates
     //! \returns False if out of range

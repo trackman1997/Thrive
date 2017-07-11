@@ -31,7 +31,7 @@ void UCompoundBagComponent::BeginPlay()
 
 	UCompoundRegistry*  Registry = GameMode->GetCompoundRegistry();
 
-	for (auto Compound : Registry->RegisteredCompounds) {
+	for (auto Compound : Registry->GetRegisteredCompounds()) {
 		CompoundStorageData Data;
 		Data.Amount = 0;
 		Data.UninflatedPrice = INITIAL_COMPOUND_PRICE;
@@ -39,8 +39,8 @@ void UCompoundBagComponent::BeginPlay()
 		Data.Demand = INITIAL_COMPOUND_DEMAND;
 		Data.PriceReductionPerUnit = 0;
 		Data.BreakEvenPoint = 0;
-		Data.CompoundId = Compound.ID;
-		compounds.Add(Compound.ID, Data);
+		Data.CompoundName = Compound.InternalName;
+		compounds.Add(Data.CompoundName, Data);
 	}
 }
 
@@ -65,35 +65,35 @@ float UCompoundBagComponent::getStorageSpaceOccupied() {
 	return storageSpaceOccupied;
 }
 
-float UCompoundBagComponent::getCompoundAmount(ECompoundID CompoundId) {
-	if (!compounds.Contains(CompoundId)) return 0.0;
-	return compounds[CompoundId].Amount;
+float UCompoundBagComponent::getCompoundAmount(const FName &CompoundName) {
+	if (!compounds.Contains(CompoundName)) return 0.0;
+	return compounds[CompoundName].Amount;
 }
 
-float UCompoundBagComponent::getPrice(ECompoundID CompoundId) {
-	if (!compounds.Contains(CompoundId)) return 0.0;
-	return compounds[CompoundId].Price;
+float UCompoundBagComponent::getPrice(const FName &CompoundName) {
+	if (!compounds.Contains(CompoundName)) return 0.0;
+	return compounds[CompoundName].Price;
 }
 
-float UCompoundBagComponent::getDemand(ECompoundID CompoundId) {
-	if (!compounds.Contains(CompoundId)) return 0.0;
-	return compounds[CompoundId].Demand;
+float UCompoundBagComponent::getDemand(const FName &CompoundName) {
+	if (!compounds.Contains(CompoundName)) return 0.0;
+	return compounds[CompoundName].Demand;
 }
 
-float UCompoundBagComponent::takeCompound(ECompoundID CompoundId, float amount) {
-	if (!compounds.Contains(CompoundId)) return 0.0;
-	if (compounds[CompoundId].Amount > amount) {
-		compounds[CompoundId].Amount -= amount;
+float UCompoundBagComponent::takeCompound(const FName &CompoundName, float amount) {
+	if (!compounds.Contains(CompoundName)) return 0.0;
+	if (compounds[CompoundName].Amount > amount) {
+		compounds[CompoundName].Amount -= amount;
 		return amount;
 	}
 
 	else {
-		float amountTaken = compounds[CompoundId].Amount;
-		compounds[CompoundId].Amount = 0;
+		float amountTaken = compounds[CompoundName].Amount;
+		compounds[CompoundName].Amount = 0;
 		return amountTaken;
 	}
 }
 
-void UCompoundBagComponent::giveCompound(ECompoundID CompoundId, float amount) {
-	compounds[CompoundId].Amount += amount;
+void UCompoundBagComponent::giveCompound(const FName &CompoundName, float amount) {
+	compounds[CompoundName].Amount += amount;
 }

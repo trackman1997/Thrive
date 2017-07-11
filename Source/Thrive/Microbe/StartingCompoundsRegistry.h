@@ -20,5 +20,5 @@ public:
 	void LoadStartingCompounds(UCompoundRegistry* CompoundRegistry);
 
 	UPROPERTY()
-	TMap<ECompoundID, float> StartingCompounds;
+	TMap<FName, float> StartingCompounds;
 };

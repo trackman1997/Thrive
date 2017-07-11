@@ -82,9 +82,9 @@ void ACellBase::BeginPlay()
 	UStartingCompoundsRegistry*  Registry = GameMode->GetStartingCompoundsRegistry();
 
 	for (auto Compound : Registry->StartingCompounds) {
-		ECompoundID CompoundID = Compound.Key;
+		FName CompoundName = Compound.Key;
 		float Amount = Compound.Value;
-		CompoundBag->giveCompound(CompoundID, Amount);
+		CompoundBag->giveCompound(CompoundName, Amount);
 	}
 }
 

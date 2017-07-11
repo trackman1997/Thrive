@@ -51,15 +51,12 @@ void ACompoundCloudManager::BeginPlay()
 
     auto* Registry = GameMode->GetCompoundRegistry();
 
-    const auto OxygenID = Registry->GetCompoundByName(TEXT("ammonia"));
+    TestCloud->Initialize("oxygen", "invalid", "invalid", "invalid");
 
-    TestCloud->Initialize(OxygenID, ECompoundID::Invalid, ECompoundID::Invalid,
-        ECompoundID::Invalid);
-
-    TestCloud->AddCloud(OxygenID, 2500.f, 0.53f, 0.53f);
-    TestCloud->AddCloud(OxygenID, 2500.f, 0.54f, 0.54f);
-    TestCloud->AddCloud(OxygenID, 2500.f, 0.55f, 0.55f);
-    TestCloud->AddCloud(OxygenID, 2500.f, 0.56f, 0.56f);
+    TestCloud->AddCloud("oxygen", 2500.f, 0.53f, 0.53f);
+    TestCloud->AddCloud("oxygen", 2500.f, 0.54f, 0.54f);
+    TestCloud->AddCloud("oxygen", 2500.f, 0.55f, 0.55f);
+    TestCloud->AddCloud("oxygen", 2500.f, 0.56f, 0.56f);
     
 }
 

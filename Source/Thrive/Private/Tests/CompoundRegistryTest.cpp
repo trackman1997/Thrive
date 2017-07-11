@@ -6,7 +6,8 @@
 
 #include "Microbe/CompoundRegistry.h"
 
-
+// Is this even necesary? If the registry fails the gui would show it.
+/*
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompoundRegistryRegister,
     "Thrive.Microbe.CompoundRegistry.Register",
      THRIVE_UNITTEST)
@@ -45,4 +46,4 @@ bool FCompoundRegistryRegister::RunTest(const FString &Parameters){
     
     return true;
 }
-
+*/

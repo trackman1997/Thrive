@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "MicrobeCommon.h"
 #include "CompoundRegistry.h"
 #include "Common/JsonRegistry.h"
 #include "UObject/NoExportTypes.h"
@@ -16,7 +15,7 @@ struct FBiomeType : public FJsonRegistryType {
 public:
 	//! Map with the compounds present on this biome, and its quantities.
 	UPROPERTY()
-	TMap<ECompoundID, int> Compounds;
+	TMap<FName, int> Compounds;
 };
 
 /**

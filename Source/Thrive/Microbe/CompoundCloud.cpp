@@ -37,8 +37,8 @@ ACompoundCloud::ACompoundCloud()
     }
 }
 
-void ACompoundCloud::Initialize(ECompoundID Compound1, ECompoundID Compound2,
-    ECompoundID Compound3, ECompoundID Compound4)
+void ACompoundCloud::Initialize(FName Compound1, FName Compound2,
+	FName Compound3, FName Compound4)
 {
     AMicrobeGameModeBase* GameMode = Cast<AMicrobeGameModeBase>(GetWorld()->GetAuthGameMode());
 
@@ -52,28 +52,28 @@ void ACompoundCloud::Initialize(ECompoundID Compound1, ECompoundID Compound2,
     
     check(DynMaterial);
 
-    // These set the compound colours and create the layers //
-    if(Compound1 != ECompoundID::Invalid)
+    // These set the compound colours and create the layers
+    if (Registry->IsValidCompound(Compound1))
         _SetupCompound(Compound1, Registry);
 
-    if(Compound2 != ECompoundID::Invalid)
+	if (Registry->IsValidCompound(Compound2))
         _SetupCompound(Compound2, Registry);
 
-    if(Compound3 != ECompoundID::Invalid)
+	if (Registry->IsValidCompound(Compound3))
         _SetupCompound(Compound3, Registry);
 
-    if(Compound4 != ECompoundID::Invalid)
+	if (Registry->IsValidCompound(Compound4))
         _SetupCompound(Compound4, Registry);
 }
 
-void ACompoundCloud::_SetupCompound(ECompoundID Compound, UCompoundRegistry* Registry){
+void ACompoundCloud::_SetupCompound(FName Compound, UCompoundRegistry* Registry){
 
     CompoundLayers.Add(FLayerData(Compound, TextureSize, TextureSize, CloudScale));
     
     check(CompoundLayers.Num() <= 4);
 
     DynMaterial->SetVectorParameterValue(FName(*FString::Printf(TEXT("CompoundColour%d"),
-                CompoundLayers.Num())), Registry->GetColour(Compound));
+                CompoundLayers.Num())), Registry->GetCompoundData(Compound).Colour);
 }
 
 void ACompoundCloud::OnConstruction(const FTransform& Transform){
@@ -143,7 +143,7 @@ void ACompoundCloud::Tick(float DeltaTime)
         UpdateTexture();
 }
 // ------------------------------------ //
-bool ACompoundCloud::AddCloud(ECompoundID Compound, float Density, float X, float Y){
+bool ACompoundCloud::AddCloud(FName Compound, float Density, float X, float Y){
 
     uint32_t ArrayX, ArrayY;
     if(!GetTargetCoordinates(X, Y, ArrayX, ArrayY))
@@ -158,7 +158,7 @@ bool ACompoundCloud::AddCloud(ECompoundID Compound, float Density, float X, floa
     return true;
 }
 
-int ACompoundCloud::TakeCompound(ECompoundID Compound, float X, float Y, float Rate){
+int ACompoundCloud::TakeCompound(FName Compound, float X, float Y, float Rate){
 
     uint32_t ArrayX, ArrayY;
     if(!GetTargetCoordinates(X, Y, ArrayX, ArrayY))
@@ -179,7 +179,7 @@ int ACompoundCloud::TakeCompound(ECompoundID Compound, float X, float Y, float R
     return CanTake;
 }
 
-bool ACompoundCloud::AmountAvailable(TArray<std::tuple<ECompoundID, int>> &Result, float X,
+bool ACompoundCloud::AmountAvailable(TArray<std::tuple<FName, int>> &Result, float X,
     float Y)
 {
     uint32_t ArrayX, ArrayY;
@@ -193,17 +193,17 @@ bool ACompoundCloud::AmountAvailable(TArray<std::tuple<ECompoundID, int>> &Resul
         const auto Available = Layer.Density[ArrayX][ArrayY];
 
         if(Available > 0)
-            Result.Add(std::make_tuple(Layer.ID, Available));
+            Result.Add(std::make_tuple(Layer.Name, Available));
     }
     
     return true;
 }
 // ------------------------------------ //
-ACompoundCloud::FLayerData* ACompoundCloud::GetLayerForCompound(ECompoundID Compound){
+ACompoundCloud::FLayerData* ACompoundCloud::GetLayerForCompound(FName Compound){
 
     for(auto& Layer : CompoundLayers){
 
-        if(Layer.ID == Compound)
+        if(Layer.Name == Compound)
             return &Layer;
     }
     
@@ -281,9 +281,9 @@ void ACompoundCloud::CopyLayerDataToMemory(uint8_t* Target, size_t TargetSize,
 
 // ------------------------------------ //
 // FLayerData
-ACompoundCloud::FLayerData::FLayerData(ECompoundID InID, int32_t InWidth, int32_t InHeight,
+ACompoundCloud::FLayerData::FLayerData(FName InName, int32_t InWidth, int32_t InHeight,
     float ResolutionFactor) :
-    ID(InID), GridSize(ResolutionFactor), Width(InWidth), Height(InHeight)
+    Name(InName), GridSize(ResolutionFactor), Width(InWidth), Height(InHeight)
 {
     Density.Reserve(Height);
     Density.SetNum(Width);
@@ -305,7 +305,7 @@ ACompoundCloud::FLayerData::FLayerData(ECompoundID InID, int32_t InWidth, int32_
 }
 
 ACompoundCloud::FLayerData::FLayerData(FLayerData&& MoveFrom) :
-    ID(MoveFrom.ID), Density(std::move(MoveFrom.Density)),
+    Name(MoveFrom.Name), Density(std::move(MoveFrom.Density)),
     LastDensity(std::move(MoveFrom.LastDensity)), GridSize(MoveFrom.GridSize),
     Width(MoveFrom.Width), Height(MoveFrom.Height)
 {

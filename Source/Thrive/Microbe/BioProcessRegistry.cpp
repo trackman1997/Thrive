@@ -14,19 +14,17 @@ FBioProcessType UBioProcessRegistry::GetTypeFromJsonObject(const TSharedPtr<FJso
 	// Getting the input information.
 	TSharedPtr<FJsonObject> BioProcessInputs = JsonData->GetObjectField("inputs");
 	for (auto Input : BioProcessInputs->Values) {
-		FName compoundName = *Input.Key;
+		FName CompoundName = *Input.Key;
 		int Amount = Input.Value->AsNumber();
-		ECompoundID CompoundId = CompoundRegistry->GetCompoundByName(compoundName);
-		NewBioProcess.Inputs.Add(CompoundId, Amount);
+		NewBioProcess.Inputs.Add(CompoundName, Amount);
 	}
 
 	// Getting the output information.
 	TSharedPtr<FJsonObject> BioProcessOutputs = JsonData->GetObjectField("outputs");
 	for (auto Output : BioProcessOutputs->Values) {
-		FName compoundName = *Output.Key;
+		FName CompoundName = *Output.Key;
 		int Amount = Output.Value->AsNumber();
-		ECompoundID CompoundId = CompoundRegistry->GetCompoundByName(compoundName);
-		NewBioProcess.Outputs.Add(CompoundId, Amount);
+		NewBioProcess.Outputs.Add(CompoundName, Amount);
 	}
 
 	return NewBioProcess;

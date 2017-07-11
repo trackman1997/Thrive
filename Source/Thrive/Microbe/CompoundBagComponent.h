@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "MicrobeCommon.h"
 #include "CompoundBagComponent.generated.h"
 
 // The minimum positive price a compound can have.
@@ -33,7 +32,7 @@ struct CompoundStorageData {
 	float Demand;
 	float PriceReductionPerUnit;
 	float BreakEvenPoint;
-	ECompoundID CompoundId;
+	FName CompoundName;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -63,23 +62,23 @@ public:
 	float getStorageSpaceOccupied();
 
 	UFUNCTION(BlueprintCallable, Category = "Thrive")
-	float getCompoundAmount(ECompoundID CompoundId);
+	float getCompoundAmount(const FName &CompoundName);
 
 	UFUNCTION(BlueprintPure, Category = "Thrive")
-	float getPrice(ECompoundID CompoundId);
+	float getPrice(const FName &CompoundName);
 
 	UFUNCTION(BlueprintPure, Category = "Thrive")
-	float getDemand(ECompoundID CompoundId);
+	float getDemand(const FName &CompoundName);
 
 	UFUNCTION(BlueprintCallable, Category = "Thrive")
-	float takeCompound(ECompoundID CompoundId, float amount); // remove up to a certain amount of compound, returning how much was removed
+	float takeCompound(const FName &CompoundName, float amount); // remove up to a certain amount of compound, returning how much was removed
 
 	UFUNCTION(BlueprintCallable, Category = "Thrive")
-	void giveCompound(ECompoundID CompoundId, float amount);
+	void giveCompound(const FName &CompoundName, float amount);
 
 
 private:
-	TMap<ECompoundID, CompoundStorageData> compounds;
+	TMap<FName, CompoundStorageData> compounds;
 	float storageSpaceTotal;
 	float storageSpaceOccupied;
 };
