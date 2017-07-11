@@ -45,7 +45,8 @@ void AMicrobeGameModeBase::PreInitializeComponents(){
 
 	BiomeRegistry = NewObject<UBiomeRegistry>();
 	check(BiomeRegistry);
-	BiomeRegistry->LoadDefaultBiomes(CompoundRegistry);
+	BiomeRegistry->Init(CompoundRegistry);
+	BiomeRegistry->LoadDefaultBiomes("GameData/MicrobeStage/Biomes.json");
     
 
     // Create compounds spawn manager //

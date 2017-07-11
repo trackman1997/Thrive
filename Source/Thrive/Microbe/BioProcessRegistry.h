@@ -34,8 +34,6 @@ public:
 	UFUNCTION()
 	void Init(UCompoundRegistry* ACompoundRegistry);
 
-	//UBioProcessRegistry();
-
 	virtual FBioProcessType GetTypeFromJsonObject(const TSharedPtr<FJsonObject>& JsonData);
 
 	//! Loads default bio processes
@@ -54,15 +52,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FBioProcessType const& GetBioProcessData(const FName &BioProcessName) const;
 
-	//! Registered processes
-	UPROPERTY()
-	TArray<FBioProcessType> RegisteredBioProcesses;
-
 private:
-
-	//! For returning references to invalid bio processes
-	UPROPERTY()
-	FBioProcessType InvalidBioProcess;
-
 	UCompoundRegistry* CompoundRegistry = nullptr;
 };

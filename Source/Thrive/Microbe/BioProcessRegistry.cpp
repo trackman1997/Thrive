@@ -4,11 +4,6 @@
 #include "CompoundRegistry.h"
 #include "BioProcessRegistry.h"
 
-/*
-UBioProcessRegistry::UBioProcessRegistry() {
-}
-*/
-
 void UBioProcessRegistry::Init(UCompoundRegistry* ACompoundRegistry) {
 	CompoundRegistry = ACompoundRegistry;
 }
