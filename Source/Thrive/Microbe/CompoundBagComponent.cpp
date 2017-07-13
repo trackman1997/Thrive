@@ -97,3 +97,8 @@ float UCompoundBagComponent::takeCompound(const FName &CompoundName, float amoun
 void UCompoundBagComponent::giveCompound(const FName &CompoundName, float amount) {
 	compounds[CompoundName].Amount += amount;
 }
+
+void UCompoundBagComponent::ChangeStorageSpace(float Change) {
+	storageSpaceTotal += Change;
+	if(storageSpaceTotal <= 0) storageSpaceTotal = 0;
+}

@@ -17,6 +17,11 @@
 
 #include "CellBase.generated.h"
 
+class UMembraneComponent;
+class UOrganelleContainerComponent;
+class UOrganelleComponent;
+class UCompoundBagComponent;
+
 UCLASS(Blueprintable)
 class THRIVE_API ACellBase : public APawn
 {
@@ -51,9 +56,14 @@ public:
     void MoveForward(float AxisValue);
     void MoveRight(float AxisValue);
     void ToggleEngulf();
-    
-protected:
 
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	UCompoundBagComponent* CompoundBag = nullptr;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+	UOrganelleContainerComponent* OrganelleContainerComponent = nullptr;
+
+protected:
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
     UCellPawnMovementComponent* OurMovementComponent = nullptr;
 
@@ -74,9 +84,6 @@ protected:
 
     UPROPERTY(EditAnyWhere, BlueprintReadOnly)
     URuntimeMeshComponent* RuntimeMesh;
-
-	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
-	UCompoundBagComponent* CompoundBag;
 
     //! As it seems like cells really don't like being constrained to an axis
     //! this should do something

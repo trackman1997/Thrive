@@ -23,7 +23,7 @@ ACellBase::ACellBase()
     }
     
     RuntimeMesh->bUseComplexAsSimpleCollision = false;
-
+	OrganelleContainerComponent = CreateDefaultSubobject<UOrganelleContainerComponent>(TEXT("OrganelleContainerComponent"));
 	CompoundBag = CreateDefaultSubobject<UCompoundBagComponent>(TEXT("CompoundBag"));
     MembraneComponent = CreateDefaultSubobject<UMembraneComponent>(TEXT("Membrane"));
     //MembraneComponent->SetupAttachment(RuntimeMesh);
@@ -108,6 +108,9 @@ void ACellBase::OnConstruction(const FTransform& Transform)
 
 	FBox2D membraneBox(points);
     MembraneComponent->CreateMembraneMesh(RuntimeMesh, membraneBox);
+
+	// Initializing organelles if needed.
+	
 }
 
 // Called every frame

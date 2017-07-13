@@ -46,3 +46,12 @@ TArray<FVector2D> UOrganelleContainerComponent::getOrganellePoints() {
 
 	return result;
 }
+/*
+void UOrganelleContainerComponent::InitializeOrganelles(ACellBase* Microbe) {
+	TArray<USceneComponent*> Organelles;
+	GetChildrenComponents(false, Organelles);
+
+	for(auto Organelle : Organelles)
+		((UOrganelleComponent*)Organelle)->OnAddedToMicrobe(Microbe);
+}
+*/

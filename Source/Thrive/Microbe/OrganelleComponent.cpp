@@ -3,6 +3,7 @@
 #include "Thrive.h"
 #include "OrganelleComponent.h"
 
+class UOrganelleComponent;
 
 // Sets default values for this component's properties
 UOrganelleComponent::UOrganelleComponent()
@@ -24,13 +25,14 @@ void UOrganelleComponent::BeginPlay()
 	
 }
 
-
 // Called every frame
 void UOrganelleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	for (auto Functionality : Functionalities) {
+		Functionality->OnUpdate(DeltaTime, Health);
+	}
 }
 
 TArray<FVector2D> UOrganelleComponent::getPoints() {
@@ -41,4 +43,16 @@ TArray<FVector2D> UOrganelleComponent::getPoints() {
 	result.Emplace(organelleX - size, organelleY - size);
 	result.Emplace(organelleX + size, organelleY + size);
 	return result;
+}
+/*
+void UOrganelleComponent::OnAddedToMicrobe(ACellBase* Microbe) {
+	for (auto Functionality : Functionalities) {
+		Functionality->OnAddedToMicrobe(Microbe, this);
+	}
+}
+*/
+void UOrganelleComponent::OnRemovedFromMicrobe() {
+	for (auto Functionality : Functionalities) {
+		Functionality->OnRemovedFromMicrobe();
+	}
 }

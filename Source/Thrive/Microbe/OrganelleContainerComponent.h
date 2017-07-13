@@ -6,7 +6,6 @@
 #include "OrganelleComponent.h"
 #include "OrganelleContainerComponent.generated.h"
 
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class THRIVE_API UOrganelleContainerComponent : public USceneComponent
 {
@@ -15,6 +14,9 @@ class THRIVE_API UOrganelleContainerComponent : public USceneComponent
 public:	
 	// Sets default values for this component's properties
 	UOrganelleContainerComponent();
+
+	//UFUNCTION()
+	//void InitializeOrganelles(ACellBase* Microbe);
 
 protected:
 	// Called when the game starts

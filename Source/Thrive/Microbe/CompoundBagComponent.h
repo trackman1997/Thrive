@@ -76,6 +76,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Thrive")
 	void giveCompound(const FName &CompoundName, float amount);
 
+	UFUNCTION(BlueprintCallable, Category = "Thrive")
+	void ChangeStorageSpace(float Change);
 
 private:
 	TMap<FName, CompoundStorageData> compounds;
